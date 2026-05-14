@@ -7,6 +7,9 @@ import 'features/ble_connection/domain/ble_service.dart';
 import 'features/ble_connection/presentation/controllers/ble_connection_controller.dart';
 import 'features/ble_connection/presentation/screens/connection_screen.dart';
 import 'features/ble_connection/shared/widgets/bottom_nav_shell.dart';
+import 'features/oe4_control/domain/motor_command_service.dart';
+import 'features/oe4_control/presentation/controllers/oe4_control_controller.dart';
+import 'features/oe4_control/presentation/screens/oe4_control_screen.dart';
 import 'features/settings/application/settings_service.dart';
 import 'features/settings/presentation/screens/settings_screen.dart';
 
@@ -40,13 +43,21 @@ class AstroPilotApp extends StatelessWidget {
             return controller;
           },
         ),
+        ChangeNotifierProvider(
+          create: (_) => Oe4ControlController(MotorCommandService()),
+        ),
       ],
       child: MaterialApp(
         title: 'AstroPilot',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
         home: const BottomNavShell(
-          tabs: [ConnectionScreen(), CatalogScreen(), SettingsScreen()],
+          tabs: [
+            ConnectionScreen(),
+            CatalogScreen(),
+            Oe4ControlScreen(),
+            SettingsScreen(),
+          ],
         ),
       ),
     );

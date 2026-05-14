@@ -29,9 +29,10 @@ class _BottomNavShellState extends State<BottomNavShell> {
             label: 'Catálogo',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Config',
+            icon: Icon(Icons.precision_manufacturing),
+            label: 'Control',
           ),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Config'),
         ],
       ),
     );
