@@ -64,20 +64,30 @@ class MotorCommandService {
     _cachedDeviceId = null;
 
     final device = BluetoothDevice.fromId(deviceId);
-    final services = await device.discoverServices();
+    final services = await _discoverServicesWithRetry(device);
     final service = _findService(services, serviceUuid);
     if (service == null) {
-      throw StateError('Servicio OE4 no encontrado en el ESP32.');
+      throw StateError(
+        'Servicio OE4 no encontrado. Esperado: ${serviceUuid.str128}. '
+        'Servicios encontrados: ${_describeServices(services)}. '
+        'Verifica que el ESP32 este usando el firmware OE4 BLE y que el dispositivo conectado sea AstroPilot-OE4.',
+      );
     }
 
     final rx = _findCharacteristic(service.characteristics, rxWriteUuid);
     if (rx == null) {
-      throw StateError('Caracteristica RX Write OE4 no encontrada.');
+      throw StateError(
+        'Caracteristica RX Write OE4 no encontrada. Esperada: ${rxWriteUuid.str128}. '
+        'Caracteristicas encontradas: ${_describeCharacteristics(service.characteristics)}.',
+      );
     }
 
     final tx = _findCharacteristic(service.characteristics, txNotifyUuid);
     if (tx == null) {
-      throw StateError('Caracteristica TX Notify OE4 no encontrada.');
+      throw StateError(
+        'Caracteristica TX Notify OE4 no encontrada. Esperada: ${txNotifyUuid.str128}. '
+        'Caracteristicas encontradas: ${_describeCharacteristics(service.characteristics)}.',
+      );
     }
 
     _rxCharacteristic = rx;
@@ -89,6 +99,31 @@ class MotorCommandService {
         if (value.isEmpty) return;
         _responseController.add(utf8.decode(value, allowMalformed: true));
       });
+    }
+  }
+
+  Future<List<BluetoothService>> _discoverServicesWithRetry(
+    BluetoothDevice device,
+  ) async {
+    await Future<void>.delayed(const Duration(milliseconds: 350));
+    final firstServices = await device.discoverServices(
+      subscribeToServicesChanged: false,
+    );
+    if (_findService(firstServices, serviceUuid) != null) {
+      return firstServices;
+    }
+
+    await _tryClearGattCache(device);
+    await Future<void>.delayed(const Duration(milliseconds: 650));
+
+    return device.discoverServices(subscribeToServicesChanged: false);
+  }
+
+  Future<void> _tryClearGattCache(BluetoothDevice device) async {
+    try {
+      await device.clearGattCache();
+    } catch (_) {
+      // Android-only optimization. Other platforms or unsupported states can ignore it.
     }
   }
 
@@ -114,6 +149,28 @@ class MotorCommandService {
       if (characteristic.uuid == uuid) return characteristic;
     }
     return null;
+  }
+
+  String _describeServices(List<BluetoothService> services) {
+    if (services.isEmpty) return 'ninguno';
+
+    return services
+        .map(
+          (service) =>
+              '${service.uuid.str128} '
+              'chars=[${_describeCharacteristics(service.characteristics)}]',
+        )
+        .join(' | ');
+  }
+
+  String _describeCharacteristics(
+    List<BluetoothCharacteristic> characteristics,
+  ) {
+    if (characteristics.isEmpty) return 'ninguna';
+
+    return characteristics
+        .map((characteristic) => characteristic.uuid.str128)
+        .join(', ');
   }
 
   Future<void> dispose() async {

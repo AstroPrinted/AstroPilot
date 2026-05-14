@@ -60,7 +60,8 @@ class Oe4ControlController extends ChangeNotifier {
     try {
       _lastSentCommand = await command();
     } catch (e) {
-      _errorMessage = 'No se pudo enviar comando OE4: $e';
+      final message = e is StateError ? e.message : e.toString();
+      _errorMessage = 'No se pudo enviar comando OE4: $message';
     } finally {
       _isSending = false;
       notifyListeners();
