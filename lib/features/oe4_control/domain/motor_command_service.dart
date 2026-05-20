@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class MotorCommandService {
@@ -51,19 +52,24 @@ class MotorCommandService {
     await _ensureCharacteristics(deviceId);
     final json = jsonEncode(command);
     final data = utf8.encode(json);
-    await _rxCharacteristic!.write(data, withoutResponse: false);
+    try {
+      await _rxCharacteristic!.write(data, withoutResponse: false);
+    } on PlatformException catch (e) {
+      if (!_isStaleGattWriteError(e)) rethrow;
+
+      await _resetCharacteristics(BluetoothDevice.fromId(deviceId));
+      await _ensureCharacteristics(deviceId);
+      await _rxCharacteristic!.write(data, withoutResponse: false);
+    }
     return json;
   }
 
   Future<void> _ensureCharacteristics(String deviceId) async {
     if (_cachedDeviceId == deviceId && _rxCharacteristic != null) return;
 
-    await _notifySubscription?.cancel();
-    _notifySubscription = null;
-    _rxCharacteristic = null;
-    _cachedDeviceId = null;
-
     final device = BluetoothDevice.fromId(deviceId);
+    await _resetCharacteristics(device);
+
     final services = await _discoverServicesWithRetry(device);
     final service = _findService(services, serviceUuid);
     if (service == null) {
@@ -125,6 +131,20 @@ class MotorCommandService {
     } catch (_) {
       // Android-only optimization. Other platforms or unsupported states can ignore it.
     }
+  }
+
+  Future<void> _resetCharacteristics(BluetoothDevice device) async {
+    await _notifySubscription?.cancel();
+    _notifySubscription = null;
+    _rxCharacteristic = null;
+    _cachedDeviceId = null;
+    await _tryClearGattCache(device);
+  }
+
+  bool _isStaleGattWriteError(PlatformException e) {
+    final details = '${e.message ?? ''} ${e.details ?? ''}'.toLowerCase();
+    return e.code == 'writeCharacteristic' &&
+        details.contains('primary service not found');
   }
 
   num _jsonNumber(double value) {
