@@ -1,0 +1,51 @@
+[
+  {
+    "id": "FZ-001",
+    "entrada": "Hola",
+    "resultado_esperado": "ERROR: JSON invalido",
+    "resultado_observado": "",
+    "evidencia": ""
+  },
+  {
+    "id": "FZ-002",
+    "entrada": "{\"cmd\":\"GOTO\",\"alt\":\"ABCD\",\"az\":null}",
+    "resultado_esperado": "ERROR: alt/az no numericos",
+    "resultado_observado": "",
+    "evidencia": ""
+  },
+  {
+    "id": "FZ-003",
+    "entrada": "{\"cmd\":\"GOTO\",\"alt\":9000,\"az\":180}",
+    "resultado_esperado": "ERROR: altitud fuera de rango",
+    "resultado_observado": "",
+    "evidencia": ""
+  },
+  {
+    "id": "FZ-004",
+    "entrada": "{\"cmd\":\"GOTO\",\"alt\":45,\"az\":9000}",
+    "resultado_esperado": "ERROR: azimut fuera de rango",
+    "resultado_observado": "",
+    "evidencia": ""
+  },
+  {
+    "id": "FZ-005",
+    "entrada": "{\"cmd\":\"GOTO\"}",
+    "resultado_esperado": "ERROR: campos requeridos ausentes",
+    "resultado_observado": "",
+    "evidencia": ""
+  },
+  {
+    "id": "FZ-006",
+    "entrada": "{\"cmd\":\"EXPLODE\",\"alt\":0,\"az\":0}",
+    "resultado_esperado": "ERROR: comando desconocido",
+    "resultado_observado": "",
+    "evidencia": ""
+  },
+  {
+    "id": "FZ-007",
+    "entrada": "{\"cmd\":\"GOTO\",\"alt\":{},\"az\":[]}",
+    "resultado_esperado": "ERROR: alt/az no numericos",
+    "resultado_observado": "",
+    "evidencia": ""
+  }
+]

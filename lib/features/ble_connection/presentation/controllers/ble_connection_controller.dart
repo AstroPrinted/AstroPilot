@@ -9,6 +9,7 @@ class BleConnectionController extends ChangeNotifier {
   BleConnectionState _state = const BleConnectionState();
   StreamSubscription? _scanSubscription;
   StreamSubscription? _bluetoothSubscription;
+  StreamSubscription? _connectionSubscription;
   Timer? _connectionTimeoutTimer;
 
   BleConnectionState get state => _state;
@@ -48,7 +49,9 @@ class BleConnectionController extends ChangeNotifier {
     _state = _state.copyWith(
       isBluetoothEnabled: btEnabled,
       arePermissionsGranted: perms,
-      errorMessage: perms ? null : 'Permisos denegados. Abre configuración para habilitarlos.',
+      errorMessage: perms
+          ? null
+          : 'Permisos denegados. Abre configuración para habilitarlos.',
     );
     notifyListeners();
   }
@@ -64,7 +67,8 @@ class BleConnectionController extends ChangeNotifier {
 
     if (!_state.arePermissionsGranted) {
       _state = _state.copyWith(
-        errorMessage: 'Permisos denegados. Abre configuración para habilitarlos.',
+        errorMessage:
+            'Permisos denegados. Abre configuración para habilitarlos.',
       );
       notifyListeners();
       return;
@@ -92,6 +96,7 @@ class BleConnectionController extends ChangeNotifier {
   }
 
   Future<void> connectToDevice(BleDevice device) async {
+    await _connectionSubscription?.cancel();
     _state = _state.copyWith(
       connectionStatus: BleConnectionStatus.connecting,
       errorMessage: null,
@@ -118,6 +123,22 @@ class BleConnectionController extends ChangeNotifier {
       );
       await _bleService.stopScan();
       _scanSubscription?.cancel();
+      _connectionSubscription = _bleService
+          .connectionStatusStream(device.id)
+          .listen((status) {
+            if (_state.connectedDevice?.id != device.id &&
+                status != BleConnectionStatus.disconnected) {
+              return;
+            }
+
+            _state = _state.copyWith(
+              connectionStatus: status,
+              connectedDevice: status == BleConnectionStatus.disconnected
+                  ? null
+                  : _state.connectedDevice,
+            );
+            notifyListeners();
+          });
       notifyListeners();
     } catch (e) {
       _connectionTimeoutTimer?.cancel();
@@ -130,6 +151,8 @@ class BleConnectionController extends ChangeNotifier {
   }
 
   Future<void> disconnect() async {
+    await _connectionSubscription?.cancel();
+    _connectionSubscription = null;
     if (_state.connectedDevice != null) {
       await _bleService.disconnectDevice(_state.connectedDevice!.id);
     }
@@ -148,6 +171,7 @@ class BleConnectionController extends ChangeNotifier {
   void dispose() {
     _scanSubscription?.cancel();
     _bluetoothSubscription?.cancel();
+    _connectionSubscription?.cancel();
     _connectionTimeoutTimer?.cancel();
     _bleService.stopScan();
     super.dispose();

@@ -1,0 +1,4 @@
+id,fecha_hora,firmware,dispositivo,watchdog_activo,ping_interval_ms,timeout_ms,comando_movimiento,metodo_interrupcion,tiempo_alerta_ms_medido,motores_detenidos,alerta_serial,alerta_ble_notify,evidencia_video,observaciones
+WD-001,,,,,300,1000,,,,,,,,
+WD-002,,,,,300,1000,,,,,,,,
+WD-003,,,,,300,1000,,,,,,,,

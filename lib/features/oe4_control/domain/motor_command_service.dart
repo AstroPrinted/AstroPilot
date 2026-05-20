@@ -45,6 +45,21 @@ class MotorCommandService {
     return _sendCommand(deviceId, {'cmd': 'TEST_ROUTINE'});
   }
 
+  Future<String> sendPingCommand(String deviceId) {
+    return _sendCommand(deviceId, {'cmd': 'PING'});
+  }
+
+  Future<String> sendEnableWatchdogCommand(String deviceId, bool enabled) {
+    return _sendCommand(deviceId, {
+      'cmd': 'ENABLE_WATCHDOG',
+      'enabled': enabled,
+    });
+  }
+
+  Future<int> readRssi(String deviceId) {
+    return BluetoothDevice.fromId(deviceId).readRssi();
+  }
+
   Future<String> _sendCommand(
     String deviceId,
     Map<String, Object> command,

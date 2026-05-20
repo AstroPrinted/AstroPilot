@@ -1,0 +1,8 @@
+id,fecha_hora,medio,entrada,resultado_esperado,resultado_observado,motores_se_movieron,crash_reinicio,evidencia,observaciones
+FZ-001,,,,ERROR: JSON invalido,,,,,
+FZ-002,,,,ERROR: alt/az no numericos,,,,,
+FZ-003,,,,ERROR: altitud fuera de rango,,,,,
+FZ-004,,,,ERROR: azimut fuera de rango,,,,,
+FZ-005,,,,ERROR: campos requeridos ausentes,,,,,
+FZ-006,,,,ERROR: comando desconocido,,,,,
+FZ-007,,,,ERROR: alt/az no numericos,,,,,

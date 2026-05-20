@@ -1,0 +1,6 @@
+id,fecha_hora,distancia_m,obstaculos,orientacion_dispositivo,rssi_dbm,estado_visual_rssi,heartbeat_activo,ultimo_pong_actualiza,goto_ok,observaciones,evidencia
+RS-001,,,,,,,,,,,
+RS-002,,,,,,,,,,,
+RS-003,,,,,,,,,,,
+RS-004,,,,,,,,,,,
+RS-005,,,,,,,,,,,

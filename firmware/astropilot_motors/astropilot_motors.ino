@@ -26,6 +26,8 @@ const float AZ_MAX_DEG = 360.0f;
 const float MOTOR_MAX_SPEED = 600.0f;
 const float MOTOR_ACCELERATION = 300.0f;
 const unsigned long ROUTINE_PAUSE_MS = 600;
+const unsigned long WATCHDOG_TIMEOUT_MS = 1000;
+const unsigned int COMMAND_MAX_LENGTH = 256;
 
 // Real validated pinout.
 const uint8_t ALT_IN1 = 25;
@@ -85,6 +87,9 @@ bool routineWaiting = false;
 int routineIndex = 0;
 unsigned long routineNextAtMs = 0;
 
+bool watchdogEnabled = false;
+unsigned long lastPingAtMs = 0;
+
 void handleJsonCommand(String json);
 void sendResponse(const String& message);
 void setupBle();
@@ -108,6 +113,10 @@ class RxCallbacks : public BLECharacteristicCallbacks {
     String value = String(characteristic->getValue().c_str());
     value.trim();
     if (value.length() == 0) return;
+    if (value.length() > COMMAND_MAX_LENGTH) {
+      sendResponse("ERROR: comando demasiado largo");
+      return;
+    }
 
     Serial.print("BLE RX: ");
     Serial.println(value);
@@ -178,6 +187,40 @@ bool extractJsonString(String json, const String& key, String& value) {
   return value.length() > 0;
 }
 
+bool hasJsonKey(String json, const String& key) {
+  String marker = String("\"") + key + String("\"");
+  return json.indexOf(marker) >= 0;
+}
+
+bool extractJsonBool(String json, const String& key, bool& value) {
+  String marker = String("\"") + key + String("\"");
+  int keyIndex = json.indexOf(marker);
+  if (keyIndex < 0) return false;
+
+  int colonIndex = json.indexOf(':', keyIndex + marker.length());
+  if (colonIndex < 0) return false;
+
+  int endIndex = colonIndex + 1;
+  while (endIndex < json.length() && json[endIndex] != ',' && json[endIndex] != '}') {
+    endIndex++;
+  }
+
+  String raw = json.substring(colonIndex + 1, endIndex);
+  raw.trim();
+  raw.toLowerCase();
+
+  if (raw == "true") {
+    value = true;
+    return true;
+  }
+  if (raw == "false") {
+    value = false;
+    return true;
+  }
+
+  return false;
+}
+
 bool extractJsonFloat(String json, const String& key, float& value) {
   String marker = String("\"") + key + String("\"");
   int keyIndex = json.indexOf(marker);
@@ -209,7 +252,9 @@ void sendStatus() {
                   String(" pasos (") +
                   String(stepsToDegrees(motorAz.currentPosition()), 2) +
                   String(" deg), moving=") +
-                  String(movementActive ? "true" : "false");
+                  String(movementActive ? "true" : "false") +
+                  String(", watchdog=") +
+                  String(watchdogEnabled ? "true" : "false");
   sendResponse(status);
 }
 
@@ -256,6 +301,51 @@ void stopMotors() {
   cancelRoutine("Rutina OE4 cancelada por STOP");
   sendResponse("STOP Completado -> movimiento detenido");
   sendStatus();
+}
+
+void handlePing() {
+  lastPingAtMs = millis();
+  sendResponse("{\"status\":\"OK\",\"msg\":\"PONG\"}");
+}
+
+void setWatchdogEnabled(bool enabled) {
+  watchdogEnabled = enabled;
+  lastPingAtMs = millis();
+
+  sendResponse(
+    String("{\"status\":\"OK\",\"watchdog\":") +
+    String(watchdogEnabled ? "true" : "false") +
+    String("}")
+  );
+}
+
+void stopMotorsForWatchdog(unsigned long elapsedMs) {
+  motorAlt.stop();
+  motorAz.stop();
+  motorAlt.moveTo(motorAlt.currentPosition());
+  motorAz.moveTo(motorAz.currentPosition());
+
+  movementActive = false;
+  activeMoveKind = MOVE_NONE;
+  routineActive = false;
+  routineWaiting = false;
+  routineIndex = 0;
+
+  sendResponse(
+    String("ALERTA: conexión perdida. Motores detenidos en ") +
+    String(elapsedMs) +
+    String(" ms")
+  );
+}
+
+void updateWatchdog() {
+  if (!watchdogEnabled || !movementActive) return;
+  if (lastPingAtMs == 0) return;
+
+  unsigned long elapsedMs = millis() - lastPingAtMs;
+  if (elapsedMs <= WATCHDOG_TIMEOUT_MS) return;
+
+  stopMotorsForWatchdog(elapsedMs);
 }
 
 void scheduleNextRoutineStep() {
@@ -355,14 +445,19 @@ void updateMovementCompletion() {
 void handleJsonCommand(String json) {
   json.trim();
 
+  if (json.length() > COMMAND_MAX_LENGTH) {
+    sendResponse("ERROR: comando demasiado largo");
+    return;
+  }
+
   if (!json.startsWith("{") || !json.endsWith("}")) {
-    sendResponse(String("ERROR: comando no es JSON: ") + json);
+    sendResponse("ERROR: JSON invalido");
     return;
   }
 
   String cmd;
   if (!extractJsonString(json, "cmd", cmd)) {
-    sendResponse(String("ERROR: JSON sin campo cmd: ") + json);
+    sendResponse("ERROR: campos requeridos ausentes");
     return;
   }
 
@@ -370,6 +465,26 @@ void handleJsonCommand(String json) {
 
   if (cmd == "STOP") {
     stopMotors();
+    return;
+  }
+
+  if (cmd == "PING") {
+    handlePing();
+    return;
+  }
+
+  if (cmd == "ENABLE_WATCHDOG") {
+    bool enabled = false;
+    if (!hasJsonKey(json, "enabled")) {
+      sendResponse("ERROR: campos requeridos ausentes");
+      return;
+    }
+    if (!extractJsonBool(json, "enabled", enabled)) {
+      sendResponse("ERROR: JSON invalido");
+      return;
+    }
+
+    setWatchdogEnabled(enabled);
     return;
   }
 
@@ -396,18 +511,23 @@ void handleJsonCommand(String json) {
     float altDeg = 0.0f;
     float azDeg = 0.0f;
 
+    if (!hasJsonKey(json, "alt") || !hasJsonKey(json, "az")) {
+      sendResponse("ERROR: campos requeridos ausentes");
+      return;
+    }
+
     if (!extractJsonFloat(json, "alt", altDeg) || !extractJsonFloat(json, "az", azDeg)) {
-      sendResponse("ERROR: GOTO requiere alt y az numericos");
+      sendResponse("ERROR: alt/az no numericos");
       return;
     }
 
     if (altDeg < ALT_MIN_DEG || altDeg > ALT_MAX_DEG) {
-      sendResponse("ERROR: altitud fuera de rango [-90, 90]");
+      sendResponse("ERROR: altitud fuera de rango");
       return;
     }
 
     if (azDeg < AZ_MIN_DEG || azDeg > AZ_MAX_DEG) {
-      sendResponse("ERROR: azimut fuera de rango [0, 360]");
+      sendResponse("ERROR: azimut fuera de rango");
       return;
     }
 
@@ -415,7 +535,7 @@ void handleJsonCommand(String json) {
     return;
   }
 
-  sendResponse(String("ERROR: comando no soportado: ") + cmd);
+  sendResponse("ERROR: comando desconocido");
 }
 
 void handleSerialInput(String input) {
@@ -437,6 +557,21 @@ void handleSerialInput(String input) {
 
   if (upper == "STATUS") {
     handleJsonCommand("{\"cmd\":\"STATUS\"}");
+    return;
+  }
+
+  if (upper == "PING") {
+    handleJsonCommand("{\"cmd\":\"PING\"}");
+    return;
+  }
+
+  if (upper == "ENABLE_WATCHDOG") {
+    handleJsonCommand("{\"cmd\":\"ENABLE_WATCHDOG\",\"enabled\":true}");
+    return;
+  }
+
+  if (upper == "DISABLE_WATCHDOG") {
+    handleJsonCommand("{\"cmd\":\"ENABLE_WATCHDOG\",\"enabled\":false}");
     return;
   }
 
@@ -463,7 +598,7 @@ void handleSerialInput(String input) {
     azRaw.trim();
 
     if (!isNumericLiteral(altRaw) || !isNumericLiteral(azRaw)) {
-      sendResponse("ERROR: GOTO requiere numeros. Ejemplo GOTO:90,180");
+      sendResponse("ERROR: alt/az no numericos");
       return;
     }
 
@@ -473,7 +608,7 @@ void handleSerialInput(String input) {
     return;
   }
 
-  sendResponse("ERROR: comando Serial no reconocido. Use JSON, HOME, STATUS, STOP, TEST_ROUTINE o GOTO:alt,az");
+  sendResponse("ERROR: JSON invalido");
 }
 
 void readSerialCommands() {
@@ -488,11 +623,11 @@ void readSerialCommands() {
       continue;
     }
 
-    if (serialBuffer.length() < 256) {
+    if (serialBuffer.length() < COMMAND_MAX_LENGTH) {
       serialBuffer += ch;
     } else {
       serialBuffer = "";
-      sendResponse("ERROR: comando Serial demasiado largo");
+      sendResponse("ERROR: comando demasiado largo");
     }
   }
 }
@@ -556,7 +691,7 @@ void setup() {
   sendResponse("AstroPilot OE4 - Firmware listo");
   sendResponse("Motores: AccelStepper HALF4WIRE, STEPS_PER_REV=4096");
   sendResponse("Serial JSON ejemplo: {\"cmd\":\"GOTO\",\"alt\":90,\"az\":180}");
-  sendResponse("Comandos: HOME, STATUS, STOP, TEST_ROUTINE, GOTO:alt,az");
+  sendResponse("Comandos: HOME, STATUS, STOP, TEST_ROUTINE, PING, ENABLE_WATCHDOG, GOTO:alt,az");
   sendStatus();
 }
 
@@ -568,4 +703,5 @@ void loop() {
 
   updateMovementCompletion();
   updateRoutine();
+  updateWatchdog();
 }

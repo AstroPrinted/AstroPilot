@@ -48,6 +48,11 @@ class _Oe4ControlScreenState extends State<Oe4ControlScreen> {
               bleState.connectedDevice != null;
           final deviceId = bleState.connectedDevice?.id;
 
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            oe4Controller.syncConnectionDevice(isConnected ? deviceId : null);
+          });
+
           return LayoutBuilder(
             builder: (context, constraints) {
               final useWideActions = constraints.maxWidth >= 520;
@@ -63,6 +68,23 @@ class _Oe4ControlScreenState extends State<Oe4ControlScreen> {
                     lastSentCommand: oe4Controller.lastSentCommand,
                     lastResponse: oe4Controller.lastResponse,
                     errorMessage: oe4Controller.errorMessage,
+                  ),
+                  const SizedBox(height: 14),
+                  _ReliabilityCard(
+                    isConnected: isConnected,
+                    heartbeatActive: oe4Controller.heartbeatActive,
+                    lastPongReceivedAt: oe4Controller.lastPongReceivedAt,
+                    watchdogEnabled: oe4Controller.watchdogEnabled,
+                    isTogglingWatchdog: oe4Controller.isTogglingWatchdog,
+                    lastEsp32Alert: oe4Controller.lastEsp32Alert,
+                    currentRssi: oe4Controller.currentRssi,
+                    rssiUnavailable: oe4Controller.rssiUnavailable,
+                    onWatchdogChanged: deviceId == null
+                        ? null
+                        : (enabled) => oe4Controller.setWatchdogEnabled(
+                            deviceId,
+                            enabled,
+                          ),
                   ),
                   const SizedBox(height: 14),
                   _GotoCard(
@@ -310,6 +332,213 @@ class _ConnectionCard extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _ReliabilityCard extends StatelessWidget {
+  static const Color _okColor = Color(0xFF22C55E);
+  static const Color _riskColor = Color(0xFFF59E0B);
+  static const Color _criticalColor = Color(0xFFEF4444);
+
+  final bool isConnected;
+  final bool heartbeatActive;
+  final DateTime? lastPongReceivedAt;
+  final bool watchdogEnabled;
+  final bool isTogglingWatchdog;
+  final String? lastEsp32Alert;
+  final int? currentRssi;
+  final bool rssiUnavailable;
+  final ValueChanged<bool>? onWatchdogChanged;
+
+  const _ReliabilityCard({
+    required this.isConnected,
+    required this.heartbeatActive,
+    required this.lastPongReceivedAt,
+    required this.watchdogEnabled,
+    required this.isTogglingWatchdog,
+    required this.lastEsp32Alert,
+    required this.currentRssi,
+    required this.rssiUnavailable,
+    required this.onWatchdogChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final heartbeatColor = isConnected && heartbeatActive
+        ? _okColor
+        : colorScheme.error;
+    final watchdogColor = watchdogEnabled ? _riskColor : colorScheme.secondary;
+    final rssiColor = _rssiStatusColor(colorScheme);
+    final canToggleWatchdog = isConnected && !isTogglingWatchdog;
+
+    return _Oe4Card(
+      title: 'Confiabilidad y cobertura',
+      icon: Icons.health_and_safety_rounded,
+      accent: rssiColor,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _ReliabilityTile(
+                label: 'Heartbeat',
+                value: isConnected && heartbeatActive ? 'Activo' : 'Inactivo',
+                color: heartbeatColor,
+                icon: Icons.favorite_rounded,
+              ),
+              _ReliabilityTile(
+                label: 'RSSI actual',
+                value: _rssiValue,
+                color: rssiColor,
+                icon: Icons.network_check_rounded,
+              ),
+              _ReliabilityTile(
+                label: 'Estado RSSI',
+                value: _rssiStatus,
+                color: rssiColor,
+                icon: Icons.shield_rounded,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Semantics(
+            label: 'Switch Watchdog activo',
+            toggled: watchdogEnabled,
+            child: Container(
+              decoration: BoxDecoration(
+                color: watchdogColor.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: watchdogColor.withValues(alpha: 0.24),
+                ),
+              ),
+              child: SwitchListTile.adaptive(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                value: isConnected && watchdogEnabled,
+                onChanged: canToggleWatchdog ? onWatchdogChanged : null,
+                title: Text(
+                  'Watchdog activo',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                subtitle: Text(
+                  watchdogEnabled
+                      ? 'Prueba activa: STOP si PING se pierde por mas de 1000 ms.'
+                      : 'Desactivado para no interferir con pruebas normales.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _MonospaceBlock(
+            label: 'Ultimo PONG recibido',
+            value: _formatPong(lastPongReceivedAt),
+            accent: heartbeatColor,
+          ),
+          const SizedBox(height: 10),
+          _MonospaceBlock(
+            label: 'Ultima alerta del ESP32',
+            value: lastEsp32Alert ?? 'Sin alertas',
+            accent: lastEsp32Alert == null
+                ? colorScheme.secondary
+                : colorScheme.error,
+          ),
+          const SizedBox(height: 10),
+          _InlineNotice(
+            icon: Icons.info_outline_rounded,
+            color: colorScheme.secondary,
+            message:
+                'Umbrales RSSI preventivos: OK >= -70 dBm, Riesgo -71 a -85 dBm, Crítico < -85 dBm. Se ajustan con mediciones reales.',
+          ),
+        ],
+      ),
+    );
+  }
+
+  String get _rssiValue {
+    if (!isConnected) return 'Sin BLE';
+    if (rssiUnavailable) return 'RSSI no disponible';
+    final rssi = currentRssi;
+    if (rssi == null) return 'Leyendo...';
+    return '$rssi dBm';
+  }
+
+  String get _rssiStatus {
+    if (!isConnected) return 'Desconectado';
+    if (rssiUnavailable || currentRssi == null) return 'Sin dato';
+    if (currentRssi! >= -70) return 'OK';
+    if (currentRssi! >= -85) return 'Riesgo';
+    return 'Crítico';
+  }
+
+  Color _rssiStatusColor(ColorScheme colorScheme) {
+    if (!isConnected) return colorScheme.error;
+    if (rssiUnavailable || currentRssi == null) return colorScheme.secondary;
+    if (currentRssi! >= -70) return _okColor;
+    if (currentRssi! >= -85) return _riskColor;
+    return _criticalColor;
+  }
+
+  String _formatPong(DateTime? value) {
+    if (!isConnected) return 'Sin conexion BLE';
+    if (value == null) return 'Sin PONG recibido';
+
+    String two(int input) => input.toString().padLeft(2, '0');
+    String three(int input) => input.toString().padLeft(3, '0');
+    return '${two(value.hour)}:${two(value.minute)}:${two(value.second)}.${three(value.millisecond)}';
+  }
+}
+
+class _ReliabilityTile extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+  final IconData icon;
+
+  const _ReliabilityTile({
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 145, maxWidth: 210),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.42),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.24)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 16, color: color),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            _StatusPill(label: value, color: color),
+          ],
+        ),
       ),
     );
   }
