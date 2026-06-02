@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'features/calibration/data/calibration_repository.dart';
+import 'features/calibration/data/calibration_storage.dart';
+import 'features/calibration/domain/services/astronomy_position_service.dart';
+import 'features/calibration/domain/services/calibration_service.dart';
+import 'features/calibration/domain/services/pointing_correction_service.dart';
+import 'features/calibration/presentation/controllers/calibration_controller.dart';
+import 'features/calibration/presentation/screens/calibration_screen.dart';
 import 'core/theme/app_theme.dart';
 import 'features/catalog/data/repository/celestial_catalog_repository.dart';
 import 'features/catalog/presentation/screens/catalog_screen.dart';
@@ -46,6 +53,19 @@ class AstroPilotApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (_) => Oe4ControlController(MotorCommandService()),
         ),
+        ChangeNotifierProvider(
+          create: (context) => CalibrationController(
+            catalogRepository: CelestialCatalogRepository(),
+            calibrationRepository: CalibrationRepository(
+              storage: CalibrationStorage(),
+            ),
+            astronomyPositionService: const AstronomyPositionService(),
+            calibrationService: const CalibrationService(
+              correctionService: PointingCorrectionService(),
+            ),
+            observerDataProvider: context.read<SettingsService>(),
+          ),
+        ),
       ],
       child: MaterialApp(
         title: 'AstroPilot',
@@ -56,6 +76,7 @@ class AstroPilotApp extends StatelessWidget {
             ConnectionScreen(),
             CatalogScreen(),
             Oe4ControlScreen(),
+            CalibrationScreen(),
             SettingsScreen(),
           ],
         ),

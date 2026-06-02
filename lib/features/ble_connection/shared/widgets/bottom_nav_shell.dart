@@ -32,6 +32,10 @@ class _BottomNavShellState extends State<BottomNavShell> {
             icon: Icon(Icons.precision_manufacturing),
             label: 'Control',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.center_focus_strong),
+            label: 'Calibracion',
+          ),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Config'),
         ],
       ),
