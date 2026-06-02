@@ -179,11 +179,10 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
       ),
       CalibrationFlowStep.waitingUserCentering => _CenteringStep(
         calibration: calibration,
-        controlsEnabled: isConnected && !calibration.isBusy,
+        controlsEnabled: isConnected,
         isBusy: calibration.isBusy,
-        onNudge: (direction) {
-          _sendNudge(calibration, oe4Controller, deviceId, direction);
-        },
+        onNudge: (direction) =>
+            _sendNudge(calibration, oe4Controller, deviceId, direction),
         onConfirm: calibration.confirmAdjustedReference,
         onCancel: calibration.cancelFlow,
       ),
@@ -638,7 +637,7 @@ class _CenteringStep extends StatelessWidget {
   final CalibrationController calibration;
   final bool controlsEnabled;
   final bool isBusy;
-  final ValueChanged<CalibrationNudgeDirection> onNudge;
+  final Future<void> Function(CalibrationNudgeDirection direction) onNudge;
   final VoidCallback onConfirm;
   final VoidCallback onCancel;
 
@@ -658,7 +657,7 @@ class _CenteringStep extends StatelessWidget {
       totalSteps: 5,
       title: 'Ajusta la referencia de motores',
       description:
-          'Cada boton envia un GOTO incremental de ${CalibrationController.fineStepDegrees.toStringAsFixed(2)} grados. Guarda la posicion ajustada como referencia estimada del prototipo.',
+          'Cada boton envia un GOTO incremental de ${CalibrationController.fineStepDegrees.toStringAsFixed(2)} grados. Puedes mantenerlo presionado para repetir el movimiento. Guarda la posicion ajustada como referencia estimada del prototipo.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
