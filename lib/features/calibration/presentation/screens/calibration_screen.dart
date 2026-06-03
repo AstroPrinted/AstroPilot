@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../ble_connection/data/models/ble_device_state.dart';
 import '../../../ble_connection/presentation/controllers/ble_connection_controller.dart';
+import '../../../catalog/presentation/screens/catalog_screen.dart';
 import '../../../observation/domain/models/alt_az_result.dart';
 import '../../../oe4_control/presentation/controllers/oe4_control_controller.dart';
 import '../../domain/models/calibration_flow_step.dart';
@@ -191,6 +192,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
         hasUnsavedResult: calibration.hasUnsavedResult,
         onSave: calibration.savePendingResult,
         onNewCalibration: calibration.cancelFlow,
+        onViewVisibleObjects: () => _openVisibleObjects(context),
       ),
       CalibrationFlowStep.failed => _FailedStep(
         message:
@@ -277,6 +279,14 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
     if (confirmed == true) {
       await calibration.clearCalibration();
     }
+  }
+
+  void _openVisibleObjects(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const CatalogScreen(initialVisibleOnly: true),
+      ),
+    );
   }
 }
 
@@ -757,6 +767,7 @@ class _CompletedStep extends StatelessWidget {
   final bool hasUnsavedResult;
   final VoidCallback onSave;
   final VoidCallback onNewCalibration;
+  final VoidCallback onViewVisibleObjects;
 
   const _CompletedStep({
     required this.result,
@@ -764,6 +775,7 @@ class _CompletedStep extends StatelessWidget {
     required this.hasUnsavedResult,
     required this.onSave,
     required this.onNewCalibration,
+    required this.onViewVisibleObjects,
   });
 
   @override
@@ -793,6 +805,12 @@ class _CompletedStep extends StatelessWidget {
                   ? 'Guardar correccion estimada'
                   : 'Correccion estimada guardada',
             ),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: isBusy || hasUnsavedResult ? null : onViewVisibleObjects,
+            icon: const Icon(Icons.visibility_rounded),
+            label: const Text('Ver objetos visibles'),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
