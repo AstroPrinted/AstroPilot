@@ -53,6 +53,15 @@ class AstronomicalGotoService {
     return calibrationRepository.loadCurrentResult();
   }
 
+  AltAzResult calculateCurrentPosition(CelestialObject object) {
+    if (_isSun(object)) {
+      throw StateError('GoTo solar bloqueado por seguridad ocular.');
+    }
+
+    final observer = observerDataProvider.current();
+    return _calculatePosition(object, observer);
+  }
+
   AstronomicalGotoCommand buildCommand({
     required CelestialObject object,
     required AltAzResult rawPosition,
@@ -86,8 +95,7 @@ class AstronomicalGotoService {
     }
 
     debugPrint('[AstronomicalGoTo] Object: ${object.name}');
-    final observer = observerDataProvider.current();
-    final rawPosition = _calculatePosition(object, observer);
+    final rawPosition = calculateCurrentPosition(object);
     debugPrint(
       '[AstronomicalGoTo] Raw Alt/Az: '
       '${rawPosition.altitudeDeg.toStringAsFixed(4)} / '
