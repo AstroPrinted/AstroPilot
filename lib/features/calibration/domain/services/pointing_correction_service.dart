@@ -4,6 +4,7 @@ import '../../../observation/domain/utils/angle_math.dart';
 import '../models/calibration_method.dart';
 import '../models/calibration_point.dart';
 import '../models/calibration_result.dart';
+import '../models/calibration_status.dart';
 
 class PointingCorrectionService {
   const PointingCorrectionService();
@@ -11,12 +12,15 @@ class PointingCorrectionService {
   // MVP: la correccion es un offset logico estimado. La validacion optica queda para fases futuras.
   CalibrationResult calculateCorrection(
     CalibrationMethod method,
-    List<CalibrationPoint> points,
-  ) {
+    List<CalibrationPoint> points, {
+    List<String> warnings = const [],
+  }) {
     if (points.isEmpty) {
       throw ArgumentError('La correccion estimada requiere al menos un punto.');
     }
 
+    // MVP: se promedian offsets registrados. En una fase futura esto puede
+    // reemplazarse por un modelo geometrico multipunto mas avanzado.
     final altitudeOffset =
         points.map((point) => point.altitudeError).reduce((a, b) => a + b) /
         points.length;
@@ -39,7 +43,9 @@ class PointingCorrectionService {
       azimuthOffset: azimuthOffset,
       estimatedError: estimatedError,
       method: method,
+      status: _statusFor(method),
       points: List.unmodifiable(points),
+      warnings: List.unmodifiable(warnings),
       createdAt: DateTime.now().toUtc(),
     );
   }
@@ -76,5 +82,14 @@ class PointingCorrectionService {
     if (diff > 180.0) return diff - 360.0;
     if (diff < -180.0) return diff + 360.0;
     return diff;
+  }
+
+  CalibrationStatus _statusFor(CalibrationMethod method) {
+    return switch (method) {
+      CalibrationMethod.oneStar => CalibrationStatus.calibratedOneStar,
+      CalibrationMethod.twoStars => CalibrationStatus.calibratedTwoStars,
+      CalibrationMethod.threeStars => CalibrationStatus.calibratedThreeStars,
+      CalibrationMethod.fixedObjectSync => CalibrationStatus.localSyncActive,
+    };
   }
 }

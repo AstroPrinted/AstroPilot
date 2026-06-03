@@ -2,6 +2,7 @@ import 'package:astroprintedlogicincludedgeoengine/features/calibration/data/cal
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/data/calibration_storage.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_method.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_result.dart';
+import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_status.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/catalog/application/astronomical_goto_service.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/catalog/domain/models/celestial_object.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/catalog/presentation/controllers/celestial_control_controller.dart';
@@ -29,6 +30,7 @@ void main() {
           altitudeOffset: 1,
           azimuthOffset: 10,
           method: CalibrationMethod.oneStar,
+          status: CalibrationStatus.calibratedOneStar,
           points: const [],
           createdAt: DateTime.utc(2026),
         ),

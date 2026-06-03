@@ -21,6 +21,7 @@ class CalibrationService {
   }
 
   CalibrationPoint createPoint({
+    required String objectId,
     required String objectName,
     required double calculatedAltitude,
     required double calculatedAzimuth,
@@ -37,6 +38,7 @@ class CalibrationService {
     );
 
     return CalibrationPoint(
+      objectId: objectId,
       objectName: objectName,
       calculatedAltitude: calculatedAltitude,
       calculatedAzimuth: calculatedAzimuth,
@@ -48,10 +50,29 @@ class CalibrationService {
     );
   }
 
+  CalibrationSession addWarning(CalibrationSession session, String warning) {
+    if (session.warnings.contains(warning)) return session;
+
+    return session.copyWith(
+      warnings: List.unmodifiable([...session.warnings, warning]),
+    );
+  }
+
   CalibrationSession addPoint(
     CalibrationSession session,
     CalibrationPoint point,
   ) {
+    final alreadyRegistered = session.points.any(
+      (existing) =>
+          existing.objectId == point.objectId ||
+          existing.objectName == point.objectName,
+    );
+    if (alreadyRegistered) {
+      throw StateError(
+        '${point.objectName} ya fue registrada como referencia en esta sesion.',
+      );
+    }
+
     final points = [...session.points, point];
     return session.copyWith(
       points: List.unmodifiable(points),
@@ -63,9 +84,16 @@ class CalibrationService {
   }
 
   CalibrationResult completeSession(CalibrationSession session) {
+    if (session.points.length < session.method.requiredPointCount) {
+      throw StateError(
+        'La calibracion logica requiere ${session.method.requiredPointCount} referencias.',
+      );
+    }
+
     return correctionService.calculateCorrection(
       session.method,
       session.points,
+      warnings: session.warnings,
     );
   }
 

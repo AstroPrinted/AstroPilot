@@ -15,9 +15,9 @@ extension CalibrationMethodLabel on CalibrationMethod {
       CalibrationMethod.oneStar =>
         'Rapida y simple. Estima un desfase basico usando una referencia de motores.',
       CalibrationMethod.twoStars =>
-        'Permitira estimar mejor la orientacion general del sistema.',
+        'Correccion logica multipunto con dos referencias de motores.',
       CalibrationMethod.threeStars =>
-        'Preparara un modelo logico con mas referencias mecanicas.',
+        'Correccion logica multipunto con tres referencias de motores.',
       CalibrationMethod.fixedObjectSync =>
         'Permitira guardar una correccion local cerca de un objeto.',
     };
@@ -32,7 +32,14 @@ extension CalibrationMethodLabel on CalibrationMethod {
     };
   }
 
-  bool get isEnabledInMvp => this == CalibrationMethod.oneStar;
+  bool get isEnabledInMvp {
+    return switch (this) {
+      CalibrationMethod.oneStar ||
+      CalibrationMethod.twoStars ||
+      CalibrationMethod.threeStars => true,
+      CalibrationMethod.fixedObjectSync => false,
+    };
+  }
 }
 
 CalibrationMethod calibrationMethodFromName(String? name) {

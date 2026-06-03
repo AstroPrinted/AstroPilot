@@ -50,7 +50,7 @@ class _PointTile extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Punto $index: ${point.objectName}',
+            'Referencia $index: ${point.objectName}',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: colorScheme.onSurface,
               fontWeight: FontWeight.w700,
@@ -58,25 +58,17 @@ class _PointTile extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           _Row(
-            label: 'Calculado',
-            value: _pair(point.calculatedAltitude, point.calculatedAzimuth),
+            label: 'Alt calculada',
+            value: _format(point.calculatedAltitude),
           ),
-          _Row(
-            label: 'Ajustado',
-            value: _pair(point.adjustedAltitude, point.adjustedAzimuth),
-          ),
-          _Row(
-            label: 'Offset',
-            value:
-                'Alt ${_formatSigned(point.altitudeError)} / Az ${_formatSigned(point.azimuthError)}',
-          ),
+          _Row(label: 'Az calculado', value: _format(point.calculatedAzimuth)),
+          _Row(label: 'Alt ajustada', value: _format(point.adjustedAltitude)),
+          _Row(label: 'Az ajustado', value: _format(point.adjustedAzimuth)),
+          _Row(label: 'Offset alt', value: _formatSigned(point.altitudeError)),
+          _Row(label: 'Offset az', value: _formatSigned(point.azimuthError)),
         ],
       ),
     );
-  }
-
-  String _pair(double altitude, double azimuth) {
-    return 'Alt ${_format(altitude)} / Az ${_format(azimuth)}';
   }
 
   String _format(double value) => '${value.toStringAsFixed(2)}°';
@@ -100,7 +92,7 @@ class _Row extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: 82,
+            width: 104,
             child: Text(label, style: Theme.of(context).textTheme.bodySmall),
           ),
           Expanded(

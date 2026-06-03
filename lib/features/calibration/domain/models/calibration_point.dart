@@ -1,4 +1,5 @@
 class CalibrationPoint {
+  final String objectId;
   final String objectName;
   final double calculatedAltitude;
   final double calculatedAzimuth;
@@ -9,6 +10,7 @@ class CalibrationPoint {
   final DateTime timestamp;
 
   const CalibrationPoint({
+    required this.objectId,
     required this.objectName,
     required this.calculatedAltitude,
     required this.calculatedAzimuth,
@@ -21,6 +23,7 @@ class CalibrationPoint {
 
   Map<String, dynamic> toJson() {
     return {
+      'objectId': objectId,
       'objectName': objectName,
       'calculatedAltitude': calculatedAltitude,
       'calculatedAzimuth': calculatedAzimuth,
@@ -33,8 +36,10 @@ class CalibrationPoint {
   }
 
   factory CalibrationPoint.fromJson(Map<String, dynamic> json) {
+    final objectName = json['objectName'] as String? ?? 'Objeto desconocido';
     return CalibrationPoint(
-      objectName: json['objectName'] as String? ?? 'Objeto desconocido',
+      objectId: json['objectId'] as String? ?? objectName,
+      objectName: objectName,
       calculatedAltitude: _readDouble(json, 'calculatedAltitude'),
       calculatedAzimuth: _readDouble(json, 'calculatedAzimuth'),
       adjustedAltitude: _readDoubleAny(

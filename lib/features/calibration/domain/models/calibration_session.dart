@@ -6,6 +6,7 @@ class CalibrationSession {
   final CalibrationMethod method;
   final CalibrationStatus status;
   final List<CalibrationPoint> points;
+  final List<String> warnings;
   final DateTime startedAt;
   final DateTime? completedAt;
 
@@ -13,6 +14,7 @@ class CalibrationSession {
     required this.method,
     required this.status,
     required this.points,
+    this.warnings = const [],
     required this.startedAt,
     this.completedAt,
   });
@@ -21,6 +23,7 @@ class CalibrationSession {
     CalibrationMethod? method,
     CalibrationStatus? status,
     List<CalibrationPoint>? points,
+    List<String>? warnings,
     DateTime? startedAt,
     DateTime? completedAt,
   }) {
@@ -28,6 +31,7 @@ class CalibrationSession {
       method: method ?? this.method,
       status: status ?? this.status,
       points: points ?? this.points,
+      warnings: warnings ?? this.warnings,
       startedAt: startedAt ?? this.startedAt,
       completedAt: completedAt ?? this.completedAt,
     );
@@ -38,6 +42,7 @@ class CalibrationSession {
       'method': method.name,
       'status': status.name,
       'points': points.map((point) => point.toJson()).toList(),
+      'warnings': warnings,
       'startedAt': startedAt.toUtc().toIso8601String(),
       'completedAt': completedAt?.toUtc().toIso8601String(),
     };
@@ -45,12 +50,16 @@ class CalibrationSession {
 
   factory CalibrationSession.fromJson(Map<String, dynamic> json) {
     final rawPoints = json['points'] as List<dynamic>? ?? const [];
+    final rawWarnings = json['warnings'] as List<dynamic>? ?? const [];
     return CalibrationSession(
       method: calibrationMethodFromName(json['method'] as String?),
       status: calibrationStatusFromName(json['status'] as String?),
       points: rawPoints
           .whereType<Map<String, dynamic>>()
           .map(CalibrationPoint.fromJson)
+          .toList(growable: false),
+      warnings: rawWarnings
+          .map((warning) => warning.toString())
           .toList(growable: false),
       startedAt:
           DateTime.tryParse(json['startedAt'] as String? ?? '')?.toUtc() ??
