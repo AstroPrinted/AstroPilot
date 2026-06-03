@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../../../ble_connection/data/models/ble_device_state.dart';
 import '../../../ble_connection/presentation/controllers/ble_connection_controller.dart';
-import '../../../catalog/domain/models/celestial_object.dart';
 import '../../../observation/domain/models/alt_az_result.dart';
 import '../../../oe4_control/presentation/controllers/oe4_control_controller.dart';
 import '../../domain/models/calibration_flow_step.dart';
@@ -165,7 +164,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
         onCancel: calibration.cancelFlow,
       ),
       CalibrationFlowStep.selectingObject => _SelectingObjectStep(
-        stars: calibration.calibrationStars,
+        starOptions: calibration.calibrationStarOptions,
         onSelected: calibration.selectStar,
         onCancel: calibration.cancelFlow,
       ),
@@ -492,35 +491,57 @@ class _WaitingHomeStep extends StatelessWidget {
 }
 
 class _SelectingObjectStep extends StatelessWidget {
-  final List<CalibrationStar> stars;
-  final ValueChanged<CalibrationStar> onSelected;
+  final List<CalibrationStarOption> starOptions;
+  final ValueChanged<CalibrationStarOption> onSelected;
   final VoidCallback onCancel;
 
   const _SelectingObjectStep({
-    required this.stars,
+    required this.starOptions,
     required this.onSelected,
     required this.onCancel,
   });
 
   @override
   Widget build(BuildContext context) {
+    final visibleOptions = starOptions
+        .where((option) => option.isVisible)
+        .toList(growable: false);
+    final notVisibleOptions = starOptions
+        .where((option) => !option.isVisible)
+        .toList(growable: false);
+
     return CalibrationStepCard(
       stepNumber: 2,
       totalSteps: 5,
-      title: 'Selecciona una estrella de referencia',
+      title: 'Seleccionar estrella visible',
       description:
-          'La app calculara su Alt/Az. En esta fase no se verifica visualmente el apuntado del telescopio.',
+          'Estrella visible para referencia. La app calcula Alt/Az con la ubicacion, fecha y hora actuales; esta fase no verifica apuntado optico real.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (stars.isEmpty)
-            Text(
-              'No hay estrellas de referencia disponibles en el catalogo.',
-              style: Theme.of(context).textTheme.bodyMedium,
-            )
-          else
-            for (final star in stars)
-              _StarTile(star: star, onTap: () => onSelected(star)),
+          if (visibleOptions.isEmpty) ...[
+            const _InlineNotice(
+              icon: Icons.visibility_off_rounded,
+              message:
+                  'No hay estrellas de calibracion visibles con la ubicacion, fecha y hora actuales.\nRevisa la configuracion de ubicacion/hora o intenta mas tarde.',
+            ),
+            const SizedBox(height: 12),
+          ],
+          if (visibleOptions.isNotEmpty) ...[
+            _StarSectionTitle(
+              label: 'Estrellas visibles ahora (${visibleOptions.length})',
+            ),
+            const SizedBox(height: 8),
+            for (final option in visibleOptions)
+              _StarTile(option: option, onTap: () => onSelected(option)),
+          ],
+          if (notVisibleOptions.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            const _StarSectionTitle(label: 'No visibles actualmente'),
+            const SizedBox(height: 8),
+            for (final option in notVisibleOptions)
+              _StarTile(option: option, onTap: null),
+          ],
           const SizedBox(height: 8),
           TextButton(onPressed: onCancel, child: const Text('Cancelar')),
         ],
@@ -529,29 +550,71 @@ class _SelectingObjectStep extends StatelessWidget {
   }
 }
 
-class _StarTile extends StatelessWidget {
-  final CalibrationStar star;
-  final VoidCallback onTap;
+class _StarSectionTitle extends StatelessWidget {
+  final String label;
 
-  const _StarTile({required this.star, required this.onTap});
+  const _StarSectionTitle({required this.label});
 
   @override
   Widget build(BuildContext context) {
+    return Text(label, style: Theme.of(context).textTheme.titleSmall);
+  }
+}
+
+class _StarTile extends StatelessWidget {
+  final CalibrationStarOption option;
+  final VoidCallback? onTap;
+
+  const _StarTile({required this.option, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final star = option.star;
+    final position = option.position;
+    final colorScheme = Theme.of(context).colorScheme;
+    final stateColor = option.isVisible
+        ? colorScheme.secondary
+        : colorScheme.onSurfaceVariant;
+    final stateLabel = option.isVisible
+        ? 'Visible ahora'
+        : position.altitudeDeg < 0
+        ? 'No visible - bajo el horizonte'
+        : 'No visible para calibracion';
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Material(
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+        color: option.isVisible
+            ? colorScheme.secondary.withValues(alpha: 0.08)
+            : colorScheme.surfaceContainerHighest.withValues(alpha: 0.26),
         borderRadius: BorderRadius.circular(12),
         child: ListTile(
+          enabled: option.isVisible,
           onTap: onTap,
-          leading: const Icon(Icons.star_rounded),
-          title: Text(star.name),
-          subtitle: Text(
-            '${star.constellation} · Mag ${star.magnitude ?? 'N/A'} · ${star.spectralType}',
+          leading: Icon(
+            option.isVisible
+                ? Icons.visibility_rounded
+                : Icons.visibility_off_rounded,
+            color: stateColor,
           ),
-          trailing: const Icon(Icons.chevron_right_rounded),
+          title: Text(star.name),
+          subtitle: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${star.constellation} · Mag ${star.magnitude ?? 'N/A'} · ${star.spectralType}',
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Alt ${_formatDeg(position.altitudeDeg)} / Az ${_formatDeg(position.azimuthDeg)}',
+              ),
+              const SizedBox(height: 2),
+              Text('Estado: $stateLabel'),
+            ],
+          ),
+          trailing: option.isVisible
+              ? const Icon(Icons.chevron_right_rounded)
+              : const Icon(Icons.block_rounded),
         ),
       ),
     );
@@ -592,27 +655,31 @@ class _MovingToTargetStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final target = calibration.targetPosition;
+    final targetIsVisible =
+        target != null &&
+        target.altitudeDeg >
+            CalibrationController.visibleStarAltitudeThresholdDeg;
     return CalibrationStepCard(
       stepNumber: 3,
       totalSteps: 5,
-      title: 'Movimiento automatico hacia la estrella',
+      title: 'Enviar GoTo a posicion calculada',
       description:
-          'La app enviara un comando GOTO con la posicion calculada de ${calibration.selectedStar?.name ?? 'la estrella'}.',
+          'Posicion calculada actual de ${calibration.selectedStar?.name ?? 'la estrella'}. La app enviara un comando GoTo existente.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (target != null) _TargetPanel(target: target),
-          if (target != null && target.altitudeDeg < 0) ...[
+          if (target != null && !targetIsVisible) ...[
             const SizedBox(height: 10),
-            const _InlineNotice(
+            _InlineNotice(
               icon: Icons.visibility_off_rounded,
               message:
-                  'La estrella esta bajo el horizonte para la fecha y ubicacion actuales.',
+                  'La estrella ya no supera el umbral de ${CalibrationController.visibleStarAltitudeThresholdDeg.toStringAsFixed(0)} grados para calibracion.',
             ),
           ],
           const SizedBox(height: 12),
           FilledButton.icon(
-            onPressed: isBusy ? null : onGoto,
+            onPressed: isBusy || !targetIsVisible ? null : onGoto,
             icon: const Icon(Icons.gps_fixed_rounded),
             label: const Text('Enviar GoTo'),
           ),
@@ -671,7 +738,7 @@ class _CenteringStep extends StatelessWidget {
           FilledButton.icon(
             onPressed: isBusy ? null : onConfirm,
             icon: const Icon(Icons.check_circle_outline_rounded),
-            label: const Text('Guardar posicion como referencia'),
+            label: const Text('Guardar posicion ajustada como referencia'),
           ),
           const SizedBox(height: 8),
           TextButton(
@@ -768,20 +835,35 @@ class _TargetPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: _MetricTile(
-            label: 'Altitud calculada',
-            value: _formatDeg(target.altitudeDeg),
-          ),
+        Text(
+          'Posicion calculada actual',
+          style: Theme.of(context).textTheme.titleSmall,
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _MetricTile(
-            label: 'Azimut calculado',
-            value: _formatDeg(target.azimuthDeg),
-          ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: _MetricTile(
+                label: 'Altitud actual',
+                value: _formatDeg(target.altitudeDeg),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _MetricTile(
+                label: 'Azimut actual',
+                value: _formatDeg(target.azimuthDeg),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'UTC ${target.computedAt.toIso8601String()}',
+          style: Theme.of(context).textTheme.bodySmall,
         ),
       ],
     );

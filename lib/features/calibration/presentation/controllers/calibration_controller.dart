@@ -21,8 +21,22 @@ typedef CalibrationGotoSender =
 
 enum CalibrationNudgeDirection { up, down, left, right }
 
+@immutable
+final class CalibrationStarOption {
+  final CalibrationStar star;
+  final AltAzResult position;
+  final bool isVisible;
+
+  const CalibrationStarOption({
+    required this.star,
+    required this.position,
+    required this.isVisible,
+  });
+}
+
 class CalibrationController extends ChangeNotifier {
   static const double fineStepDegrees = 0.25;
+  static const double visibleStarAltitudeThresholdDeg = 15.0;
 
   final CelestialCatalogRepository catalogRepository;
   final CalibrationRepository calibrationRepository;
@@ -43,6 +57,7 @@ class CalibrationController extends ChangeNotifier {
   double? _adjustedAltitude;
   double? _adjustedAzimuth;
   List<CalibrationStar> _calibrationStars = const [];
+  List<CalibrationStarOption> _calibrationStarOptions = const [];
 
   CalibrationController({
     required this.catalogRepository,
@@ -65,6 +80,8 @@ class CalibrationController extends ChangeNotifier {
   double? get adjustedAltitude => _adjustedAltitude;
   double? get adjustedAzimuth => _adjustedAzimuth;
   List<CalibrationStar> get calibrationStars => _calibrationStars;
+  List<CalibrationStarOption> get calibrationStarOptions =>
+      _calibrationStarOptions;
   bool get hasUnsavedResult => _pendingResult != null;
 
   CalibrationStatus get status {
@@ -130,6 +147,7 @@ class CalibrationController extends ChangeNotifier {
     _targetPosition = null;
     _adjustedAltitude = null;
     _adjustedAzimuth = null;
+    _calibrationStarOptions = const [];
     _flowStep = CalibrationFlowStep.waitingHome;
     _errorMessage = null;
     debugPrint('[Calibration] Method selected: ${method.name}');
@@ -143,13 +161,36 @@ class CalibrationController extends ChangeNotifier {
 
   void continueAfterHome() {
     if (_session == null) return;
-    _flowStep = CalibrationFlowStep.selectingObject;
-    _errorMessage = null;
+
+    try {
+      _calibrationStarOptions = _buildCalibrationStarOptions();
+      _flowStep = CalibrationFlowStep.selectingObject;
+      _errorMessage = null;
+      debugPrint(
+        '[Calibration] Visible calibration stars: '
+        '${_calibrationStarOptions.where((option) => option.isVisible).length} / '
+        '${_calibrationStarOptions.length}',
+      );
+    } catch (error) {
+      _flowStep = CalibrationFlowStep.failed;
+      _errorMessage = 'No se pudo calcular visibilidad de estrellas: $error';
+      debugPrint('[Calibration] Star visibility calculation failed: $error');
+    }
+
     notifyListeners();
   }
 
-  Future<void> selectStar(CalibrationStar star) async {
+  Future<void> selectStar(CalibrationStarOption option) async {
     if (_session == null) return;
+
+    if (!option.isVisible) {
+      _errorMessage =
+          'Selecciona una estrella visible sobre ${visibleStarAltitudeThresholdDeg.toStringAsFixed(0)} grados de altitud.';
+      notifyListeners();
+      return;
+    }
+
+    final star = option.star;
 
     _selectedStar = star;
     _targetPosition = null;
@@ -166,6 +207,15 @@ class CalibrationController extends ChangeNotifier {
         star: star,
         observer: observer,
       );
+      if (!_isVisibleForCalibration(target)) {
+        _calibrationStarOptions = _buildCalibrationStarOptions();
+        _selectedStar = null;
+        _flowStep = CalibrationFlowStep.selectingObject;
+        _errorMessage =
+            'La estrella ya no esta visible para referencia. Selecciona otra estrella visible.';
+        return;
+      }
+
       _targetPosition = target;
       _adjustedAltitude = target.altitudeDeg;
       _adjustedAzimuth = target.azimuthDeg;
@@ -187,6 +237,12 @@ class CalibrationController extends ChangeNotifier {
   Future<void> sendGotoToTarget(CalibrationGotoSender sendGoto) async {
     final target = _targetPosition;
     if (target == null) return;
+    if (!_isVisibleForCalibration(target)) {
+      _errorMessage =
+          'La estrella seleccionada no supera el umbral de visibilidad para calibracion.';
+      notifyListeners();
+      return;
+    }
 
     await _runCommand(
       logLabel:
@@ -305,6 +361,7 @@ class CalibrationController extends ChangeNotifier {
       _targetPosition = null;
       _adjustedAltitude = null;
       _adjustedAzimuth = null;
+      _calibrationStarOptions = const [];
       _flowStep = CalibrationFlowStep.idle;
       debugPrint('[Calibration] Cleared estimated correction');
     } catch (error) {
@@ -323,9 +380,42 @@ class CalibrationController extends ChangeNotifier {
     _targetPosition = null;
     _adjustedAltitude = null;
     _adjustedAzimuth = null;
+    _calibrationStarOptions = const [];
     _flowStep = CalibrationFlowStep.idle;
     _errorMessage = null;
     notifyListeners();
+  }
+
+  List<CalibrationStarOption> _buildCalibrationStarOptions() {
+    final observer = observerDataProvider.current();
+    final options = _calibrationStars.map((star) {
+      final position = astronomyPositionService.calculateForStar(
+        star: star,
+        observer: observer,
+      );
+      return CalibrationStarOption(
+        star: star,
+        position: position,
+        isVisible: _isVisibleForCalibration(position),
+      );
+    }).toList();
+
+    options.sort((a, b) {
+      if (a.isVisible != b.isVisible) {
+        return a.isVisible ? -1 : 1;
+      }
+      final altitudeOrder = b.position.altitudeDeg.compareTo(
+        a.position.altitudeDeg,
+      );
+      if (altitudeOrder != 0) return altitudeOrder;
+      return a.star.name.compareTo(b.star.name);
+    });
+
+    return options;
+  }
+
+  bool _isVisibleForCalibration(AltAzResult position) {
+    return position.altitudeDeg > visibleStarAltitudeThresholdDeg;
   }
 
   Future<void> _runCommand({

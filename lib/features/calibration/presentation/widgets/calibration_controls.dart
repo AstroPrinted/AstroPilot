@@ -77,7 +77,7 @@ class _NudgeButton extends StatefulWidget {
 
 class _NudgeButtonState extends State<_NudgeButton> {
   static const Duration _initialRepeatDelay = Duration(milliseconds: 350);
-  static const Duration _repeatInterval = Duration(milliseconds: 220);
+  static const Duration _repeatInterval = Duration(milliseconds: 250);
 
   Timer? _initialRepeatTimer;
   Timer? _repeatTimer;
