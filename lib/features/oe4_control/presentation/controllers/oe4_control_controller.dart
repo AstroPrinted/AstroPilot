@@ -94,6 +94,34 @@ class Oe4ControlController extends ChangeNotifier {
     );
   }
 
+  Future<void> sendNudge(
+    String deviceId, {
+    required double deltaAlt,
+    required double deltaAz,
+  }) {
+    return _send(
+      () => _motorCommandService.sendNudgeCommand(
+        deviceId,
+        deltaAlt: deltaAlt,
+        deltaAz: deltaAz,
+      ),
+    );
+  }
+
+  Future<void> sendSetPosition(
+    String deviceId, {
+    required double alt,
+    required double az,
+  }) {
+    return _send(
+      () => _motorCommandService.sendSetPositionCommand(
+        deviceId,
+        alt: alt,
+        az: az,
+      ),
+    );
+  }
+
   Future<void> sendHome(String deviceId) {
     return _send(() => _motorCommandService.sendHomeCommand(deviceId));
   }

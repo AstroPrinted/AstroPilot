@@ -57,6 +57,7 @@ bool bleClientConnected = false;
 enum MoveKind {
   MOVE_NONE,
   MOVE_GOTO,
+  MOVE_NUDGE,
   MOVE_HOME,
 };
 
@@ -131,6 +132,12 @@ long degreesToSteps(float degrees) {
 
 float stepsToDegrees(long steps) {
   return steps / STEPS_PER_DEGREE;
+}
+
+float normalizeAzimuth(float azDeg) {
+  while (azDeg < 0.0f) azDeg += 360.0f;
+  while (azDeg >= 360.0f) azDeg -= 360.0f;
+  return azDeg;
 }
 
 void sendResponse(const String& message) {
@@ -286,6 +293,47 @@ void startGoto(float altDeg, float azDeg) {
   startMove(altSteps, azSteps, MOVE_GOTO);
 }
 
+void startNudge(float deltaAltDeg, float deltaAzDeg) {
+  float currentAltDeg = stepsToDegrees(motorAlt.currentPosition());
+  float currentAzDeg = stepsToDegrees(motorAz.currentPosition());
+  float nextAltDeg = currentAltDeg + deltaAltDeg;
+  float nextAzDeg = normalizeAzimuth(currentAzDeg + deltaAzDeg);
+
+  if (nextAltDeg < ALT_MIN_DEG) nextAltDeg = ALT_MIN_DEG;
+  if (nextAltDeg > ALT_MAX_DEG) nextAltDeg = ALT_MAX_DEG;
+
+  sendResponse(
+    String("Comando: NUDGE dAlt=") + String(deltaAltDeg, 2) +
+    String(" deg, dAz=") + String(deltaAzDeg, 2) +
+    String(" deg -> alt=") + String(nextAltDeg, 2) +
+    String(" deg, az=") + String(nextAzDeg, 2) + String(" deg")
+  );
+
+  startMove(degreesToSteps(nextAltDeg), degreesToSteps(nextAzDeg), MOVE_NUDGE);
+}
+
+void setCurrentLogicalPosition(float altDeg, float azDeg) {
+  if (movementActive) {
+    sendResponse("ERROR: SET_POSITION requiere motores detenidos");
+    return;
+  }
+
+  long altSteps = degreesToSteps(altDeg);
+  long azSteps = degreesToSteps(azDeg);
+
+  motorAlt.setCurrentPosition(altSteps);
+  motorAz.setCurrentPosition(azSteps);
+  movementActive = false;
+  activeMoveKind = MOVE_NONE;
+
+  sendResponse(
+    String("SET_POSITION OK -> alt=") + String(altDeg, 4) +
+    String(" deg, az=") + String(azDeg, 4) +
+    String(" deg")
+  );
+  sendStatus();
+}
+
 void startHome() {
   sendResponse("Comando: HOME -> Volver a Cero");
   startMove(0, 0, MOVE_HOME);
@@ -425,6 +473,8 @@ void updateMovementCompletion() {
 
   if (completedKind == MOVE_GOTO) {
     sendResponse("GOTO Completado");
+  } else if (completedKind == MOVE_NUDGE) {
+    sendResponse("NUDGE Completado");
   } else if (completedKind == MOVE_HOME) {
     sendResponse("HOME Completado");
     sendResponse(
@@ -535,6 +585,52 @@ void handleJsonCommand(String json) {
     return;
   }
 
+  if (cmd == "NUDGE") {
+    float deltaAltDeg = 0.0f;
+    float deltaAzDeg = 0.0f;
+
+    if (!hasJsonKey(json, "dAlt") || !hasJsonKey(json, "dAz")) {
+      sendResponse("ERROR: campos requeridos ausentes");
+      return;
+    }
+
+    if (!extractJsonFloat(json, "dAlt", deltaAltDeg) || !extractJsonFloat(json, "dAz", deltaAzDeg)) {
+      sendResponse("ERROR: dAlt/dAz no numericos");
+      return;
+    }
+
+    startNudge(deltaAltDeg, deltaAzDeg);
+    return;
+  }
+
+  if (cmd == "SET_POSITION") {
+    float altDeg = 0.0f;
+    float azDeg = 0.0f;
+
+    if (!hasJsonKey(json, "alt") || !hasJsonKey(json, "az")) {
+      sendResponse("ERROR: campos requeridos ausentes");
+      return;
+    }
+
+    if (!extractJsonFloat(json, "alt", altDeg) || !extractJsonFloat(json, "az", azDeg)) {
+      sendResponse("ERROR: alt/az no numericos");
+      return;
+    }
+
+    if (altDeg < ALT_MIN_DEG || altDeg > ALT_MAX_DEG) {
+      sendResponse("ERROR: altitud fuera de rango");
+      return;
+    }
+
+    if (azDeg < AZ_MIN_DEG || azDeg > AZ_MAX_DEG) {
+      sendResponse("ERROR: azimut fuera de rango");
+      return;
+    }
+
+    setCurrentLogicalPosition(altDeg, azDeg);
+    return;
+  }
+
   sendResponse("ERROR: comando desconocido");
 }
 
@@ -603,6 +699,52 @@ void handleSerialInput(String input) {
     }
 
     String json = String("{\"cmd\":\"GOTO\",\"alt\":") +
+                  altRaw + String(",\"az\":") + azRaw + String("}");
+    handleJsonCommand(json);
+    return;
+  }
+
+  if (upper.startsWith("NUDGE:")) {
+    int commaIndex = input.indexOf(',');
+    if (commaIndex < 0) {
+      sendResponse("ERROR: formato esperado NUDGE:dAlt,dAz");
+      return;
+    }
+
+    String altRaw = input.substring(6, commaIndex);
+    String azRaw = input.substring(commaIndex + 1);
+    altRaw.trim();
+    azRaw.trim();
+
+    if (!isNumericLiteral(altRaw) || !isNumericLiteral(azRaw)) {
+      sendResponse("ERROR: dAlt/dAz no numericos");
+      return;
+    }
+
+    String json = String("{\"cmd\":\"NUDGE\",\"dAlt\":") +
+                  altRaw + String(",\"dAz\":") + azRaw + String("}");
+    handleJsonCommand(json);
+    return;
+  }
+
+  if (upper.startsWith("SET_POSITION:")) {
+    int commaIndex = input.indexOf(',');
+    if (commaIndex < 0) {
+      sendResponse("ERROR: formato esperado SET_POSITION:alt,az");
+      return;
+    }
+
+    String altRaw = input.substring(13, commaIndex);
+    String azRaw = input.substring(commaIndex + 1);
+    altRaw.trim();
+    azRaw.trim();
+
+    if (!isNumericLiteral(altRaw) || !isNumericLiteral(azRaw)) {
+      sendResponse("ERROR: alt/az no numericos");
+      return;
+    }
+
+    String json = String("{\"cmd\":\"SET_POSITION\",\"alt\":") +
                   altRaw + String(",\"az\":") + azRaw + String("}");
     handleJsonCommand(json);
     return;
@@ -691,7 +833,7 @@ void setup() {
   sendResponse("AstroPilot OE4 - Firmware listo");
   sendResponse("Motores: AccelStepper HALF4WIRE, STEPS_PER_REV=4096");
   sendResponse("Serial JSON ejemplo: {\"cmd\":\"GOTO\",\"alt\":90,\"az\":180}");
-  sendResponse("Comandos: HOME, STATUS, STOP, TEST_ROUTINE, PING, ENABLE_WATCHDOG, GOTO:alt,az");
+  sendResponse("Comandos: HOME, STATUS, STOP, TEST_ROUTINE, PING, ENABLE_WATCHDOG, GOTO:alt,az, NUDGE:dAlt,dAz, SET_POSITION:alt,az");
   sendStatus();
 }
 

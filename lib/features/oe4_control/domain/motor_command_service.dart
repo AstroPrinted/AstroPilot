@@ -29,6 +29,30 @@ class MotorCommandService {
     });
   }
 
+  Future<String> sendNudgeCommand(
+    String deviceId, {
+    required double deltaAlt,
+    required double deltaAz,
+  }) {
+    return _sendCommand(deviceId, {
+      'cmd': 'NUDGE',
+      'dAlt': _jsonNumber(deltaAlt),
+      'dAz': _jsonNumber(deltaAz),
+    });
+  }
+
+  Future<String> sendSetPositionCommand(
+    String deviceId, {
+    required double alt,
+    required double az,
+  }) {
+    return _sendCommand(deviceId, {
+      'cmd': 'SET_POSITION',
+      'alt': _jsonNumber(alt),
+      'az': _jsonNumber(az),
+    });
+  }
+
   Future<String> sendHomeCommand(String deviceId) {
     return _sendCommand(deviceId, {'cmd': 'HOME'});
   }
