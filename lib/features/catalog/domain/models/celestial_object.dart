@@ -4,8 +4,14 @@ sealed class CelestialObject {
   final String id;
   final String name;
   final String? magnitude;
+  final String? notes;
 
-  const CelestialObject({required this.id, required this.name, this.magnitude});
+  const CelestialObject({
+    required this.id,
+    required this.name,
+    this.magnitude,
+    this.notes,
+  });
 }
 
 final class DeepSkyObject extends CelestialObject {
@@ -14,18 +20,17 @@ final class DeepSkyObject extends CelestialObject {
   final double raJ2000Hours;
   final double decJ2000Degrees;
   final List<String> catalogs;
-  final String? notes;
 
   const DeepSkyObject({
     required super.id,
     required super.name,
     super.magnitude,
+    super.notes,
     required this.objectType,
     required this.constellations,
     required this.raJ2000Hours,
     required this.decJ2000Degrees,
     required this.catalogs,
-    this.notes,
   });
 }
 
@@ -40,6 +45,7 @@ final class CalibrationStar extends CelestialObject {
     required super.id,
     required super.name,
     super.magnitude,
+    super.notes,
     required this.constellation,
     required this.spectralType,
     required this.raJ2000Hours,
@@ -55,6 +61,7 @@ final class SolarSystemBody extends CelestialObject {
     required super.id,
     required super.name,
     super.magnitude,
+    super.notes,
     required this.geoengineBody,
   });
 

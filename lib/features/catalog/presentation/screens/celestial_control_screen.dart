@@ -17,6 +17,7 @@ import '../../domain/models/celestial_object.dart';
 import '../controllers/celestial_control_controller.dart';
 import '../utils/coordinate_formatters.dart';
 import '../widgets/celestial_fine_controls.dart';
+import '../widgets/celestial_educational_panel.dart';
 
 class CelestialControlScreen extends StatefulWidget {
   final CelestialObject object;
@@ -30,6 +31,7 @@ class CelestialControlScreen extends StatefulWidget {
 class _CelestialControlScreenState extends State<CelestialControlScreen> {
   late final CelestialControlController _controller;
   late final ScrollController _scrollController;
+  bool _educationalModeEnabled = false;
 
   @override
   void initState() {
@@ -143,6 +145,26 @@ class _CelestialControlScreenState extends State<CelestialControlScreen> {
                   ),
                   const SizedBox(height: 14),
                   _LastCommandCard(command: _controller.lastSentCommand),
+                  const SizedBox(height: 14),
+                  _EducationalModeToggleCard(
+                    enabled: _educationalModeEnabled,
+                    onChanged: (value) {
+                      setState(() => _educationalModeEnabled = value);
+                    },
+                  ),
+                  if (_educationalModeEnabled) ...[
+                    const SizedBox(height: 14),
+                    CelestialEducationalPanel(
+                      objectName: widget.object.name,
+                      currentPosition: _controller.currentPosition,
+                      savedCalibration: _controller.savedCalibration,
+                      previewCommand: _controller.previewCommand,
+                      lastUpdatedAt: _controller.lastUpdatedAt,
+                      nextTrackingAt: _controller.nextTrackingAt,
+                      trackingInterval:
+                          CelestialControlController.trackingInterval,
+                    ),
+                  ],
                 ],
               ),
             );
@@ -579,6 +601,36 @@ class _ActionsCard extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         CelestialFineControls(enabled: canFineTune, onNudge: onFineTune),
+      ],
+    );
+  }
+}
+
+class _EducationalModeToggleCard extends StatelessWidget {
+  final bool enabled;
+  final ValueChanged<bool> onChanged;
+
+  const _EducationalModeToggleCard({
+    required this.enabled,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _ControlCard(
+      title: 'Modo educativo',
+      icon: Icons.school_rounded,
+      children: [
+        SwitchListTile.adaptive(
+          contentPadding: EdgeInsets.zero,
+          value: enabled,
+          onChanged: onChanged,
+          title: const Text('Mostrar explicacion interactiva'),
+          subtitle: const Text(
+            'Panel solo visual: no envia comandos, no inicia tracking y no '
+            'modifica calibracion.',
+          ),
+        ),
       ],
     );
   }

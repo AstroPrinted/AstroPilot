@@ -47,6 +47,7 @@ class _CelestialDetailScreenState extends State<CelestialDetailScreen> {
     final solarMagnitude = object is SolarSystemBody
         ? object.getDynamicMagnitude(DateTime.now().toUtc())
         : null;
+    final notes = object.notes?.trim();
 
     return Scaffold(
       appBar: AppBar(title: Text(object.name)),
@@ -65,6 +66,8 @@ class _CelestialDetailScreenState extends State<CelestialDetailScreen> {
                 value: solarMagnitude ?? object.magnitude ?? 'N/A',
               ),
               ..._buildObjectRows(object),
+              if (notes != null && notes.isNotEmpty)
+                _InfoRow(label: 'Curiosidad', value: notes),
             ],
           ),
           const SizedBox(height: 14),

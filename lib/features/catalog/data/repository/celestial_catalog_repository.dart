@@ -22,10 +22,15 @@ class CelestialCatalogRepository {
     }
 
     final jsonObjects = <CelestialObject>[];
+    final solarSystemNotes = <String, String>{};
 
     try {
       final raw = await rootBundle.loadString(_assetPath);
       final map = json.decode(raw) as Map<String, dynamic>;
+
+      solarSystemNotes.addAll(
+        _parseSolarSystemNotes(map['solar_system_bodies']),
+      );
 
       final deepSky = (map['deep_sky_objects'] as List<dynamic>? ?? const [])
           .cast<Map<String, dynamic>>()
@@ -48,7 +53,7 @@ class CelestialCatalogRepository {
       debugPrint('Catalog load error: $e');
     }
 
-    final solarSystem = _buildSolarSystemBodies();
+    final solarSystem = _buildSolarSystemBodies(solarSystemNotes);
     _catalog = _mergeAndSort(solarSystem, jsonObjects);
   }
 
@@ -111,6 +116,7 @@ class CelestialCatalogRepository {
       id: 'star_${_slug(name)}',
       name: name,
       magnitude: _parseMagnitude(item['magnitude_v']),
+      notes: item['notes'] as String?,
       constellation: item['constellation'] as String? ?? 'N/A',
       spectralType: item['spectral_type'] as String? ?? 'N/A',
       raJ2000Hours: (item['right_ascension_hours'] as num?)?.toDouble() ?? 0,
@@ -121,7 +127,19 @@ class CelestialCatalogRepository {
     );
   }
 
-  List<SolarSystemBody> _buildSolarSystemBodies() {
+  Map<String, String> _parseSolarSystemNotes(dynamic value) {
+    final items = (value as List<dynamic>? ?? const [])
+        .cast<Map<String, dynamic>>();
+    return {
+      for (final item in items)
+        if (item['name'] is String && item['notes'] is String)
+          (item['name'] as String).toLowerCase(): item['notes'] as String,
+    };
+  }
+
+  List<SolarSystemBody> _buildSolarSystemBodies(
+    Map<String, String> notesByName,
+  ) {
     const bodies = <({Body body, String name})>[
       (body: Body.Jupiter, name: 'Jupiter'),
       (body: Body.Moon, name: 'Luna'),
@@ -140,6 +158,7 @@ class CelestialCatalogRepository {
           (entry) => SolarSystemBody(
             id: 'solar_${entry.body.name.toLowerCase()}',
             name: entry.name,
+            notes: notesByName[entry.name.toLowerCase()],
             geoengineBody: entry.body,
           ),
         )
