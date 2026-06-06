@@ -57,26 +57,36 @@ class _PointTile extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
+          _Row(label: 'Alt estrella', value: _format(point.calculatedAltitude)),
+          _Row(label: 'Az estrella', value: _format(point.calculatedAzimuth)),
           _Row(
-            label: 'Alt calculada',
-            value: _format(point.calculatedAltitude),
+            label: 'Alt motor',
+            value: _format(
+              point.motorAltitudeAtCalibration ?? point.adjustedAltitude,
+            ),
           ),
-          _Row(label: 'Az calculado', value: _format(point.calculatedAzimuth)),
-          _Row(label: 'Alt ajustada', value: _format(point.adjustedAltitude)),
-          _Row(label: 'Az ajustado', value: _format(point.adjustedAzimuth)),
-          _Row(label: 'Offset alt', value: _formatSigned(point.altitudeError)),
-          _Row(label: 'Offset az', value: _formatSigned(point.azimuthError)),
+          _Row(
+            label: 'Az motor',
+            value: _format(
+              point.motorAzimuthAtCalibration ?? point.adjustedAzimuth,
+            ),
+          ),
+          if (point.referenceRaJ2000Hours != null)
+            _Row(
+              label: 'RA J2000',
+              value: '${point.referenceRaJ2000Hours!.toStringAsFixed(4)} h',
+            ),
+          if (point.referenceDecJ2000Degrees != null)
+            _Row(
+              label: 'Dec J2000',
+              value: _format(point.referenceDecJ2000Degrees!),
+            ),
         ],
       ),
     );
   }
 
   String _format(double value) => '${value.toStringAsFixed(2)}°';
-
-  String _formatSigned(double value) {
-    final sign = value >= 0 ? '+' : '';
-    return '$sign${value.toStringAsFixed(2)}°';
-  }
 }
 
 class _Row extends StatelessWidget {

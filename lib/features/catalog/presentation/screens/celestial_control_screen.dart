@@ -7,6 +7,7 @@ import '../../../ble_connection/data/models/ble_device_state.dart';
 import '../../../ble_connection/presentation/controllers/ble_connection_controller.dart';
 import '../../../calibration/data/calibration_repository.dart';
 import '../../../calibration/data/calibration_storage.dart';
+import '../../../calibration/domain/models/calibration_method.dart';
 import '../../../calibration/domain/services/astronomy_position_service.dart';
 import '../../../calibration/domain/services/pointing_correction_service.dart';
 import '../../../oe4_control/presentation/controllers/oe4_control_controller.dart';
@@ -303,14 +304,14 @@ class _PositionCard extends StatelessWidget {
             children: [
               Expanded(
                 child: _MetricTile(
-                  label: 'Altitud original',
+                  label: 'Altitud objetivo',
                   value: _formatSigned(position.altitudeDeg),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _MetricTile(
-                  label: 'Azimut original',
+                  label: 'Azimut objetivo',
                   value: _formatUnsigned(position.azimuthDeg),
                 ),
               ),
@@ -330,14 +331,14 @@ class _PositionCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: _MetricTile(
-                    label: 'Altitud corregida',
+                    label: 'Altitud final',
                     value: _formatSigned(preview.finalAltitude),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: _MetricTile(
-                    label: 'Azimut corregido',
+                    label: 'Azimut final',
                     value: _formatUnsigned(preview.finalAzimuth),
                   ),
                 ),
@@ -362,36 +363,56 @@ class _CorrectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final calibration = controller.savedCalibration;
+    final reference = calibration?.points.isNotEmpty == true
+        ? calibration!.points.last
+        : null;
     return _ControlCard(
-      title: 'Correccion estimada',
+      title: 'Calibracion',
       icon: Icons.tune_rounded,
       children: [
         if (calibration == null)
           const _StatusMessage(
             icon: Icons.info_outline_rounded,
             message:
-                'No disponible. GoTo inicial y tracking se enviaran sin correccion.',
+                'No calibrado. Realiza calibracion con una estrella antes de usar GoTo o tracking.',
           )
         else ...[
-          const _StatusMessage(
+          _StatusMessage(
             icon: Icons.check_circle_outline_rounded,
-            message:
-                'Disponible. Solo se aplica a GoTo inicial y tracking logico.',
+            message: calibration.method == CalibrationMethod.oneStar
+                ? 'Referencia inicial activa. El firmware conoce la posicion Alt/Az actual del telescopio.'
+                : 'Correccion multipunto disponible para GoTo inicial y tracking logico.',
           ),
           const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
                 child: _MetricTile(
-                  label: 'Offset altitud',
-                  value: _formatSigned(calibration.altitudeOffset),
+                  label: calibration.method == CalibrationMethod.oneStar
+                      ? 'Altitud fijada'
+                      : 'Offset altitud',
+                  value: calibration.method == CalibrationMethod.oneStar
+                      ? _formatSigned(
+                          reference?.motorAltitudeAtCalibration ??
+                              reference?.calculatedAltitude ??
+                              0,
+                        )
+                      : _formatSigned(calibration.altitudeOffset),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _MetricTile(
-                  label: 'Offset azimut',
-                  value: _formatSigned(calibration.azimuthOffset),
+                  label: calibration.method == CalibrationMethod.oneStar
+                      ? 'Azimut fijado'
+                      : 'Offset azimut',
+                  value: calibration.method == CalibrationMethod.oneStar
+                      ? _formatUnsigned(
+                          reference?.motorAzimuthAtCalibration ??
+                              reference?.calculatedAzimuth ??
+                              0,
+                        )
+                      : _formatSigned(calibration.azimuthOffset),
                 ),
               ),
             ],
@@ -480,10 +501,10 @@ class _LastCommandCard extends StatelessWidget {
             _StatusMessage(
               icon: sent.usedCorrection
                   ? Icons.tune_rounded
-                  : Icons.info_outline_rounded,
+                  : Icons.check_circle_outline_rounded,
               message: sent.usedCorrection
-                  ? 'Se aplico correccion estimada.'
-                  : 'Se envio sin correccion estimada.',
+                  ? 'Se aplico correccion multipunto.'
+                  : 'Se envio usando la referencia calibrada.',
             ),
           ],
         ],
@@ -523,7 +544,9 @@ class _ActionsCard extends StatelessWidget {
     final primaryBusy = busy || controller.isFineTuneInFlight;
     final fineTuneBlockedByOtherCommand =
         externalSending && !controller.isFineTuneInFlight;
-    final canSend = isConnected && !primaryBusy && !controller.isTracking;
+    final calibrated = controller.savedCalibration != null;
+    final canSend =
+        isConnected && calibrated && !primaryBusy && !controller.isTracking;
     final canFineTune =
         isConnected &&
         controller.canFineTune &&
@@ -535,6 +558,14 @@ class _ActionsCard extends StatelessWidget {
       title: 'Acciones de control',
       icon: Icons.precision_manufacturing_rounded,
       children: [
+        if (!calibrated) ...[
+          const _StatusMessage(
+            icon: Icons.lock_outline_rounded,
+            message:
+                'GoTo y tracking estan bloqueados hasta completar calibracion con una estrella.',
+          ),
+          const SizedBox(height: 10),
+        ],
         FilledButton.icon(
           onPressed: canSend ? onInitialGoto : null,
           icon: busy
@@ -597,7 +628,7 @@ class _ActionsCard extends StatelessWidget {
               : Icons.info_outline_rounded,
           message: canFineTune
               ? 'Tap para mover ${CelestialControlController.fineStepDegrees.toStringAsFixed(2)}°. Mantener presionado repite cada 250 ms.'
-              : 'Disponible despues de un GoTo inicial o tracking previo. No reaplica correccion.',
+              : 'Disponible despues de un GoTo inicial o tracking previo.',
         ),
         const SizedBox(height: 10),
         CelestialFineControls(enabled: canFineTune, onNudge: onFineTune),

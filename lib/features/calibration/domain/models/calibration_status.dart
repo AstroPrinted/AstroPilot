@@ -1,5 +1,9 @@
 enum CalibrationStatus {
   notCalibrated,
+  selectingReferenceStar,
+  waitingForManualCentering,
+  calibrated,
+  calibrationFailed,
   inProgress,
   partiallyCalibrated,
   calibratedOneStar,
@@ -12,16 +16,20 @@ enum CalibrationStatus {
 extension CalibrationStatusLabel on CalibrationStatus {
   String get label {
     return switch (this) {
-      CalibrationStatus.notCalibrated => 'Sin correccion estimada',
-      CalibrationStatus.inProgress => 'Ajuste logico en curso',
-      CalibrationStatus.partiallyCalibrated => 'Correccion estimada parcial',
-      CalibrationStatus.calibratedOneStar => 'Correccion estimada: 1 estrella',
-      CalibrationStatus.calibratedTwoStars =>
-        'Correccion estimada: 2 estrellas',
-      CalibrationStatus.calibratedThreeStars =>
-        'Correccion estimada: 3 estrellas',
+      CalibrationStatus.notCalibrated => 'Sin calibracion',
+      CalibrationStatus.selectingReferenceStar =>
+        'Seleccionando estrella de referencia',
+      CalibrationStatus.waitingForManualCentering =>
+        'Esperando centrado manual',
+      CalibrationStatus.calibrated => 'Calibrado',
+      CalibrationStatus.calibrationFailed => 'Calibracion fallida',
+      CalibrationStatus.inProgress => 'Calibracion en curso',
+      CalibrationStatus.partiallyCalibrated => 'Calibracion parcial',
+      CalibrationStatus.calibratedOneStar => 'Calibrado: 1 estrella',
+      CalibrationStatus.calibratedTwoStars => 'Calibrado: 2 estrellas',
+      CalibrationStatus.calibratedThreeStars => 'Calibrado: 3 estrellas',
       CalibrationStatus.localSyncActive => 'Sync local activo',
-      CalibrationStatus.failed => 'Correccion estimada fallida',
+      CalibrationStatus.failed => 'Calibracion fallida',
     };
   }
 }

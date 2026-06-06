@@ -130,7 +130,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
           const SizedBox(height: 14),
         ],
         Text(
-          'Elige un metodo de correccion estimada',
+          'Elige un metodo de calibracion',
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 10),
@@ -148,7 +148,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
                 ? null
                 : () => _confirmClearCalibration(context, calibration),
             icon: const Icon(Icons.delete_outline_rounded),
-            label: const Text('Borrar correccion estimada'),
+            label: const Text('Borrar calibracion guardada'),
           ),
         ],
       ],
@@ -163,14 +163,6 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
     bool isConnected,
   ) {
     return switch (calibration.flowStep) {
-      CalibrationFlowStep.waitingHome => _WaitingHomeStep(
-        stepNumber: calibration.currentFlowStepNumber,
-        totalSteps: calibration.totalFlowSteps,
-        isBusy: calibration.isBusy,
-        onHome: () => _sendHome(calibration, oe4Controller, deviceId),
-        onContinue: calibration.continueAfterHome,
-        onCancel: calibration.cancelFlow,
-      ),
       CalibrationFlowStep.selectingObject => _SelectingObjectStep(
         calibration: calibration,
         onSelected: calibration.selectStar,
@@ -181,20 +173,14 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
         totalSteps: calibration.totalFlowSteps,
         referenceLabel: calibration.referenceProgressLabel,
       ),
-      CalibrationFlowStep.movingToTarget => _MovingToTargetStep(
-        calibration: calibration,
-        isBusy: calibration.isBusy,
-        onGoto: () => _sendGotoToTarget(calibration, oe4Controller, deviceId),
-        onBack: calibration.continueAfterHome,
-        onCancel: calibration.cancelFlow,
-      ),
       CalibrationFlowStep.waitingUserCentering => _CenteringStep(
         calibration: calibration,
         controlsEnabled: isConnected,
         isBusy: calibration.isBusy,
         onNudge: (direction) =>
             _sendNudge(calibration, oe4Controller, deviceId, direction),
-        onConfirm: calibration.confirmAdjustedReference,
+        onConfirm: () =>
+            _confirmCenteredReference(calibration, oe4Controller, deviceId),
         onCancel: calibration.cancelFlow,
       ),
       CalibrationFlowStep.completed => _CompletedStep(
@@ -208,9 +194,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
         onViewVisibleObjects: () => _openVisibleObjects(context),
       ),
       CalibrationFlowStep.failed => _FailedStep(
-        message:
-            calibration.errorMessage ??
-            'El flujo de correccion estimada fallo.',
+        message: calibration.errorMessage ?? 'El flujo de calibracion fallo.',
         onBack: calibration.cancelFlow,
       ),
       _ => _FailedStep(
@@ -220,24 +204,15 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
     };
   }
 
-  Future<void> _sendHome(
+  Future<void> _confirmCenteredReference(
     CalibrationController calibration,
     Oe4ControlController oe4Controller,
     String? deviceId,
   ) async {
     if (!_ensureConnected(deviceId)) return;
-    await calibration.sendHome(() => oe4Controller.sendHome(deviceId!));
-  }
-
-  Future<void> _sendGotoToTarget(
-    CalibrationController calibration,
-    Oe4ControlController oe4Controller,
-    String? deviceId,
-  ) async {
-    if (!_ensureConnected(deviceId)) return;
-    await calibration.sendGotoToTarget(
+    await calibration.confirmCenteredReference(
       (altitude, azimuth) =>
-          oe4Controller.sendGoto(deviceId!, alt: altitude, az: azimuth),
+          oe4Controller.sendSetPosition(deviceId!, alt: altitude, az: azimuth),
     );
   }
 
@@ -250,8 +225,11 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
     if (!_ensureConnected(deviceId)) return;
     await calibration.nudge(
       direction,
-      (altitude, azimuth) =>
-          oe4Controller.sendGoto(deviceId!, alt: altitude, az: azimuth),
+      (deltaAltitude, deltaAzimuth) => oe4Controller.sendNudge(
+        deviceId!,
+        deltaAlt: deltaAltitude,
+        deltaAz: deltaAzimuth,
+      ),
     );
   }
 
@@ -271,9 +249,9 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Borrar correccion estimada'),
+          title: const Text('Borrar calibracion'),
           content: const Text(
-            'Se eliminara la correccion logica guardada en este dispositivo.',
+            'Se eliminara la referencia de calibracion guardada en este dispositivo.',
           ),
           actions: [
             TextButton(
@@ -333,7 +311,7 @@ class _HeaderCard extends StatelessWidget {
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
-                    'Calibracion logica del prototipo',
+                    'Calibracion con una estrella',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
@@ -341,7 +319,7 @@ class _HeaderCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Compara la posicion astronomica calculada con una posicion ajustada manualmente en motores. Esta fase no valida apuntado optico real.',
+              'Centra manualmente una estrella conocida y fija la posicion Alt/Az real del telescopio antes de usar GoTo.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ],
@@ -373,7 +351,7 @@ class _StatusPanel extends StatelessWidget {
             if (calibration.savedResult != null) ...[
               const SizedBox(height: 10),
               Text(
-                'Ultima correccion estimada: ${_formatDate(calibration.savedResult!.createdAt)}',
+                'Ultima calibracion: ${_formatDate(calibration.savedResult!.createdAt)}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -415,8 +393,8 @@ class _ConnectionNotice extends StatelessWidget {
           Expanded(
             child: Text(
               isConnected
-                  ? 'ESP32 conectado. El flujo usara HOME y GOTO existentes.'
-                  : 'Puedes revisar el flujo, pero HOME y GOTO requieren conexion BLE.',
+                  ? 'ESP32 conectado. El flujo usara movimiento manual y SET_POSITION.'
+                  : 'Puedes revisar el flujo, pero movimiento manual y SET_POSITION requieren conexion BLE.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
           ),
@@ -495,56 +473,6 @@ class _LoadingCard extends StatelessWidget {
   }
 }
 
-class _WaitingHomeStep extends StatelessWidget {
-  final int stepNumber;
-  final int totalSteps;
-  final bool isBusy;
-  final VoidCallback onHome;
-  final VoidCallback onContinue;
-  final VoidCallback onCancel;
-
-  const _WaitingHomeStep({
-    required this.stepNumber,
-    required this.totalSteps,
-    required this.isBusy,
-    required this.onHome,
-    required this.onContinue,
-    required this.onCancel,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return CalibrationStepCard(
-      stepNumber: stepNumber,
-      totalSteps: totalSteps,
-      title: 'Coloca el telescopio en posicion inicial',
-      description:
-          'Usa HOME como referencia mecanica antes de calcular la posicion de la estrella.',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          FilledButton.icon(
-            onPressed: isBusy ? null : onHome,
-            icon: const Icon(Icons.home_rounded),
-            label: const Text('Enviar HOME'),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            onPressed: isBusy ? null : onContinue,
-            icon: const Icon(Icons.arrow_forward_rounded),
-            label: const Text('Continuar'),
-          ),
-          const SizedBox(height: 8),
-          TextButton(
-            onPressed: isBusy ? null : onCancel,
-            child: const Text('Cancelar'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _SelectingObjectStep extends StatelessWidget {
   final CalibrationController calibration;
   final ValueChanged<CalibrationStarOption> onSelected;
@@ -571,7 +499,7 @@ class _SelectingObjectStep extends StatelessWidget {
       totalSteps: calibration.totalFlowSteps,
       title: 'Seleccionar estrella visible',
       description:
-          '${calibration.referenceProgressLabel}. La app calcula Alt/Az con la ubicacion, fecha y hora actuales; esta fase no verifica apuntado optico real.',
+          'Elige una estrella visible. Luego mueve manualmente el telescopio hasta centrarla en el ocular.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -579,7 +507,7 @@ class _SelectingObjectStep extends StatelessWidget {
             _InlineNotice(
               icon: Icons.visibility_off_rounded,
               message:
-                  'No hay suficientes estrellas visibles para calibracion con ${calibration.currentMethod?.title ?? 'este metodo'}.\nSe requieren al menos ${calibration.requiredReferenceCount} estrellas sobre ${CalibrationController.visibleStarAltitudeThresholdDeg.toStringAsFixed(0)} grados de altitud.',
+                  'No hay estrellas recomendadas visibles para calibracion con ${calibration.currentMethod?.title ?? 'este metodo'}.\nSe requiere al menos una estrella sobre ${CalibrationController.visibleStarAltitudeThresholdDeg.toStringAsFixed(0)} grados de altitud.',
             ),
             const SizedBox(height: 12),
           ],
@@ -587,7 +515,7 @@ class _SelectingObjectStep extends StatelessWidget {
             const _InlineNotice(
               icon: Icons.info_outline_rounded,
               message:
-                  'Para mejorar la correccion estimada, elige una estrella separada de la anterior.',
+                  'Para mejorar la calibracion futura, elige una estrella separada de la anterior.',
             ),
             const SizedBox(height: 12),
           ],
@@ -599,6 +527,7 @@ class _SelectingObjectStep extends StatelessWidget {
             for (final option in visibleOptions)
               _StarTile(
                 option: option,
+                guide: calibration.guideForStar(option.star),
                 onTap: option.isSelectable ? () => onSelected(option) : null,
               ),
           ],
@@ -607,7 +536,11 @@ class _SelectingObjectStep extends StatelessWidget {
             const _StarSectionTitle(label: 'No visibles actualmente'),
             const SizedBox(height: 8),
             for (final option in notVisibleOptions)
-              _StarTile(option: option, onTap: null),
+              _StarTile(
+                option: option,
+                guide: calibration.guideForStar(option.star),
+                onTap: null,
+              ),
           ],
           const SizedBox(height: 8),
           TextButton(onPressed: onCancel, child: const Text('Cancelar')),
@@ -630,9 +563,14 @@ class _StarSectionTitle extends StatelessWidget {
 
 class _StarTile extends StatelessWidget {
   final CalibrationStarOption option;
+  final String guide;
   final VoidCallback? onTap;
 
-  const _StarTile({required this.option, required this.onTap});
+  const _StarTile({
+    required this.option,
+    required this.guide,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -683,6 +621,8 @@ class _StarTile extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text('Estado: $stateLabel'),
+              const SizedBox(height: 2),
+              Text(guide, style: Theme.of(context).textTheme.bodySmall),
               if (option.closestReferenceDistanceDeg != null) ...[
                 const SizedBox(height: 2),
                 Text(
@@ -734,69 +674,6 @@ class _CalculatingStep extends StatelessWidget {
   }
 }
 
-class _MovingToTargetStep extends StatelessWidget {
-  final CalibrationController calibration;
-  final bool isBusy;
-  final VoidCallback onGoto;
-  final VoidCallback onBack;
-  final VoidCallback onCancel;
-
-  const _MovingToTargetStep({
-    required this.calibration,
-    required this.isBusy,
-    required this.onGoto,
-    required this.onBack,
-    required this.onCancel,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final target = calibration.targetPosition;
-    final targetIsVisible =
-        target != null &&
-        target.altitudeDeg >
-            CalibrationController.visibleStarAltitudeThresholdDeg;
-    return CalibrationStepCard(
-      stepNumber: calibration.currentFlowStepNumber,
-      totalSteps: calibration.totalFlowSteps,
-      title: 'Enviar GoTo a posicion calculada',
-      description:
-          '${calibration.referenceProgressLabel}. Posicion calculada actual de ${calibration.selectedStar?.name ?? 'la estrella'}. La app enviara un comando GoTo existente.',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (target != null) _TargetPanel(target: target),
-          if (target != null && !targetIsVisible) ...[
-            const SizedBox(height: 10),
-            _InlineNotice(
-              icon: Icons.visibility_off_rounded,
-              message:
-                  'La estrella ya no supera el umbral de ${CalibrationController.visibleStarAltitudeThresholdDeg.toStringAsFixed(0)} grados para calibracion.',
-            ),
-          ],
-          const SizedBox(height: 12),
-          FilledButton.icon(
-            onPressed: isBusy || !targetIsVisible ? null : onGoto,
-            icon: const Icon(Icons.gps_fixed_rounded),
-            label: const Text('Enviar GoTo'),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            onPressed: isBusy ? null : onBack,
-            icon: const Icon(Icons.swap_horiz_rounded),
-            label: const Text('Cambiar estrella'),
-          ),
-          const SizedBox(height: 8),
-          TextButton(
-            onPressed: isBusy ? null : onCancel,
-            child: const Text('Cancelar'),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _CenteringStep extends StatelessWidget {
   final CalibrationController calibration;
   final bool controlsEnabled;
@@ -819,12 +696,23 @@ class _CenteringStep extends StatelessWidget {
     return CalibrationStepCard(
       stepNumber: calibration.currentFlowStepNumber,
       totalSteps: calibration.totalFlowSteps,
-      title: 'Ajusta la referencia de motores',
+      title: 'Centra la estrella manualmente',
       description:
-          '${calibration.referenceProgressLabel}. Cada boton envia un GOTO incremental de ${CalibrationController.fineStepDegrees.toStringAsFixed(2)} grados. Puedes mantenerlo presionado para repetir el movimiento. Guarda la posicion ajustada como referencia estimada del prototipo.',
+          'Usa los controles manuales para centrar ${calibration.selectedStar?.name ?? 'la estrella'} en el ocular. No se permite GoTo automatico antes de confirmar la calibracion.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (calibration.targetPosition != null) ...[
+            _TargetPanel(target: calibration.targetPosition!),
+            const SizedBox(height: 10),
+          ],
+          if (calibration.selectedStarGuide.isNotEmpty) ...[
+            _InlineNotice(
+              icon: Icons.tips_and_updates_rounded,
+              message: calibration.selectedStarGuide,
+            ),
+            const SizedBox(height: 12),
+          ],
           _AdjustedPositionPanel(
             altitude: calibration.adjustedAltitude,
             azimuth: calibration.adjustedAzimuth,
@@ -835,7 +723,7 @@ class _CenteringStep extends StatelessWidget {
           FilledButton.icon(
             onPressed: isBusy ? null : onConfirm,
             icon: const Icon(Icons.check_circle_outline_rounded),
-            label: const Text('Guardar posicion ajustada como referencia'),
+            label: const Text('Confirmar estrella centrada'),
           ),
           const SizedBox(height: 8),
           TextButton(
@@ -876,9 +764,9 @@ class _CompletedStep extends StatelessWidget {
     return CalibrationStepCard(
       stepNumber: stepNumber,
       totalSteps: totalSteps,
-      title: 'Correccion estimada calculada',
+      title: 'Calibracion guardada',
       description:
-          'Esta correccion se basa en las referencias de motores registradas manualmente y en posiciones calculadas.',
+          'La posicion logica del telescopio fue fijada con la Alt/Az real de la estrella centrada.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -892,9 +780,7 @@ class _CompletedStep extends StatelessWidget {
             onPressed: isBusy || !hasUnsavedResult ? null : onSave,
             icon: const Icon(Icons.save_rounded),
             label: Text(
-              hasUnsavedResult
-                  ? 'Guardar correccion estimada'
-                  : 'Correccion estimada guardada',
+              hasUnsavedResult ? 'Guardar calibracion' : 'Calibracion guardada',
             ),
           ),
           const SizedBox(height: 8),
@@ -907,7 +793,7 @@ class _CompletedStep extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: isBusy ? null : onNewCalibration,
             icon: const Icon(Icons.restart_alt_rounded),
-            label: const Text('Nuevo ajuste logico'),
+            label: const Text('Nueva calibracion'),
           ),
         ],
       ),
@@ -991,14 +877,14 @@ class _AdjustedPositionPanel extends StatelessWidget {
       children: [
         Expanded(
           child: _MetricTile(
-            label: 'Altitud ajustada',
+            label: 'Movimiento altitud',
             value: altitude == null ? 'N/A' : _formatDeg(altitude!),
           ),
         ),
         const SizedBox(width: 10),
         Expanded(
           child: _MetricTile(
-            label: 'Azimut ajustado',
+            label: 'Movimiento azimut',
             value: azimuth == null ? 'N/A' : _formatDeg(azimuth!),
           ),
         ),
@@ -1075,8 +961,9 @@ class _ResultSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final stateLabel = isSaved
-        ? 'Correccion estimada guardada'
-        : 'Correccion estimada sin guardar';
+        ? 'Calibracion guardada'
+        : 'Calibracion sin guardar';
+    final reference = result.points.isNotEmpty ? result.points.last : null;
 
     return Card(
       child: Padding(
@@ -1090,7 +977,7 @@ class _ResultSummaryCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Resumen de correccion estimada',
+                    'Resumen de calibracion',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
@@ -1102,15 +989,25 @@ class _ResultSummaryCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: _MetricTile(
-                    label: 'Offset promedio altitud',
-                    value: _formatSignedDeg(result.altitudeOffset),
+                    label: 'Altitud fijada',
+                    value: reference == null
+                        ? 'N/A'
+                        : _formatDeg(
+                            reference.motorAltitudeAtCalibration ??
+                                reference.calculatedAltitude,
+                          ),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: _MetricTile(
-                    label: 'Offset promedio azimut',
-                    value: _formatSignedDeg(result.azimuthOffset),
+                    label: 'Azimut fijado',
+                    value: reference == null
+                        ? 'N/A'
+                        : _formatDeg(
+                            reference.motorAzimuthAtCalibration ??
+                                reference.calculatedAzimuth,
+                          ),
                   ),
                 ),
               ],
@@ -1130,7 +1027,7 @@ class _ResultSummaryCard extends StatelessWidget {
             if (result.estimatedError != null) ...[
               const SizedBox(height: 4),
               Text(
-                'Diferencia estimada MVP: ${_formatDeg(result.estimatedError!)}',
+                'Error de referencia: ${_formatDeg(result.estimatedError!)}',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -1149,7 +1046,7 @@ class _ResultSummaryCard extends StatelessWidget {
             ],
             const SizedBox(height: 14),
             Text(
-              'Esta correccion se basa en el ajuste manual del usuario; no confirma apuntado optico real.',
+              'Esta calibracion fija una referencia inicial. No corrige por si sola errores mecanicos, desnivel del tripode o desalineacion avanzada.',
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 14),
@@ -1213,7 +1110,7 @@ class _SavedBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
-        isSaved ? 'Estimada guardada' : 'Sin guardar',
+        isSaved ? 'Guardada' : 'Sin guardar',
         style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color),
       ),
     );
@@ -1221,11 +1118,6 @@ class _SavedBadge extends StatelessWidget {
 }
 
 String _formatDeg(double value) => '${value.toStringAsFixed(2)}°';
-
-String _formatSignedDeg(double value) {
-  final sign = value >= 0 ? '+' : '';
-  return '$sign${value.toStringAsFixed(2)}°';
-}
 
 String _formatDate(DateTime value) {
   return value.toLocal().toString().split('.').first;

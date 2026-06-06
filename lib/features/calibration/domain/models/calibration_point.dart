@@ -7,6 +7,10 @@ class CalibrationPoint {
   final double adjustedAzimuth;
   final double altitudeError;
   final double azimuthError;
+  final double? referenceRaJ2000Hours;
+  final double? referenceDecJ2000Degrees;
+  final double? motorAltitudeAtCalibration;
+  final double? motorAzimuthAtCalibration;
   final DateTime timestamp;
 
   const CalibrationPoint({
@@ -19,6 +23,10 @@ class CalibrationPoint {
     required this.altitudeError,
     required this.azimuthError,
     required this.timestamp,
+    this.referenceRaJ2000Hours,
+    this.referenceDecJ2000Degrees,
+    this.motorAltitudeAtCalibration,
+    this.motorAzimuthAtCalibration,
   });
 
   Map<String, dynamic> toJson() {
@@ -31,6 +39,10 @@ class CalibrationPoint {
       'adjustedAzimuth': adjustedAzimuth,
       'altitudeError': altitudeError,
       'azimuthError': azimuthError,
+      'referenceRaJ2000Hours': referenceRaJ2000Hours,
+      'referenceDecJ2000Degrees': referenceDecJ2000Degrees,
+      'motorAltitudeAtCalibration': motorAltitudeAtCalibration,
+      'motorAzimuthAtCalibration': motorAzimuthAtCalibration,
       'timestamp': timestamp.toUtc().toIso8601String(),
     };
   }
@@ -54,6 +66,19 @@ class CalibrationPoint {
       ),
       altitudeError: _readDouble(json, 'altitudeError'),
       azimuthError: _readDouble(json, 'azimuthError'),
+      referenceRaJ2000Hours: _readNullableDouble(json, 'referenceRaJ2000Hours'),
+      referenceDecJ2000Degrees: _readNullableDouble(
+        json,
+        'referenceDecJ2000Degrees',
+      ),
+      motorAltitudeAtCalibration: _readNullableDouble(
+        json,
+        'motorAltitudeAtCalibration',
+      ),
+      motorAzimuthAtCalibration: _readNullableDouble(
+        json,
+        'motorAzimuthAtCalibration',
+      ),
       timestamp:
           DateTime.tryParse(json['timestamp'] as String? ?? '')?.toUtc() ??
           DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
@@ -72,5 +97,9 @@ class CalibrationPoint {
     return (json[preferredKey] as num?)?.toDouble() ??
         (json[fallbackKey] as num?)?.toDouble() ??
         0.0;
+  }
+
+  static double? _readNullableDouble(Map<String, dynamic> json, String key) {
+    return (json[key] as num?)?.toDouble();
   }
 }

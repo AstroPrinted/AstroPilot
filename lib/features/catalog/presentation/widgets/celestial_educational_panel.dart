@@ -65,7 +65,8 @@ class CelestialEducationalPanel extends StatelessWidget {
                 ),
                 const _FlowStep(
                   number: '2',
-                  text: 'Se aplica correccion estimada si existe.',
+                  text:
+                      'Se verifica que exista una referencia de calibracion guardada.',
                 ),
                 const _FlowStep(
                   number: '3',
@@ -111,40 +112,42 @@ class CelestialEducationalPanel extends StatelessWidget {
             ),
             _EducationalTile(
               icon: Icons.tune_rounded,
-              title: 'Que hace la correccion estimada?',
+              title: 'Que hace la referencia calibrada?',
               children: [
                 const _BodyText(
-                  'La calibracion guarda una diferencia entre la posicion '
-                  'calculada y la posicion ajustada por el usuario.',
+                  'La calibracion con una estrella fija la posicion logica '
+                  'actual del telescopio usando la Alt/Az real de una estrella '
+                  'centrada manualmente.',
                 ),
                 const SizedBox(height: 8),
                 const _BodyText(
-                  'Esa diferencia se aplica al GoTo astronomico como '
-                  'correccion estimada. No confirma la posicion por camara ni '
-                  'por sensores opticos en esta fase.',
+                  'Luego el firmware mueve los motores desde esa posicion '
+                  'logica hacia la Alt/Az real del objeto objetivo.',
                 ),
                 const SizedBox(height: 8),
                 const _BodyText(
-                  'Es una correccion logica del prototipo educativo.',
+                  'Es una referencia inicial; no corrige automaticamente '
+                  'errores mecanicos, desnivel del tripode o desalineacion '
+                  'avanzada.',
                 ),
                 const SizedBox(height: 12),
                 if (savedCalibration == null) ...[
                   const _SafeNotice(
                     icon: Icons.info_outline_rounded,
                     text:
-                        'Sin correccion estimada. El GoTo se enviara con la '
-                        'posicion calculada directamente.',
+                        'Sin calibracion guardada. El GoTo automatico debe '
+                        'permanecer bloqueado hasta centrar una estrella.',
                   ),
                   const SizedBox(height: 12),
                 ],
                 _MetricWrap(
                   metrics: [
                     _EducationalMetric(
-                      label: 'Offset altitud',
+                      label: 'Referencia altitud',
                       value: _altitudeOffsetText,
                     ),
                     _EducationalMetric(
-                      label: 'Offset azimut',
+                      label: 'Referencia azimut',
                       value: _azimuthOffsetText,
                     ),
                   ],
@@ -156,20 +159,21 @@ class CelestialEducationalPanel extends StatelessWidget {
               title: 'Que comando se envia al telescopio?',
               children: [
                 const _BodyText(
-                  'La app usa la posicion calculada en Alt/Az. Si existe una '
-                  'correccion estimada, ajusta esos valores.',
+                  'La app calcula la posicion real del objeto en Alt/Az usando '
+                  'fecha, hora y ubicacion actuales.',
                 ),
                 const SizedBox(height: 8),
                 const _BodyText(
-                  'Luego prepara un comando GOTO final con la posicion que se '
-                  'enviara al telescopio.',
+                  'Luego prepara un comando GOTO final hacia esa Alt/Az. La '
+                  'diferencia de movimiento la resuelve el firmware desde su '
+                  'posicion logica actual.',
                 ),
                 const SizedBox(height: 12),
                 _DataLine(
                   label: 'Alt/Az calculado',
                   value: _calculatedPairText,
                 ),
-                _DataLine(label: 'Alt/Az corregido', value: _correctedPairText),
+                _DataLine(label: 'Alt/Az final', value: _correctedPairText),
                 _DataLine(label: 'Comando final', value: _finalCommandText),
               ],
             ),
@@ -225,13 +229,25 @@ class CelestialEducationalPanel extends StatelessWidget {
 
   String get _altitudeOffsetText {
     final calibration = savedCalibration;
-    if (calibration == null) return 'Sin correccion estimada';
+    if (calibration == null) return 'Sin calibracion';
+    final point = calibration.points.isNotEmpty
+        ? calibration.points.last
+        : null;
+    if (point?.motorAltitudeAtCalibration != null) {
+      return _formatSigned(point!.motorAltitudeAtCalibration!);
+    }
     return _formatSigned(calibration.altitudeOffset);
   }
 
   String get _azimuthOffsetText {
     final calibration = savedCalibration;
-    if (calibration == null) return 'Sin correccion estimada';
+    if (calibration == null) return 'Sin calibracion';
+    final point = calibration.points.isNotEmpty
+        ? calibration.points.last
+        : null;
+    if (point?.motorAzimuthAtCalibration != null) {
+      return _formatUnsigned(point!.motorAzimuthAtCalibration!);
+    }
     return _formatSigned(calibration.azimuthOffset);
   }
 

@@ -13,13 +13,13 @@ extension CalibrationMethodLabel on CalibrationMethod {
   String get description {
     return switch (this) {
       CalibrationMethod.oneStar =>
-        'Rapida y simple. Estima un desfase basico usando una referencia de motores.',
+        'Referencia inicial. Centra manualmente una estrella y fija la posicion real Alt/Az del telescopio.',
       CalibrationMethod.twoStars =>
-        'Correccion logica multipunto con dos referencias de motores.',
+        'Proximamente: correccion multipunto con dos referencias.',
       CalibrationMethod.threeStars =>
-        'Correccion logica multipunto con tres referencias de motores.',
+        'Proximamente: correccion multipunto con tres referencias.',
       CalibrationMethod.fixedObjectSync =>
-        'Permitira guardar una correccion local cerca de un objeto.',
+        'Proximamente: sincronizacion local cerca de un objeto.',
     };
   }
 
@@ -34,9 +34,9 @@ extension CalibrationMethodLabel on CalibrationMethod {
 
   bool get isEnabledInMvp {
     return switch (this) {
-      CalibrationMethod.oneStar ||
+      CalibrationMethod.oneStar => true,
       CalibrationMethod.twoStars ||
-      CalibrationMethod.threeStars => true,
+      CalibrationMethod.threeStars ||
       CalibrationMethod.fixedObjectSync => false,
     };
   }

@@ -16,7 +16,7 @@ class PointingCorrectionService {
     List<String> warnings = const [],
   }) {
     if (points.isEmpty) {
-      throw ArgumentError('La correccion estimada requiere al menos un punto.');
+      throw ArgumentError('La calibracion requiere al menos un punto.');
     }
 
     // MVP: se promedian offsets registrados. En una fase futura esto puede
@@ -86,7 +86,7 @@ class PointingCorrectionService {
 
   CalibrationStatus _statusFor(CalibrationMethod method) {
     return switch (method) {
-      CalibrationMethod.oneStar => CalibrationStatus.calibratedOneStar,
+      CalibrationMethod.oneStar => CalibrationStatus.calibrated,
       CalibrationMethod.twoStars => CalibrationStatus.calibratedTwoStars,
       CalibrationMethod.threeStars => CalibrationStatus.calibratedThreeStars,
       CalibrationMethod.fixedObjectSync => CalibrationStatus.localSyncActive,

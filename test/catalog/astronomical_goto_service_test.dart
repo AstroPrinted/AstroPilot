@@ -22,8 +22,33 @@ void main() {
     repository = CalibrationRepository(storage: CalibrationStorage());
   });
 
-  test('sends raw Alt/Az when there is no saved correction', () async {
+  test('blocks GoTo when the telescope is not calibrated', () async {
     final service = _service(repository, _position(20, 30));
+    var sent = false;
+
+    expect(
+      () => service.sendGoto(
+        object: _object(),
+        send: (_, __) async => sent = true,
+      ),
+      throwsA(isA<StateError>()),
+    );
+    expect(sent, isFalse);
+  });
+
+  test('uses one-star calibration without applying offset', () async {
+    await repository.saveCurrentResult(
+      CalibrationResult(
+        altitudeOffset: 2,
+        azimuthOffset: -40,
+        method: CalibrationMethod.oneStar,
+        status: CalibrationStatus.calibrated,
+        points: const [],
+        createdAt: DateTime.utc(2026),
+      ),
+    );
+
+    final service = _service(repository, _position(20, 10));
     double? sentAlt;
     double? sentAz;
 
@@ -35,18 +60,19 @@ void main() {
       },
     );
 
+    expect(command.hasCalibration, isTrue);
     expect(command.usedCorrection, isFalse);
     expect(sentAlt, 20);
-    expect(sentAz, 30);
+    expect(sentAz, 10);
   });
 
-  test('applies saved correction and normalizes azimuth', () async {
+  test('applies future multipoint correction and normalizes azimuth', () async {
     await repository.saveCurrentResult(
       CalibrationResult(
         altitudeOffset: 2,
         azimuthOffset: -40,
-        method: CalibrationMethod.oneStar,
-        status: CalibrationStatus.calibratedOneStar,
+        method: CalibrationMethod.twoStars,
+        status: CalibrationStatus.calibratedTwoStars,
         points: const [],
         createdAt: DateTime.utc(2026),
       ),

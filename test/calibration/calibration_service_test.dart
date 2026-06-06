@@ -9,25 +9,27 @@ void main() {
     correctionService: PointingCorrectionService(),
   );
 
-  test('one star calibration keeps direct offset', () {
+  test('one star calibration stores a logical position reference', () {
     var session = service.startSession(CalibrationMethod.oneStar);
-    final point = service.createPoint(
+    final point = service.createPositionReferencePoint(
       objectId: 'star_a',
       objectName: 'Star A',
-      calculatedAltitude: 30,
-      calculatedAzimuth: 120,
-      adjustedAltitude: 27,
-      adjustedAzimuth: 110,
+      referenceRaJ2000Hours: 12.5,
+      referenceDecJ2000Degrees: -63,
+      altitude: 30,
+      azimuth: 120,
     );
 
     session = service.addPoint(session, point);
     final result = service.completeSession(session);
 
     expect(result.method, CalibrationMethod.oneStar);
-    expect(result.status, CalibrationStatus.calibratedOneStar);
+    expect(result.status, CalibrationStatus.calibrated);
     expect(result.points, hasLength(1));
-    expect(result.altitudeOffset, 3);
-    expect(result.azimuthOffset, 10);
+    expect(result.altitudeOffset, 0);
+    expect(result.azimuthOffset, 0);
+    expect(result.points.single.motorAltitudeAtCalibration, 30);
+    expect(result.points.single.motorAzimuthAtCalibration, 120);
   });
 
   test('two star calibration averages offsets', () {

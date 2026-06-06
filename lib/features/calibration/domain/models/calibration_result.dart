@@ -67,7 +67,7 @@ class CalibrationResult {
 
   static CalibrationStatus _statusFor(CalibrationMethod method) {
     return switch (method) {
-      CalibrationMethod.oneStar => CalibrationStatus.calibratedOneStar,
+      CalibrationMethod.oneStar => CalibrationStatus.calibrated,
       CalibrationMethod.twoStars => CalibrationStatus.calibratedTwoStars,
       CalibrationMethod.threeStars => CalibrationStatus.calibratedThreeStars,
       CalibrationMethod.fixedObjectSync => CalibrationStatus.localSyncActive,

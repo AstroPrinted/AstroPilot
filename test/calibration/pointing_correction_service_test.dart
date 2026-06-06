@@ -15,9 +15,8 @@ void main() {
     expect(service.azimuthError(calculatedAzimuth: 1, adjustedAzimuth: 359), 2);
   });
 
-  test('applyCorrection works with one, two and three star results', () {
+  test('applyCorrection works with future multipoint results', () {
     for (final result in [
-      _result(CalibrationMethod.oneStar, CalibrationStatus.calibratedOneStar),
       _result(CalibrationMethod.twoStars, CalibrationStatus.calibratedTwoStars),
       _result(
         CalibrationMethod.threeStars,

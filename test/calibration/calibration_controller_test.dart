@@ -2,6 +2,7 @@ import 'package:astroprintedlogicincludedgeoengine/features/calibration/data/cal
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/data/calibration_storage.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_flow_step.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_method.dart';
+import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_status.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/services/astronomy_position_service.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/services/calibration_service.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/services/pointing_correction_service.dart';
@@ -21,19 +22,81 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  test('detects when there are not enough visible stars', () async {
+  test('detects when there is no visible reference star', () async {
     final controller = _controller(_position(10, 120));
     addTearDown(controller.dispose);
 
     await controller.loadSavedCalibration();
-    controller.startMethod(CalibrationMethod.threeStars);
-    controller.continueAfterHome();
+    controller.startMethod(CalibrationMethod.oneStar);
 
     expect(controller.flowStep, CalibrationFlowStep.selectingObject);
-    expect(controller.errorMessage, contains('No hay suficientes'));
-    expect(controller.errorMessage, contains('3 estrellas'));
-    expect(controller.errorMessage, contains('3 estrellas sobre 15'));
+    expect(controller.errorMessage, contains('No hay estrellas'));
+    expect(controller.errorMessage, contains('una estrella sobre 15'));
   });
+
+  test('selects a visible star and waits for manual centering', () async {
+    final controller = _controller(_position(45, 120));
+    addTearDown(controller.dispose);
+
+    await controller.loadSavedCalibration();
+    controller.startMethod(CalibrationMethod.oneStar);
+    await controller.selectStar(controller.calibrationStarOptions.first);
+
+    expect(controller.flowStep, CalibrationFlowStep.waitingUserCentering);
+    expect(controller.status, CalibrationStatus.waitingForManualCentering);
+    expect(controller.targetPosition?.altitudeDeg, 45);
+    expect(controller.selectedStarGuide, isNotEmpty);
+  });
+
+  test('manual nudge sends relative movement without GoTo target', () async {
+    final controller = _controller(_position(45, 120));
+    addTearDown(controller.dispose);
+    final sent = <List<double>>[];
+
+    await controller.loadSavedCalibration();
+    controller.startMethod(CalibrationMethod.oneStar);
+    await controller.selectStar(controller.calibrationStarOptions.first);
+    await controller.nudge(CalibrationNudgeDirection.right, (
+      deltaAltitude,
+      deltaAzimuth,
+    ) async {
+      sent.add([deltaAltitude, deltaAzimuth]);
+    });
+
+    expect(sent, [
+      [0.0, CalibrationController.fineStepDegrees],
+    ]);
+    expect(controller.adjustedAltitude, 0);
+    expect(controller.adjustedAzimuth, CalibrationController.fineStepDegrees);
+  });
+
+  test(
+    'confirming centered star sends SET_POSITION and saves calibration',
+    () async {
+      final controller = _controller(_position(63.1548, 30.4972));
+      addTearDown(controller.dispose);
+      double? sentAltitude;
+      double? sentAzimuth;
+
+      await controller.loadSavedCalibration();
+      controller.startMethod(CalibrationMethod.oneStar);
+      await controller.selectStar(controller.calibrationStarOptions.first);
+      await controller.confirmCenteredReference((altitude, azimuth) async {
+        sentAltitude = altitude;
+        sentAzimuth = azimuth;
+      });
+
+      expect(sentAltitude, 63.1548);
+      expect(sentAzimuth, 30.4972);
+      expect(controller.flowStep, CalibrationFlowStep.completed);
+      expect(controller.savedResult?.status, CalibrationStatus.calibrated);
+      expect(controller.savedResult?.points, hasLength(1));
+      final point = controller.savedResult!.points.single;
+      expect(point.motorAltitudeAtCalibration, 63.1548);
+      expect(point.motorAzimuthAtCalibration, 30.4972);
+      expect(point.referenceRaJ2000Hours, isNotNull);
+    },
+  );
 }
 
 CalibrationController _controller(AltAzResult position) {

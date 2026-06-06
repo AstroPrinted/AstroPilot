@@ -12,8 +12,11 @@ class CalibrationStatusBadge extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final color = switch (status) {
       CalibrationStatus.notCalibrated => colorScheme.onSurfaceVariant,
+      CalibrationStatus.selectingReferenceStar ||
+      CalibrationStatus.waitingForManualCentering ||
       CalibrationStatus.inProgress ||
       CalibrationStatus.partiallyCalibrated => colorScheme.tertiary,
+      CalibrationStatus.calibrationFailed ||
       CalibrationStatus.failed => colorScheme.error,
       _ => colorScheme.secondary,
     };
@@ -45,6 +48,10 @@ class CalibrationStatusBadge extends StatelessWidget {
   IconData _iconFor(CalibrationStatus status) {
     return switch (status) {
       CalibrationStatus.notCalibrated => Icons.radio_button_unchecked_rounded,
+      CalibrationStatus.selectingReferenceStar => Icons.manage_search_rounded,
+      CalibrationStatus.waitingForManualCentering =>
+        Icons.center_focus_strong_rounded,
+      CalibrationStatus.calibrationFailed => Icons.error_outline_rounded,
       CalibrationStatus.inProgress => Icons.sync_rounded,
       CalibrationStatus.partiallyCalibrated => Icons.adjust_rounded,
       CalibrationStatus.failed => Icons.error_outline_rounded,

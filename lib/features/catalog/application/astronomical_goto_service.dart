@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 
 import '../../calibration/data/calibration_repository.dart';
+import '../../calibration/domain/models/calibration_method.dart';
 import '../../calibration/domain/models/calibration_result.dart';
 import '../../calibration/domain/services/astronomy_position_service.dart';
 import '../../calibration/domain/services/pointing_correction_service.dart';
@@ -31,7 +32,9 @@ class AstronomicalGotoCommand {
     required this.finalAzimuth,
   });
 
-  bool get usedCorrection => calibration != null;
+  bool get hasCalibration => calibration != null;
+  bool get usedCorrection =>
+      calibration != null && calibration!.method != CalibrationMethod.oneStar;
 }
 
 class AstronomicalGotoService {
@@ -68,8 +71,11 @@ class AstronomicalGotoService {
     required CalibrationResult? calibration,
   }) {
     _ensureGotoAllowed(object, rawPosition);
+    _ensureCalibrated(calibration);
+    final savedCalibration = calibration!;
 
-    final corrected = calibration == null
+    final usesOffset = savedCalibration.method != CalibrationMethod.oneStar;
+    final corrected = !usesOffset
         ? (
             altitude: rawPosition.altitudeDeg.clamp(-90.0, 90.0).toDouble(),
             azimuth: normalizeDegrees360(rawPosition.azimuthDeg),
@@ -77,13 +83,13 @@ class AstronomicalGotoService {
         : correctionService.applyCorrection(
             targetAltitude: rawPosition.altitudeDeg,
             targetAzimuth: rawPosition.azimuthDeg,
-            calibration: calibration,
+            calibration: savedCalibration,
           );
 
     return AstronomicalGotoCommand(
       object: object,
       rawPosition: rawPosition,
-      calibration: calibration,
+      calibration: savedCalibration,
       finalAltitude: corrected.altitude,
       finalAzimuth: corrected.azimuth,
     );
@@ -104,13 +110,16 @@ class AstronomicalGotoService {
 
     final calibration = await loadSavedCalibration();
     debugPrint('[AstronomicalGoTo] Calibration found: ${calibration != null}');
-    if (calibration != null) {
-      debugPrint(
-        '[AstronomicalGoTo] Offset Alt/Az: '
-        '${calibration.altitudeOffset.toStringAsFixed(4)} / '
-        '${calibration.azimuthOffset.toStringAsFixed(4)}',
+    if (calibration == null) {
+      throw StateError(
+        'Telescopio no calibrado. Realiza calibracion con una estrella antes de usar GoTo.',
       );
     }
+    debugPrint(
+      '[AstronomicalGoTo] Offset Alt/Az: '
+      '${calibration.altitudeOffset.toStringAsFixed(4)} / '
+      '${calibration.azimuthOffset.toStringAsFixed(4)}',
+    );
 
     final command = buildCommand(
       object: object,
@@ -157,6 +166,14 @@ class AstronomicalGotoService {
     }
     if (rawPosition.altitudeDeg < 0.0) {
       throw StateError('Objeto bajo el horizonte. GoTo bloqueado.');
+    }
+  }
+
+  void _ensureCalibrated(CalibrationResult? calibration) {
+    if (calibration == null) {
+      throw StateError(
+        'Telescopio no calibrado. Realiza calibracion con una estrella antes de usar GoTo.',
+      );
     }
   }
 

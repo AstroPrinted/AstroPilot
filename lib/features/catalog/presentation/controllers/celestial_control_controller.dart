@@ -245,8 +245,8 @@ class CelestialControlController extends ChangeNotifier {
         sentAt: sentAt,
       );
       _statusMessage = command.usedCorrection
-          ? '$label enviado con correccion estimada.'
-          : '$label enviado sin correccion estimada.';
+          ? '$label enviado con correccion multipunto.'
+          : '$label enviado con referencia calibrada.';
     } catch (e) {
       _errorMessage = _errorText(e);
       _statusMessage = _errorMessage;

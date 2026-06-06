@@ -23,14 +23,14 @@ void main() {
   });
 
   test(
-    'fine tune moves from corrected local position without reapplying offset',
+    'fine tune moves from one-star calibrated target without applying offset',
     () async {
       await repository.saveCurrentResult(
         CalibrationResult(
           altitudeOffset: 1,
           azimuthOffset: 10,
           method: CalibrationMethod.oneStar,
-          status: CalibrationStatus.calibratedOneStar,
+          status: CalibrationStatus.calibrated,
           points: const [],
           createdAt: DateTime.utc(2026),
         ),
@@ -48,9 +48,9 @@ void main() {
       );
 
       expect(sent, hasLength(2));
-      expect(sent[0], [21, 40]);
-      expect(sent[1][0], 21);
-      expect(sent[1][1], 40.25);
+      expect(sent[0], [20, 30]);
+      expect(sent[1][0], 20);
+      expect(sent[1][1], 30.25);
       expect(controller.lastSentCommand?.usedCorrection, isFalse);
     },
   );
@@ -68,6 +68,16 @@ void main() {
   });
 
   test('STOP stops active tracking and sends stop command', () async {
+    await repository.saveCurrentResult(
+      CalibrationResult(
+        altitudeOffset: 0,
+        azimuthOffset: 0,
+        method: CalibrationMethod.oneStar,
+        status: CalibrationStatus.calibrated,
+        points: const [],
+        createdAt: DateTime.utc(2026),
+      ),
+    );
     final controller = _controller(repository, _position(30, 45));
     addTearDown(controller.dispose);
     var stopSent = false;
