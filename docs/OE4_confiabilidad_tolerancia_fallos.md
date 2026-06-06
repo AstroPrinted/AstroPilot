@@ -1,6 +1,6 @@
 # OE4 - Confiabilidad y tolerancia a fallos
 
-Este documento describe la base de Fase 4 implementada sobre el Prototipo 3. La Fase 3 se mantiene: `GOTO`, `HOME`, `STATUS`, `STOP`, `TEST_ROUTINE`, BLE Notify, Serial y el pinout validado no cambian.
+Este documento describe la base de Fase 4 implementada sobre el Prototipo 3. La Fase 3 se mantiene: `GOTO`, `HOME`, `STATUS`, `STOP`, `TEST_ROUTINE`, BLE Notify, Serial y el pinout validado no cambian. Para el flujo de calibracion de una estrella se agregan `NUDGE` y `SET_POSITION`.
 
 ## Alcance implementado
 
@@ -18,6 +18,8 @@ Este documento describe la base de Fase 4 implementada sobre el Prototipo 3. La 
 | `{"cmd":"PING"}` | Flutter automatico o Serial JSON | `{"status":"OK","msg":"PONG"}` |
 | `{"cmd":"ENABLE_WATCHDOG","enabled":true}` | Switch UI o Serial JSON | `{"status":"OK","watchdog":true}` |
 | `{"cmd":"ENABLE_WATCHDOG","enabled":false}` | Switch UI o Serial JSON | `{"status":"OK","watchdog":false}` |
+| `{"cmd":"NUDGE","dAlt":0.25,"dAz":0}` | Control manual de calibracion | Movimiento relativo |
+| `{"cmd":"SET_POSITION","alt":63.1548,"az":30.4972}` | Confirmar estrella centrada | Fija posicion logica interna |
 
 ## Errores defensivos
 

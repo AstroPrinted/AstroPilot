@@ -9,7 +9,7 @@ Este documento define como medir cobertura BLE y estabilidad del heartbeat en Fa
 - Distancia aproximada entre telefono y ESP32.
 - Obstaculos entre telefono y ESP32.
 - Si `Ultimo PONG recibido` sigue actualizandose.
-- Si los comandos `STATUS` y `GOTO` siguen funcionando.
+- Si los comandos `STATUS`, `GOTO`, `NUDGE` y `SET_POSITION` siguen funcionando.
 - Evidencia en captura, video o monitor Serial.
 
 ## Umbrales preliminares

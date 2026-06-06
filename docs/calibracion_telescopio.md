@@ -1,99 +1,70 @@
 # Calibracion del telescopio en AstroPilot
 
-## 1. Que es la calibracion en AstroPilot
+## 1. Objetivo
 
-La calibracion en AstroPilot busca relacionar dos sistemas de referencia:
+La calibracion relaciona la orientacion fisica real del telescopio con la posicion logica interna de los motores. Antes de usar GoTo automatico, el usuario debe centrar manualmente una estrella conocida y la app debe fijar la posicion actual del sistema con la Alt/Az real de esa estrella.
 
-- La posicion astronomica calculada por la app para un objeto del cielo, expresada en altitud y azimut.
-- La posicion interna estimada de los motores del prototipo, tambien expresada en altitud y azimut.
+## 2. Flujo implementado
 
-En una version completa, esta relacion deberia validarse observando una estrella en el ocular o mediante una camara. En el estado actual del prototipo, la app todavia no puede comprobar opticamente si el telescopio apunta exactamente al objeto.
+La version actual trabaja solo con calibracion de una estrella:
 
-## 2. Que implementa actualmente la Fase 1
+1. El usuario entra a Calibracion.
+2. La UI muestra 1 estrella como metodo disponible.
+3. Los modos 2 estrellas, 3 estrellas y objeto fijo quedan deshabilitados como Proximamente.
+4. La app lista estrellas visibles sobre el horizonte usando fecha, hora y ubicacion actuales.
+5. El usuario selecciona una estrella de referencia.
+6. La app muestra nombre, constelacion, magnitud, Alt/Az actual y una guia breve para reconocerla.
+7. El usuario mueve manualmente el telescopio con controles `NUDGE`.
+8. Cuando la estrella esta centrada, presiona Confirmar estrella centrada.
+9. La app recalcula la Alt/Az de la estrella en ese instante.
+10. La app envia `SET_POSITION(alt,az)` al ESP32.
+11. La calibracion queda guardada como referencia valida.
 
-La Fase 1 implementa un flujo funcional de calibracion logica y demostrativa:
+## 3. Comandos de firmware
 
-1. El usuario inicia una correccion con 1 estrella.
-2. La app permite enviar `HOME` al ESP32.
-3. El usuario selecciona una estrella del catalogo existente.
-4. La app calcula la posicion Alt/Az usando `EphemerisEngine`.
-5. La app envia `GOTO(alt,az)` usando los servicios BLE existentes.
-6. El usuario puede realizar ajustes finos con comandos `GOTO` incrementales.
-7. La app registra la posicion ajustada como referencia estimada de motores.
-8. La app calcula un offset simple entre posicion calculada y posicion ajustada.
-9. La app guarda la correccion estimada en `SharedPreferences`.
-
-Esta fase no modifica firmware, no agrega comandos nuevos y no aplica la correccion a los GoTo globales.
-
-## 3. Por que la calibracion actual es logica/demostrativa
-
-El sistema actual trabaja en lazo abierto. Esto significa que la app envia comandos al ESP32 y mantiene una estimacion local de la posicion objetivo, pero no recibe una confirmacion optica del apuntado real.
-
-La app puede mover motores y registrar una referencia ajustada por el usuario, pero no puede afirmar que una estrella fue verificada visualmente. Por eso la UI usa terminos como:
-
-- Correccion estimada.
-- Posicion ajustada.
-- Referencia de motores.
-- Ajuste manual registrado.
-
-## 4. Que significa correccion estimada
-
-Una correccion estimada es un offset calculado entre:
-
-- La altitud y el azimut calculados astronomicamente para una estrella.
-- La altitud y el azimut ajustados manualmente por el usuario en la app.
-
-Esta correccion sirve para demostrar el flujo de calibracion del prototipo, pero no certifica precision astronomica real.
-
-## 5. Que datos se guardan
-
-La app guarda localmente:
-
-- Metodo usado, por ahora `1 estrella`.
-- Fecha y hora de creacion.
-- Objeto usado como referencia.
-- Altitud calculada.
-- Azimut calculado.
-- Altitud ajustada.
-- Azimut ajustado.
-- Offset estimado de altitud.
-- Offset estimado de azimut.
-- Diferencia estimada del MVP.
-- Estado de la correccion estimada.
-
-La persistencia actual usa `SharedPreferences` mediante la feature `calibration`.
-
-## 6. Como se calcula el offset
-
-Para la Fase 1, el offset se calcula de forma simple:
+El firmware mantiene `GOTO` para apuntamientos automaticos, pero la calibracion usa comandos especificos:
 
 ```txt
-offsetAltitud = altitudCalculada - altitudAjustada
-offsetAzimut = azimutCalculado - azimutAjustado
+NUDGE:dAlt,dAz
+SET_POSITION:alt,az
 ```
 
-El signo del offset debe validarse mas adelante con pruebas fisicas y observacion real. En esta fase se guarda como una correccion logica estimada.
+`NUDGE` mueve los motores de forma relativa desde la posicion interna actual. `SET_POSITION` no mueve el telescopio; solo fija la posicion logica interna del firmware para que la posicion fisica centrada corresponda a la Alt/Az real de la estrella.
 
-## 7. Limitaciones actuales
+## 4. Logica correcta
 
-- No existe validacion optica con ocular o camara.
-- La app no detecta estrellas automaticamente.
-- La app no puede asegurar precision astronomica real.
-- El ajuste fino usa `GOTO` incremental, no comandos dedicados como `NUDGE`.
-- El firmware actual no entrega `STATUS` estructurado en JSON para reconstruir posicion real desde la app.
-- La correccion guardada no se aplica todavia a todos los GoTo globales.
-- La calibracion con 2 y 3 estrellas solo esta preparada conceptualmente.
-- El sync local todavia no esta implementado.
+No se usa regla de 3 ni un offset de una estrella para estimar otros objetos.
 
-## 8. Fases futuras
+La app calcula la Alt/Az real de cada objetivo con fecha, hora y ubicacion. Luego envia esa Alt/Az como destino. Como el firmware ya conoce su posicion logica actual gracias a `SET_POSITION`, el movimiento fisico sale de la diferencia entre posicion actual y objetivo.
 
-Las siguientes fases deberian agregar:
+## 5. Datos guardados
 
-- Validacion optica real con ocular o camara.
+La app guarda:
+
+- Metodo usado: `oneStar`.
+- Estado de calibracion.
+- Estrella de referencia.
+- RA/Dec J2000 de la estrella.
+- Alt/Az real de la estrella al confirmar.
+- Posicion logica de motores fijada con `SET_POSITION`.
+- Fecha y hora de calibracion.
+- Advertencias del flujo si existen.
+
+La persistencia usa `SharedPreferences` mediante la feature `calibration`.
+
+## 6. Reglas de seguridad y uso
+
+- GoTo y tracking quedan bloqueados antes de calibrar.
+- El movimiento manual si esta permitido antes de calibrar.
+- Si la estrella cae bajo el horizonte, no se puede confirmar.
+- La Alt/Az se recalcula al momento exacto de confirmar.
+- Si no hay ubicacion valida, el flujo debe fallar o pedir ubicacion manual desde ajustes.
+- La calibracion de una estrella es una referencia inicial; no corrige errores mecanicos, desnivel del tripode ni desalineacion avanzada.
+
+## 7. Pendiente
+
 - Calibracion con 2 estrellas.
 - Calibracion con 3 estrellas.
-- Sync local por objeto o region del cielo.
-- Parseo estructurado de `STATUS` desde el ESP32.
-- Aplicacion de la correccion estimada a los GoTo globales.
-- Validacion del signo del offset con pruebas fisicas.
-- Modelo multipunto o interpolacion por zona del cielo.
+- Sync local por objeto fijo.
+- Estado estructurado JSON desde firmware.
+- Modelo multipunto para correcciones mecanicas avanzadas.
