@@ -362,6 +362,44 @@ class CalibrationController extends ChangeNotifier {
     );
   }
 
+  Future<void> moveToAdjustedPosition({
+    required double altitude,
+    required double azimuth,
+    required CalibrationManualMoveSender sendManualMove,
+  }) async {
+    if (_selectedStar == null ||
+        _flowStep != CalibrationFlowStep.waitingUserCentering) {
+      return;
+    }
+
+    if (!altitude.isFinite || !azimuth.isFinite) {
+      _errorMessage = 'Ingresa valores numericos validos.';
+      notifyListeners();
+      return;
+    }
+
+    final currentAltitude = _adjustedAltitude ?? 0.0;
+    final currentAzimuth = _adjustedAzimuth ?? 0.0;
+    final deltaAltitude = altitude - currentAltitude;
+    final deltaAzimuth = azimuth - currentAzimuth;
+
+    if (deltaAltitude.abs() < 0.0001 && deltaAzimuth.abs() < 0.0001) {
+      return;
+    }
+
+    await _runCommand(
+      logLabel:
+          '[Calibration] Manual direct move: '
+          '${deltaAltitude.toStringAsFixed(2)} / '
+          '${deltaAzimuth.toStringAsFixed(2)}',
+      action: () => sendManualMove(deltaAltitude, deltaAzimuth),
+      onSuccess: () {
+        _adjustedAltitude = altitude;
+        _adjustedAzimuth = azimuth;
+      },
+    );
+  }
+
   Future<void> confirmCenteredReference(
     CalibrationSetPositionSender setPosition,
   ) async {

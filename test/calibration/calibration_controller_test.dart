@@ -71,6 +71,39 @@ void main() {
   });
 
   test(
+    'manual direct movement sends only the remaining relative movement',
+    () async {
+      final controller = _controller(_position(45, 120));
+      addTearDown(controller.dispose);
+      final sent = <List<double>>[];
+
+      await controller.loadSavedCalibration();
+      controller.startMethod(CalibrationMethod.oneStar);
+      await controller.selectStar(controller.calibrationStarOptions.first);
+      await controller.nudge(CalibrationNudgeDirection.right, (
+        deltaAltitude,
+        deltaAzimuth,
+      ) async {
+        sent.add([deltaAltitude, deltaAzimuth]);
+      });
+      await controller.moveToAdjustedPosition(
+        altitude: 5,
+        azimuth: 120,
+        sendManualMove: (deltaAltitude, deltaAzimuth) async {
+          sent.add([deltaAltitude, deltaAzimuth]);
+        },
+      );
+
+      expect(sent, [
+        [0.0, CalibrationController.fineStepDegrees],
+        [5.0, 120 - CalibrationController.fineStepDegrees],
+      ]);
+      expect(controller.adjustedAltitude, 5);
+      expect(controller.adjustedAzimuth, 120);
+    },
+  );
+
+  test(
     'confirming centered star sends SET_POSITION and saves calibration',
     () async {
       final controller = _controller(_position(63.1548, 30.4972));

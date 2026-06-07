@@ -179,6 +179,13 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
         isBusy: calibration.isBusy,
         onNudge: (direction) =>
             _sendNudge(calibration, oe4Controller, deviceId, direction),
+        onMoveToAdjustment: (altitude, azimuth) => _sendManualAdjustment(
+          calibration,
+          oe4Controller,
+          deviceId,
+          altitude,
+          azimuth,
+        ),
         onConfirm: () =>
             _confirmCenteredReference(calibration, oe4Controller, deviceId),
         onCancel: calibration.cancelFlow,
@@ -226,6 +233,25 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
     await calibration.nudge(
       direction,
       (deltaAltitude, deltaAzimuth) => oe4Controller.sendNudge(
+        deviceId!,
+        deltaAlt: deltaAltitude,
+        deltaAz: deltaAzimuth,
+      ),
+    );
+  }
+
+  Future<void> _sendManualAdjustment(
+    CalibrationController calibration,
+    Oe4ControlController oe4Controller,
+    String? deviceId,
+    double altitude,
+    double azimuth,
+  ) async {
+    if (!_ensureConnected(deviceId)) return;
+    await calibration.moveToAdjustedPosition(
+      altitude: altitude,
+      azimuth: azimuth,
+      sendManualMove: (deltaAltitude, deltaAzimuth) => oe4Controller.sendNudge(
         deviceId!,
         deltaAlt: deltaAltitude,
         deltaAz: deltaAzimuth,
@@ -679,6 +705,8 @@ class _CenteringStep extends StatelessWidget {
   final bool controlsEnabled;
   final bool isBusy;
   final Future<void> Function(CalibrationNudgeDirection direction) onNudge;
+  final Future<void> Function(double altitude, double azimuth)
+  onMoveToAdjustment;
   final VoidCallback onConfirm;
   final VoidCallback onCancel;
 
@@ -687,6 +715,7 @@ class _CenteringStep extends StatelessWidget {
     required this.controlsEnabled,
     required this.isBusy,
     required this.onNudge,
+    required this.onMoveToAdjustment,
     required this.onConfirm,
     required this.onCancel,
   });
@@ -718,7 +747,13 @@ class _CenteringStep extends StatelessWidget {
             azimuth: calibration.adjustedAzimuth,
           ),
           const SizedBox(height: 12),
-          CalibrationControls(enabled: controlsEnabled, onNudge: onNudge),
+          CalibrationControls(
+            enabled: controlsEnabled,
+            adjustedAltitude: calibration.adjustedAltitude,
+            adjustedAzimuth: calibration.adjustedAzimuth,
+            onNudge: onNudge,
+            onMoveToAdjustment: onMoveToAdjustment,
+          ),
           const SizedBox(height: 12),
           FilledButton.icon(
             onPressed: isBusy ? null : onConfirm,
