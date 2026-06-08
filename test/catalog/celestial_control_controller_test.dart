@@ -2,7 +2,9 @@ import 'package:astroprintedlogicincludedgeoengine/features/calibration/data/cal
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/data/calibration_storage.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_method.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_result.dart';
+import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_stage.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_status.dart';
+import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/correction_model.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/catalog/application/astronomical_goto_service.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/catalog/domain/models/celestial_object.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/catalog/presentation/controllers/celestial_control_controller.dart';
@@ -25,10 +27,12 @@ void main() {
   test(
     'fine tune moves from one-star calibrated target without applying offset',
     () async {
-      await repository.saveCurrentResult(
+      await repository.saveInitialAlignmentResult(
         CalibrationResult(
-          altitudeOffset: 1,
-          azimuthOffset: 10,
+          altitudeOffset: 0,
+          azimuthOffset: 0,
+          stage: CalibrationStage.initialAlignment,
+          correctionModel: CorrectionModel.none,
           method: CalibrationMethod.oneStar,
           status: CalibrationStatus.calibrated,
           points: const [],
@@ -68,10 +72,12 @@ void main() {
   });
 
   test('STOP stops active tracking and sends stop command', () async {
-    await repository.saveCurrentResult(
+    await repository.saveInitialAlignmentResult(
       CalibrationResult(
         altitudeOffset: 0,
         azimuthOffset: 0,
+        stage: CalibrationStage.initialAlignment,
+        correctionModel: CorrectionModel.none,
         method: CalibrationMethod.oneStar,
         status: CalibrationStatus.calibrated,
         points: const [],

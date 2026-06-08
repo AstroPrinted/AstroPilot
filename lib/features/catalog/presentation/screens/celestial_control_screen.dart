@@ -228,12 +228,12 @@ class _ObjectSummaryCard extends StatelessWidget {
         _InfoLine(label: 'Magnitud', value: object.magnitude ?? 'N/A'),
         if (object is DeepSkyObject)
           _InfoLine(
-            label: 'Catalogos',
+            label: 'Catálogos',
             value: (object as DeepSkyObject).catalogs.join(', '),
           ),
         if (object is CalibrationStar)
           _InfoLine(
-            label: 'Constelacion',
+            label: 'Constelación',
             value: (object as CalibrationStar).constellation,
           ),
       ],
@@ -243,7 +243,7 @@ class _ObjectSummaryCard extends StatelessWidget {
   String _typeLabel(CelestialObject object) {
     if (object is SolarSystemBody) return 'Sistema Solar';
     if (object is DeepSkyObject) return object.objectType;
-    return 'Estrella de calibracion';
+    return 'Estrella de calibración';
   }
 }
 
@@ -270,7 +270,7 @@ class _ConnectionCard extends StatelessWidget {
               : Icons.error_outline_rounded,
           message: isConnected
               ? 'ESP32 conectado: ${deviceName ?? 'dispositivo BLE'}'
-              : 'ESP32 desconectado. Los comandos estan deshabilitados.',
+              : 'ESP32 desconectado. Los comandos están deshabilitados.',
           isError: !isConnected,
         ),
       ],
@@ -296,7 +296,7 @@ class _PositionCard extends StatelessWidget {
         if (position == null)
           _StatusMessage(
             icon: Icons.sync_rounded,
-            message: error ?? 'Calculando posicion actual...',
+            message: error ?? 'Calculando posición actual...',
             isError: error != null,
           )
         else ...[
@@ -346,7 +346,7 @@ class _PositionCard extends StatelessWidget {
             ),
           const SizedBox(height: 8),
           _InfoLine(
-            label: 'Ultima hora de calculo',
+            label: 'Última hora de calculo',
             value: position.computedAt.toIso8601String(),
           ),
         ],
@@ -367,21 +367,21 @@ class _CorrectionCard extends StatelessWidget {
         ? calibration!.points.last
         : null;
     return _ControlCard(
-      title: 'Calibracion',
+      title: 'Calibración',
       icon: Icons.tune_rounded,
       children: [
         if (calibration == null)
           const _StatusMessage(
             icon: Icons.info_outline_rounded,
             message:
-                'No calibrado. Realiza calibracion con una estrella antes de usar GoTo o tracking.',
+                'No calibrado. Realiza calibración con una estrella antes de usar GoTo o tracking.',
           )
         else ...[
           _StatusMessage(
             icon: Icons.check_circle_outline_rounded,
             message: calibration.method == CalibrationMethod.oneStar
-                ? 'Referencia inicial activa. El firmware conoce la posicion Alt/Az actual del telescopio.'
-                : 'Correccion multipunto disponible para GoTo inicial y tracking logico.',
+                ? 'Referencia inicial activa. El firmware conoce la posición Alt/Az actual del telescopio.'
+                : 'Corrección multipunto disponible para GoTo inicial y tracking lógico.',
           ),
           const SizedBox(height: 10),
           Row(
@@ -431,7 +431,7 @@ class _TrackingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _ControlCard(
-      title: 'Tracking logico',
+      title: 'Tracking lógico',
       icon: Icons.track_changes_rounded,
       children: [
         _StatusMessage(
@@ -439,12 +439,12 @@ class _TrackingCard extends StatelessWidget {
               ? Icons.play_circle_outline_rounded
               : Icons.pause_circle_outline_rounded,
           message: controller.isTracking
-              ? 'Tracking logico activo. Actualiza la posicion cada 15 segundos.'
+              ? 'Tracking lógico activo. Actualiza la posición cada 15 segundos.'
               : 'Tracking inactivo.',
         ),
         const SizedBox(height: 10),
         _InfoLine(
-          label: 'Ultima actualizacion',
+          label: 'Última actualización',
           value: controller.lastUpdatedAt?.toIso8601String() ?? 'N/A',
         ),
         _InfoLine(
@@ -473,7 +473,7 @@ class _LastCommandCard extends StatelessWidget {
         if (sent == null)
           const _StatusMessage(
             icon: Icons.info_outline_rounded,
-            message: 'Aun no se han enviado comandos desde esta pantalla.',
+            message: 'Aún no se han enviado comandos desde esta pantalla.',
           )
         else ...[
           _InfoLine(label: 'Tipo', value: sent.label),
@@ -503,7 +503,7 @@ class _LastCommandCard extends StatelessWidget {
                   ? Icons.tune_rounded
                   : Icons.check_circle_outline_rounded,
               message: sent.usedCorrection
-                  ? 'Se aplico correccion multipunto.'
+                  ? 'Se aplicó corrección multipunto.'
                   : 'Se envio usando la referencia calibrada.',
             ),
           ],
@@ -562,7 +562,7 @@ class _ActionsCard extends StatelessWidget {
           const _StatusMessage(
             icon: Icons.lock_outline_rounded,
             message:
-                'GoTo y tracking estan bloqueados hasta completar calibracion con una estrella.',
+                'GoTo y tracking están bloqueados hasta completar calibración con una estrella.',
           ),
           const SizedBox(height: 10),
         ],
@@ -628,7 +628,7 @@ class _ActionsCard extends StatelessWidget {
               : Icons.info_outline_rounded,
           message: canFineTune
               ? 'Tap para mover ${CelestialControlController.fineStepDegrees.toStringAsFixed(2)}°. Mantener presionado repite cada 250 ms.'
-              : 'Disponible despues de un GoTo inicial o tracking previo.',
+              : 'Disponible después de un GoTo inicial o tracking previo.',
         ),
         const SizedBox(height: 10),
         CelestialFineControls(enabled: canFineTune, onNudge: onFineTune),
@@ -656,10 +656,10 @@ class _EducationalModeToggleCard extends StatelessWidget {
           contentPadding: EdgeInsets.zero,
           value: enabled,
           onChanged: onChanged,
-          title: const Text('Mostrar explicacion interactiva'),
+          title: const Text('Mostrar explicación interactiva'),
           subtitle: const Text(
-            'Panel solo visual: no envia comandos, no inicia tracking y no '
-            'modifica calibracion.',
+            'Panel solo visual: no envía comandos, no inicia tracking y no '
+            'modifica calibración.',
           ),
         ),
       ],

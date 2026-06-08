@@ -3,23 +3,23 @@ enum CalibrationMethod { oneStar, twoStars, threeStars, fixedObjectSync }
 extension CalibrationMethodLabel on CalibrationMethod {
   String get title {
     return switch (this) {
-      CalibrationMethod.oneStar => '1 estrella',
-      CalibrationMethod.twoStars => '2 estrellas',
-      CalibrationMethod.threeStars => '3 estrellas',
-      CalibrationMethod.fixedObjectSync => 'Objeto fijo',
+      CalibrationMethod.oneStar => 'Corrección con 1 estrella',
+      CalibrationMethod.twoStars => 'Corrección con 2 estrellas',
+      CalibrationMethod.threeStars => 'Corrección con 3 estrellas',
+      CalibrationMethod.fixedObjectSync => 'Corrección con objeto fijo',
     };
   }
 
   String get description {
     return switch (this) {
       CalibrationMethod.oneStar =>
-        'Referencia inicial. Centra manualmente una estrella y fija la posicion real Alt/Az del telescopio.',
+        'Guarda un offset simple entre la Alt/Az esperada y la posición donde centraste la estrella.',
       CalibrationMethod.twoStars =>
-        'Proximamente: correccion multipunto con dos referencias.',
+        'Promedia dos referencias separadas para mejorar el apuntado posterior al GOTO.',
       CalibrationMethod.threeStars =>
-        'Proximamente: correccion multipunto con tres referencias.',
+        'Usa tres referencias para preparar un modelo de corrección más completo.',
       CalibrationMethod.fixedObjectSync =>
-        'Proximamente: sincronizacion local cerca de un objeto.',
+        'Usa un objeto conocido como referencia local de ajuste fino.',
     };
   }
 
@@ -33,12 +33,7 @@ extension CalibrationMethodLabel on CalibrationMethod {
   }
 
   bool get isEnabledInMvp {
-    return switch (this) {
-      CalibrationMethod.oneStar => true,
-      CalibrationMethod.twoStars ||
-      CalibrationMethod.threeStars ||
-      CalibrationMethod.fixedObjectSync => false,
-    };
+    return true;
   }
 }
 

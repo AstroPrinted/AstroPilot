@@ -2,7 +2,9 @@ import 'package:astroprintedlogicincludedgeoengine/features/calibration/data/cal
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/data/calibration_storage.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_method.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_result.dart';
+import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_stage.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_status.dart';
+import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/correction_model.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/catalog/application/astronomical_goto_service.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/catalog/domain/models/celestial_object.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/observation/domain/models/alt_az_result.dart';
@@ -22,7 +24,7 @@ void main() {
     repository = CalibrationRepository(storage: CalibrationStorage());
   });
 
-  test('blocks GoTo when the telescope is not calibrated', () async {
+  test('blocks GoTo when the telescope is not initially aligned', () async {
     final service = _service(repository, _position(20, 30));
     var sent = false;
 
@@ -36,11 +38,13 @@ void main() {
     expect(sent, isFalse);
   });
 
-  test('uses one-star calibration without applying offset', () async {
-    await repository.saveCurrentResult(
+  test('uses initial alignment without applying correction offset', () async {
+    await repository.saveInitialAlignmentResult(
       CalibrationResult(
-        altitudeOffset: 2,
-        azimuthOffset: -40,
+        altitudeOffset: 0,
+        azimuthOffset: 0,
+        stage: CalibrationStage.initialAlignment,
+        correctionModel: CorrectionModel.none,
         method: CalibrationMethod.oneStar,
         status: CalibrationStatus.calibrated,
         points: const [],
@@ -66,11 +70,25 @@ void main() {
     expect(sentAz, 10);
   });
 
-  test('applies future multipoint correction and normalizes azimuth', () async {
-    await repository.saveCurrentResult(
+  test('applies correction calibration and normalizes azimuth', () async {
+    await repository.saveInitialAlignmentResult(
+      CalibrationResult(
+        altitudeOffset: 0,
+        azimuthOffset: 0,
+        stage: CalibrationStage.initialAlignment,
+        correctionModel: CorrectionModel.none,
+        method: CalibrationMethod.oneStar,
+        status: CalibrationStatus.calibrated,
+        points: const [],
+        createdAt: DateTime.utc(2026),
+      ),
+    );
+    await repository.saveCorrectionCalibrationResult(
       CalibrationResult(
         altitudeOffset: 2,
         azimuthOffset: -40,
+        stage: CalibrationStage.correctionCalibration,
+        correctionModel: CorrectionModel.twoStarCorrection,
         method: CalibrationMethod.twoStars,
         status: CalibrationStatus.calibratedTwoStars,
         points: const [],

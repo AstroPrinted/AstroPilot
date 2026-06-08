@@ -6,6 +6,30 @@ class CalibrationRepository {
 
   const CalibrationRepository({required this.storage});
 
+  Future<CalibrationResult?> loadInitialAlignmentResult() {
+    return storage.loadInitialAlignmentResult();
+  }
+
+  Future<CalibrationResult?> loadCorrectionCalibrationResult() {
+    return storage.loadCorrectionCalibrationResult();
+  }
+
+  Future<void> saveInitialAlignmentResult(CalibrationResult result) {
+    return storage.saveInitialAlignmentResult(result);
+  }
+
+  Future<void> saveCorrectionCalibrationResult(CalibrationResult result) {
+    return storage.saveCorrectionCalibrationResult(result);
+  }
+
+  Future<void> clearInitialAlignmentResult() {
+    return storage.clearInitialAlignmentResult();
+  }
+
+  Future<void> clearCorrectionCalibrationResult() {
+    return storage.clearCorrectionCalibrationResult();
+  }
+
   Future<CalibrationResult?> loadCurrentResult() {
     return storage.loadCurrentResult();
   }

@@ -3,6 +3,8 @@ import 'package:astroprintedlogicincludedgeoengine/features/calibration/data/cal
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_flow_step.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_method.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_status.dart';
+import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/correction_calibration_status.dart';
+import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/initial_alignment_status.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/services/astronomy_position_service.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/services/calibration_service.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/services/pointing_correction_service.dart';
@@ -31,7 +33,7 @@ void main() {
 
     expect(controller.flowStep, CalibrationFlowStep.selectingObject);
     expect(controller.errorMessage, contains('No hay estrellas'));
-    expect(controller.errorMessage, contains('una estrella sobre 15'));
+    expect(controller.errorMessage, contains('estrella reconocible sobre 15'));
   });
 
   test('selects a visible star and waits for manual centering', () async {
@@ -114,20 +116,85 @@ void main() {
       await controller.loadSavedCalibration();
       controller.startMethod(CalibrationMethod.oneStar);
       await controller.selectStar(controller.calibrationStarOptions.first);
-      await controller.confirmCenteredReference((altitude, azimuth) async {
-        sentAltitude = altitude;
-        sentAzimuth = azimuth;
-      });
+      await controller.confirmCenteredReference(
+        setInitialPosition: (altitude, azimuth) async {
+          sentAltitude = altitude;
+          sentAzimuth = azimuth;
+        },
+      );
 
       expect(sentAltitude, 63.1548);
       expect(sentAzimuth, 30.4972);
-      expect(controller.flowStep, CalibrationFlowStep.completed);
+      expect(controller.flowStep, CalibrationFlowStep.idle);
+      expect(controller.session, isNull);
       expect(controller.savedResult?.status, CalibrationStatus.calibrated);
+      expect(controller.initialAlignmentStatus, InitialAlignmentStatus.aligned);
+      expect(controller.isInitialAligned, isTrue);
+      expect(controller.initialAlignmentResult, isNotNull);
+      expect(
+        controller.correctionCalibrationStatus,
+        CorrectionCalibrationStatus.notCalibrated,
+      );
       expect(controller.savedResult?.points, hasLength(1));
       final point = controller.savedResult!.points.single;
       expect(point.motorAltitudeAtCalibration, 63.1548);
       expect(point.motorAzimuthAtCalibration, 30.4972);
       expect(point.referenceRaJ2000Hours, isNotNull);
+    },
+  );
+
+  test('blocks correction modes before initial alignment', () async {
+    final controller = _controller(_position(45, 120));
+    addTearDown(controller.dispose);
+
+    await controller.loadSavedCalibration();
+    controller.startCorrectionMethod(CalibrationMethod.twoStars);
+
+    expect(controller.flowStep, CalibrationFlowStep.idle);
+    expect(controller.hasCorrectionCalibration, isFalse);
+    expect(controller.errorMessage, contains('alineación inicial'));
+  });
+
+  test(
+    'one-star correction runs after initial alignment and stores offset',
+    () async {
+      final controller = _controller(_position(45, 120));
+      addTearDown(controller.dispose);
+      final gotos = <List<double>>[];
+
+      await controller.loadSavedCalibration();
+      controller.startInitialAlignment();
+      await controller.selectStar(controller.calibrationStarOptions.first);
+      await controller.confirmCenteredReference(
+        setInitialPosition: (_, __) async {},
+      );
+
+      controller.startCorrectionMethod(CalibrationMethod.oneStar);
+      await controller.selectStar(controller.calibrationStarOptions.first);
+
+      expect(controller.flowStep, CalibrationFlowStep.movingToTarget);
+      await controller.sendGotoToReference(
+        (altitude, azimuth) async => gotos.add([altitude, azimuth]),
+      );
+      await controller.nudge(
+        CalibrationNudgeDirection.right,
+        (deltaAltitude, deltaAzimuth) async {},
+      );
+      await controller.confirmCenteredReference();
+
+      expect(gotos, [
+        [45, 120],
+      ]);
+      expect(controller.flowStep, CalibrationFlowStep.completed);
+      expect(controller.hasCorrectionCalibration, isTrue);
+      expect(
+        controller.correctionCalibrationStatus,
+        CorrectionCalibrationStatus.calibrated,
+      );
+      expect(
+        controller.correctionCalibrationResult?.azimuthOffset,
+        CalibrationController.fineStepDegrees,
+      );
     },
   );
 }

@@ -72,7 +72,7 @@ class CelestialListTile extends StatelessWidget {
         DateTime.now().toUtc(),
       );
       if (object.isSun) {
-        return 'Sistema Solar · Mag: ${dynamicMagnitude ?? 'N/A'}\nAdvertencia: observacion solar bloqueada';
+        return 'Sistema Solar · Mag: ${dynamicMagnitude ?? 'N/A'}\nAdvertencia: observación solar bloqueada';
       }
       return 'Sistema Solar\nMagnitud: ${dynamicMagnitude ?? 'N/A'}';
     }
@@ -109,7 +109,7 @@ class CelestialListTile extends StatelessWidget {
   String _typeSummary(CelestialObject object) {
     if (object is SolarSystemBody) return 'Sistema Solar';
     if (object is DeepSkyObject) return object.objectType;
-    return 'Estrella de calibracion';
+    return 'Estrella de calibración';
   }
 }
 

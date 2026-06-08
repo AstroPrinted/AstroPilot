@@ -19,6 +19,7 @@ import 'features/oe4_control/presentation/controllers/oe4_control_controller.dar
 import 'features/oe4_control/presentation/screens/oe4_control_screen.dart';
 import 'features/settings/application/settings_service.dart';
 import 'features/settings/presentation/screens/settings_screen.dart';
+import 'features/student_mode/presentation/screens/student_mode_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -77,6 +78,7 @@ class AstroPilotApp extends StatelessWidget {
             CatalogScreen(),
             Oe4ControlScreen(),
             CalibrationScreen(),
+            StudentModeScreen(),
             SettingsScreen(),
           ],
         ),

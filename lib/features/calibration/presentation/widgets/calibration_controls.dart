@@ -131,7 +131,7 @@ class _ManualAdjustmentFormState extends State<_ManualAdjustmentForm> {
     final azimuth = _parseDegrees(_azimuthController.text);
 
     if (altitude == null || azimuth == null) {
-      setState(() => _errorText = 'Ingresa valores numericos.');
+      setState(() => _errorText = 'Ingresa valores numéricos.');
       return;
     }
 

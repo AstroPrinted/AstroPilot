@@ -4,23 +4,26 @@ import '../../../observation/domain/utils/angle_math.dart';
 import '../models/calibration_method.dart';
 import '../models/calibration_point.dart';
 import '../models/calibration_result.dart';
+import '../models/calibration_stage.dart';
 import '../models/calibration_status.dart';
+import '../models/correction_model.dart';
 
 class PointingCorrectionService {
   const PointingCorrectionService();
 
-  // MVP: la correccion es un offset logico estimado. La validacion optica queda para fases futuras.
+  // MVP: la corrección es un offset lógico estimado. La validación óptica queda para fases futuras.
   CalibrationResult calculateCorrection(
     CalibrationMethod method,
     List<CalibrationPoint> points, {
+    required CalibrationStage stage,
     List<String> warnings = const [],
   }) {
     if (points.isEmpty) {
-      throw ArgumentError('La calibracion requiere al menos un punto.');
+      throw ArgumentError('La corrección requiere al menos un punto.');
     }
 
     // MVP: se promedian offsets registrados. En una fase futura esto puede
-    // reemplazarse por un modelo geometrico multipunto mas avanzado.
+    // reemplazarse por un modelo geométrico multipunto más avanzado.
     final altitudeOffset =
         points.map((point) => point.altitudeError).reduce((a, b) => a + b) /
         points.length;
@@ -42,8 +45,10 @@ class PointingCorrectionService {
       altitudeOffset: altitudeOffset,
       azimuthOffset: azimuthOffset,
       estimatedError: estimatedError,
+      stage: stage,
+      correctionModel: correctionModelFor(stage: stage, method: method),
       method: method,
-      status: _statusFor(method),
+      status: _statusFor(stage, method),
       points: List.unmodifiable(points),
       warnings: List.unmodifiable(warnings),
       createdAt: DateTime.now().toUtc(),
@@ -69,7 +74,7 @@ class PointingCorrectionService {
     required double calculatedAltitude,
     required double adjustedAltitude,
   }) {
-    return calculatedAltitude - adjustedAltitude;
+    return adjustedAltitude - calculatedAltitude;
   }
 
   double azimuthError({
@@ -77,16 +82,23 @@ class PointingCorrectionService {
     required double adjustedAzimuth,
   }) {
     final diff =
-        normalizeDegrees360(calculatedAzimuth) -
-        normalizeDegrees360(adjustedAzimuth);
+        normalizeDegrees360(adjustedAzimuth) -
+        normalizeDegrees360(calculatedAzimuth);
     if (diff > 180.0) return diff - 360.0;
     if (diff < -180.0) return diff + 360.0;
     return diff;
   }
 
-  CalibrationStatus _statusFor(CalibrationMethod method) {
+  CalibrationStatus _statusFor(
+    CalibrationStage stage,
+    CalibrationMethod method,
+  ) {
+    if (stage == CalibrationStage.initialAlignment) {
+      return CalibrationStatus.calibrated;
+    }
+
     return switch (method) {
-      CalibrationMethod.oneStar => CalibrationStatus.calibrated,
+      CalibrationMethod.oneStar => CalibrationStatus.calibratedOneStar,
       CalibrationMethod.twoStars => CalibrationStatus.calibratedTwoStars,
       CalibrationMethod.threeStars => CalibrationStatus.calibratedThreeStars,
       CalibrationMethod.fixedObjectSync => CalibrationStatus.localSyncActive,

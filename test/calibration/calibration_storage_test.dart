@@ -4,7 +4,9 @@ import 'package:astroprintedlogicincludedgeoengine/features/calibration/data/cal
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_method.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_point.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_result.dart';
+import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_stage.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_status.dart';
+import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/correction_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -22,6 +24,8 @@ void main() {
     final result = CalibrationResult(
       altitudeOffset: 1.5,
       azimuthOffset: -3.25,
+      stage: CalibrationStage.correctionCalibration,
+      correctionModel: CorrectionModel.threeStarCorrection,
       method: CalibrationMethod.threeStars,
       status: CalibrationStatus.calibratedThreeStars,
       points: [
@@ -33,8 +37,8 @@ void main() {
       createdAt: DateTime.utc(2026, 6, 3, 12),
     );
 
-    await storage.saveCurrentResult(result);
-    final loaded = await storage.loadCurrentResult();
+    await storage.saveCorrectionCalibrationResult(result);
+    final loaded = await storage.loadCorrectionCalibrationResult();
 
     expect(loaded, isNotNull);
     expect(loaded!.method, CalibrationMethod.threeStars);
@@ -70,10 +74,12 @@ void main() {
       }),
     );
 
-    final loaded = await storage.loadCurrentResult();
+    final loaded = await storage.loadCorrectionCalibrationResult();
 
     expect(loaded, isNotNull);
     expect(loaded!.method, CalibrationMethod.twoStars);
+    expect(loaded.stage, CalibrationStage.correctionCalibration);
+    expect(loaded.correctionModel, CorrectionModel.twoStarCorrection);
     expect(loaded.status, CalibrationStatus.calibratedTwoStars);
     expect(loaded.warnings, isEmpty);
     expect(loaded.points.single.objectId, 'Legacy Star');

@@ -207,14 +207,14 @@ class _Oe4ControlScreenState extends State<Oe4ControlScreen> {
 
   String? _validateAlt(String? value) {
     final number = _parseNumber(value ?? '');
-    if (number == null) return 'Ingresa una altitud valida';
+    if (number == null) return 'Ingresa una altitud válida';
     if (number < -90 || number > 90) return 'Rango permitido: -90 a 90';
     return null;
   }
 
   String? _validateAz(String? value) {
     final number = _parseNumber(value ?? '');
-    if (number == null) return 'Ingresa un azimut valido';
+    if (number == null) return 'Ingresa un azimut válido';
     if (number < 0 || number > 360) return 'Rango permitido: 0 a 360';
     return null;
   }
@@ -255,12 +255,12 @@ class _HeaderCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Control Electromecanico OE4',
+                      'Control Electromecánico OE4',
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Envio de coordenadas Alt/Az al ESP32 para validar movimiento de motores paso a paso.',
+                      'Envío de coordenadas Alt/Az al ESP32 para validar movimiento de motores paso a paso.',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                   ],
@@ -319,7 +319,7 @@ class _ConnectionCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           _MonospaceBlock(
-            label: 'Ultima respuesta BLE Notify',
+            label: 'Última respuesta BLE Notify',
             value: lastResponse ?? 'Sin respuesta recibida',
             accent: colorScheme.secondary,
           ),
@@ -427,7 +427,7 @@ class _ReliabilityCard extends StatelessWidget {
                 ),
                 subtitle: Text(
                   watchdogEnabled
-                      ? 'Prueba activa: STOP si PING se pierde por mas de 1000 ms.'
+                      ? 'Prueba activa: STOP si PING se pierde por más de 1000 ms.'
                       : 'Desactivado para no interferir con pruebas normales.',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
@@ -442,7 +442,7 @@ class _ReliabilityCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           _MonospaceBlock(
-            label: 'Ultima alerta del ESP32',
+            label: 'Última alerta del ESP32',
             value: lastEsp32Alert ?? 'Sin alertas',
             accent: lastEsp32Alert == null
                 ? colorScheme.secondary
@@ -695,7 +695,7 @@ class _RoutineCard extends StatelessWidget {
     final disabled = !enabled || isSending;
 
     return _Oe4Card(
-      title: 'Rutina de validacion',
+      title: 'Rutina de validación',
       icon: Icons.fact_check_rounded,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -728,7 +728,7 @@ class _RoutineCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'GOTOs rapidos de validacion manual',
+            'GOTOs rápidos de validación manual',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.w600,
@@ -780,7 +780,7 @@ class _EvidenceCard extends StatelessWidget {
           _MonospaceBlock(
             label: 'Verificar en consola ESP32',
             value:
-                'Comando: Volver a Cero -> posicion interna actual: alt=0 pasos, az=0 pasos',
+                'Comando: Volver a Cero -> posición interna actual: alt=0 pasos, az=0 pasos',
             accent: colorScheme.secondary,
           ),
           const SizedBox(height: 12),
@@ -788,7 +788,7 @@ class _EvidenceCard extends StatelessWidget {
             icon: Icons.info_outline_rounded,
             color: colorScheme.secondary,
             message:
-                'La validacion corresponde a un sistema en lazo abierto. El contador interno puede volver a cero, pero sin encoder no se garantiza precision fisica absoluta.',
+                'La validación corresponde a un sistema en lazo abierto. El contador interno puede volver a cero, pero sin encoder no se garantiza precisión física absoluta.',
           ),
         ],
       ),
@@ -1152,7 +1152,7 @@ class _SequenceReference extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _MonospaceBlock(
-      label: 'Secuencia manual de validacion',
+      label: 'Secuencia manual de validación',
       value:
           '1. HOME\n2. GOTO alt=0 az=45\n3. GOTO alt=0 az=30\n4. GOTO alt=0 az=120\n5. HOME\n6. STATUS',
       accent: Theme.of(context).colorScheme.primary,

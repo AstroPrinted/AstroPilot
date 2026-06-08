@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 
 import '../../calibration/data/calibration_repository.dart';
-import '../../calibration/domain/models/calibration_method.dart';
 import '../../calibration/domain/models/calibration_result.dart';
 import '../../calibration/domain/services/astronomy_position_service.dart';
 import '../../calibration/domain/services/pointing_correction_service.dart';
@@ -20,21 +19,23 @@ typedef AstronomicalPositionResolver =
 class AstronomicalGotoCommand {
   final CelestialObject object;
   final AltAzResult rawPosition;
-  final CalibrationResult? calibration;
+  final CalibrationResult initialAlignment;
+  final CalibrationResult? correctionCalibration;
   final double finalAltitude;
   final double finalAzimuth;
 
   const AstronomicalGotoCommand({
     required this.object,
     required this.rawPosition,
-    required this.calibration,
+    required this.initialAlignment,
+    required this.correctionCalibration,
     required this.finalAltitude,
     required this.finalAzimuth,
   });
 
-  bool get hasCalibration => calibration != null;
+  bool get hasCalibration => true;
   bool get usedCorrection =>
-      calibration != null && calibration!.method != CalibrationMethod.oneStar;
+      correctionCalibration?.hasCorrectionCalibration ?? false;
 }
 
 class AstronomicalGotoService {
@@ -53,7 +54,15 @@ class AstronomicalGotoService {
   });
 
   Future<CalibrationResult?> loadSavedCalibration() {
-    return calibrationRepository.loadCurrentResult();
+    return loadInitialAlignment();
+  }
+
+  Future<CalibrationResult?> loadInitialAlignment() {
+    return calibrationRepository.loadInitialAlignmentResult();
+  }
+
+  Future<CalibrationResult?> loadCorrectionCalibration() {
+    return calibrationRepository.loadCorrectionCalibrationResult();
   }
 
   AltAzResult calculateCurrentPosition(CelestialObject object) {
@@ -68,13 +77,15 @@ class AstronomicalGotoService {
   AstronomicalGotoCommand buildCommand({
     required CelestialObject object,
     required AltAzResult rawPosition,
-    required CalibrationResult? calibration,
+    required CalibrationResult? initialAlignment,
+    required CalibrationResult? correctionCalibration,
   }) {
     _ensureGotoAllowed(object, rawPosition);
-    _ensureCalibrated(calibration);
-    final savedCalibration = calibration!;
+    _ensureInitialAligned(initialAlignment);
+    final savedInitialAlignment = initialAlignment!;
 
-    final usesOffset = savedCalibration.method != CalibrationMethod.oneStar;
+    final correction = correctionCalibration;
+    final usesOffset = correction?.hasCorrectionCalibration ?? false;
     final corrected = !usesOffset
         ? (
             altitude: rawPosition.altitudeDeg.clamp(-90.0, 90.0).toDouble(),
@@ -83,13 +94,14 @@ class AstronomicalGotoService {
         : correctionService.applyCorrection(
             targetAltitude: rawPosition.altitudeDeg,
             targetAzimuth: rawPosition.azimuthDeg,
-            calibration: savedCalibration,
+            calibration: correction!,
           );
 
     return AstronomicalGotoCommand(
       object: object,
       rawPosition: rawPosition,
-      calibration: savedCalibration,
+      initialAlignment: savedInitialAlignment,
+      correctionCalibration: correction,
       finalAltitude: corrected.altitude,
       finalAzimuth: corrected.azimuth,
     );
@@ -108,23 +120,30 @@ class AstronomicalGotoService {
       '${rawPosition.azimuthDeg.toStringAsFixed(4)}',
     );
 
-    final calibration = await loadSavedCalibration();
-    debugPrint('[AstronomicalGoTo] Calibration found: ${calibration != null}');
-    if (calibration == null) {
+    final initialAlignment = await loadInitialAlignment();
+    final correctionCalibration = await loadCorrectionCalibration();
+    debugPrint(
+      '[AstronomicalGoTo] Initial alignment found: ${initialAlignment != null}',
+    );
+    debugPrint(
+      '[AstronomicalGoTo] Correction found: ${correctionCalibration != null}',
+    );
+    if (initialAlignment == null) {
       throw StateError(
-        'Telescopio no calibrado. Realiza calibracion con una estrella antes de usar GoTo.',
+        'Antes de usar GOTO debes realizar la alineación inicial del telescopio con una estrella reconocible.',
       );
     }
     debugPrint(
-      '[AstronomicalGoTo] Offset Alt/Az: '
-      '${calibration.altitudeOffset.toStringAsFixed(4)} / '
-      '${calibration.azimuthOffset.toStringAsFixed(4)}',
+      '[AstronomicalGoTo] Correction Offset Alt/Az: '
+      '${(correctionCalibration?.altitudeOffset ?? 0).toStringAsFixed(4)} / '
+      '${(correctionCalibration?.azimuthOffset ?? 0).toStringAsFixed(4)}',
     );
 
     final command = buildCommand(
       object: object,
       rawPosition: rawPosition,
-      calibration: calibration,
+      initialAlignment: initialAlignment,
+      correctionCalibration: correctionCalibration,
     );
     debugPrint(
       '[AstronomicalGoTo] Corrected Alt/Az: '
@@ -169,10 +188,10 @@ class AstronomicalGotoService {
     }
   }
 
-  void _ensureCalibrated(CalibrationResult? calibration) {
-    if (calibration == null) {
+  void _ensureInitialAligned(CalibrationResult? initialAlignment) {
+    if (initialAlignment == null) {
       throw StateError(
-        'Telescopio no calibrado. Realiza calibracion con una estrella antes de usar GoTo.',
+        'Antes de usar GOTO debes realizar la alineación inicial del telescopio con una estrella reconocible.',
       );
     }
   }

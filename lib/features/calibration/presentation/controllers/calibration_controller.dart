@@ -11,11 +11,16 @@ import '../../domain/models/calibration_method.dart';
 import '../../domain/models/calibration_point.dart';
 import '../../domain/models/calibration_result.dart';
 import '../../domain/models/calibration_session.dart';
+import '../../domain/models/calibration_stage.dart';
 import '../../domain/models/calibration_status.dart';
+import '../../domain/models/correction_calibration_status.dart';
+import '../../domain/models/initial_alignment_status.dart';
 import '../../domain/services/astronomy_position_service.dart';
 import '../../domain/services/calibration_service.dart';
 
 typedef CalibrationCommandSender = Future<void> Function();
+typedef CalibrationGotoSender =
+    Future<void> Function(double altitude, double azimuth);
 typedef CalibrationManualMoveSender =
     Future<void> Function(double deltaAltitude, double deltaAzimuth);
 typedef CalibrationSetPositionSender =
@@ -70,8 +75,10 @@ class CalibrationController extends ChangeNotifier {
   bool _isBusy = false;
   String? _errorMessage;
   CalibrationFlowStep _flowStep = CalibrationFlowStep.idle;
+  CalibrationStage _activeStage = CalibrationStage.initialAlignment;
   CalibrationSession? _session;
-  CalibrationResult? _savedResult;
+  CalibrationResult? _initialAlignmentResult;
+  CalibrationResult? _correctionCalibrationResult;
   CalibrationResult? _pendingResult;
   CalibrationStar? _selectedStar;
   AltAzResult? _targetPosition;
@@ -94,10 +101,19 @@ class CalibrationController extends ChangeNotifier {
   bool get isBusy => _isBusy;
   String? get errorMessage => _errorMessage;
   CalibrationFlowStep get flowStep => _flowStep;
+  CalibrationStage get activeStage => _session?.stage ?? _activeStage;
   CalibrationSession? get session => _session;
-  CalibrationResult? get savedResult => _savedResult;
+  CalibrationResult? get savedResult =>
+      _correctionCalibrationResult ?? _initialAlignmentResult;
+  CalibrationResult? get initialAlignmentResult => _initialAlignmentResult;
+  CalibrationResult? get correctionCalibrationResult =>
+      _correctionCalibrationResult;
   CalibrationResult? get pendingResult => _pendingResult;
-  CalibrationResult? get visibleResult => _pendingResult ?? _savedResult;
+  CalibrationResult? get visibleResult =>
+      _pendingResult ??
+      (activeStage == CalibrationStage.initialAlignment
+          ? _initialAlignmentResult
+          : _correctionCalibrationResult);
   CalibrationStar? get selectedStar => _selectedStar;
   AltAzResult? get targetPosition => _targetPosition;
   double? get adjustedAltitude => _adjustedAltitude;
@@ -107,8 +123,81 @@ class CalibrationController extends ChangeNotifier {
   List<CalibrationStarOption> get calibrationStarOptions =>
       _calibrationStarOptions;
   bool get hasUnsavedResult => _pendingResult != null;
+  bool get isInitialAlignmentFlow =>
+      activeStage == CalibrationStage.initialAlignment;
+  bool get isCorrectionCalibrationFlow =>
+      activeStage == CalibrationStage.correctionCalibration;
+  bool get isInitialAligned => _initialAlignmentResult != null;
+  bool get hasCorrectionCalibration =>
+      _correctionCalibrationResult?.hasCorrectionCalibration ?? false;
   CalibrationMethod? get currentMethod =>
       _session?.method ?? visibleResult?.method;
+  CalibrationMethod? get correctionCalibrationMode =>
+      _correctionCalibrationResult?.method;
+
+  InitialAlignmentStatus get initialAlignmentStatus {
+    final session = _session;
+    if (session != null &&
+        session.stage == CalibrationStage.initialAlignment &&
+        _flowStep != CalibrationFlowStep.idle &&
+        _flowStep != CalibrationFlowStep.completed) {
+      return switch (_flowStep) {
+        CalibrationFlowStep.selectingObject ||
+        CalibrationFlowStep.calculatingTarget =>
+          InitialAlignmentStatus.selectingReferenceStar,
+        CalibrationFlowStep.waitingUserCentering ||
+        CalibrationFlowStep.savingPoint =>
+          InitialAlignmentStatus.waitingForManualCentering,
+        CalibrationFlowStep.failed => InitialAlignmentStatus.alignmentFailed,
+        _ => InitialAlignmentStatus.selectingReferenceStar,
+      };
+    }
+    return isInitialAligned
+        ? InitialAlignmentStatus.aligned
+        : InitialAlignmentStatus.notAligned;
+  }
+
+  CorrectionCalibrationStatus get correctionCalibrationStatus {
+    final session = _session;
+    if (session != null &&
+        session.stage == CalibrationStage.correctionCalibration &&
+        _flowStep != CalibrationFlowStep.idle &&
+        _flowStep != CalibrationFlowStep.completed) {
+      return switch (_flowStep) {
+        CalibrationFlowStep.selectingMethod =>
+          CorrectionCalibrationStatus.selectingCalibrationMode,
+        CalibrationFlowStep.selectingObject ||
+        CalibrationFlowStep.calculatingTarget =>
+          CorrectionCalibrationStatus.selectingCalibrationTarget,
+        CalibrationFlowStep.movingToTarget =>
+          CorrectionCalibrationStatus.gotoTarget,
+        CalibrationFlowStep.waitingUserCentering ||
+        CalibrationFlowStep.savingPoint =>
+          CorrectionCalibrationStatus.waitingForManualCorrection,
+        CalibrationFlowStep.calculatingCorrection =>
+          CorrectionCalibrationStatus.correctionCalculated,
+        CalibrationFlowStep.failed =>
+          CorrectionCalibrationStatus.calibrationFailed,
+        _ => CorrectionCalibrationStatus.selectingCalibrationTarget,
+      };
+    }
+    if (hasCorrectionCalibration) {
+      return CorrectionCalibrationStatus.calibrated;
+    }
+    return CorrectionCalibrationStatus.notCalibrated;
+  }
+
+  String? get initialAlignmentReferenceName =>
+      _initialAlignmentResult?.lastReference?.objectName;
+  DateTime? get initialAlignmentTimestamp => _initialAlignmentResult?.createdAt;
+  ({double altitude, double azimuth})? get initialAlignedPosition {
+    final point = _initialAlignmentResult?.lastReference;
+    if (point == null) return null;
+    return (
+      altitude: point.motorAltitudeAtCalibration ?? point.calculatedAltitude,
+      azimuth: point.motorAzimuthAtCalibration ?? point.calculatedAzimuth,
+    );
+  }
 
   int get requiredReferenceCount {
     return currentMethod?.requiredPointCount ??
@@ -133,12 +222,12 @@ class CalibrationController extends ChangeNotifier {
   }
 
   int get totalFlowSteps {
-    if (currentMethod == CalibrationMethod.oneStar) return 4;
-    return 1 + (requiredReferenceCount * 4) + 2;
+    if (isInitialAlignmentFlow) return 4;
+    return (requiredReferenceCount * 3) + 1;
   }
 
   int get currentFlowStepNumber {
-    if (currentMethod == CalibrationMethod.oneStar) {
+    if (isInitialAlignmentFlow) {
       return switch (_flowStep) {
         CalibrationFlowStep.selectingObject ||
         CalibrationFlowStep.calculatingTarget => 1,
@@ -150,15 +239,14 @@ class CalibrationController extends ChangeNotifier {
       };
     }
 
-    final referenceBase = 2 + ((currentReferenceNumber - 1) * 4);
+    final referenceBase = 1 + ((currentReferenceNumber - 1) * 3);
     return switch (_flowStep) {
-      CalibrationFlowStep.waitingHome => 1,
       CalibrationFlowStep.selectingObject ||
       CalibrationFlowStep.calculatingTarget => referenceBase,
       CalibrationFlowStep.movingToTarget => referenceBase + 1,
       CalibrationFlowStep.waitingUserCentering => referenceBase + 2,
-      CalibrationFlowStep.savingPoint => referenceBase + 3,
-      CalibrationFlowStep.calculatingCorrection => totalFlowSteps - 1,
+      CalibrationFlowStep.savingPoint ||
+      CalibrationFlowStep.calculatingCorrection => referenceBase + 2,
       CalibrationFlowStep.completed => totalFlowSteps,
       _ => 1,
     };
@@ -180,19 +268,23 @@ class CalibrationController extends ChangeNotifier {
         _flowStep != CalibrationFlowStep.completed) {
       return _session!.status;
     }
-    final result = visibleResult;
-    if (result != null) return result.status;
+    if (_correctionCalibrationResult != null) {
+      return _correctionCalibrationResult!.status;
+    }
+    if (_initialAlignmentResult != null) {
+      return _initialAlignmentResult!.status;
+    }
     return CalibrationStatus.notCalibrated;
   }
 
   CalibrationPoint? get latestPoint {
-    final resultPoints = visibleResult?.points;
-    if (resultPoints != null && resultPoints.isNotEmpty) {
-      return resultPoints.last;
-    }
     final sessionPoints = _session?.points;
     if (sessionPoints != null && sessionPoints.isNotEmpty) {
       return sessionPoints.last;
+    }
+    final resultPoints = visibleResult?.points;
+    if (resultPoints != null && resultPoints.isNotEmpty) {
+      return resultPoints.last;
     }
     return null;
   }
@@ -210,13 +302,16 @@ class CalibrationController extends ChangeNotifier {
           .getByCategory('stars')
           .whereType<CalibrationStar>()
           .toList(growable: false);
-      _savedResult = await calibrationRepository.loadCurrentResult();
+      _initialAlignmentResult = await calibrationRepository
+          .loadInitialAlignmentResult();
+      _correctionCalibrationResult = await calibrationRepository
+          .loadCorrectionCalibrationResult();
       _initialized = true;
       debugPrint(
         '[Calibration] Loaded ${_calibrationStars.length} calibration stars',
       );
     } catch (error) {
-      _errorMessage = 'No se pudo cargar calibracion: $error';
+      _errorMessage = 'No se pudo cargar estado de alineación: $error';
       debugPrint('[Calibration] Load failed: $error');
     } finally {
       _isLoading = false;
@@ -225,13 +320,40 @@ class CalibrationController extends ChangeNotifier {
   }
 
   void startMethod(CalibrationMethod method) {
-    if (!method.isEnabledInMvp) {
-      _errorMessage = '${method.title} estara disponible proximamente.';
+    if (method == CalibrationMethod.oneStar && !isInitialAligned) {
+      startInitialAlignment();
+      return;
+    }
+    startCorrectionMethod(method);
+  }
+
+  void startInitialAlignment() {
+    _startSession(
+      stage: CalibrationStage.initialAlignment,
+      method: CalibrationMethod.oneStar,
+    );
+  }
+
+  void startCorrectionMethod(CalibrationMethod method) {
+    if (!isInitialAligned) {
+      _errorMessage =
+          'Antes de usar GOTO o calibraciones de corrección, debes realizar la alineación inicial del telescopio con una estrella reconocible.';
       notifyListeners();
       return;
     }
 
-    _session = calibrationService.startSession(method);
+    _startSession(
+      stage: CalibrationStage.correctionCalibration,
+      method: method,
+    );
+  }
+
+  void _startSession({
+    required CalibrationStage stage,
+    required CalibrationMethod method,
+  }) {
+    _activeStage = stage;
+    _session = calibrationService.startSession(stage: stage, method: method);
     _pendingResult = null;
     _selectedStar = null;
     _targetPosition = null;
@@ -244,7 +366,7 @@ class CalibrationController extends ChangeNotifier {
       _flowStep = CalibrationFlowStep.selectingObject;
       _errorMessage = _visibilityRequirementError(_calibrationStarOptions);
       debugPrint(
-        '[Calibration] Visible calibration stars: '
+        '[Calibration] Visible reference stars: '
         '${_calibrationStarOptions.where((option) => option.isVisible).length} / '
         '${_calibrationStarOptions.length}',
       );
@@ -253,10 +375,10 @@ class CalibrationController extends ChangeNotifier {
       _session = _session?.copyWith(
         status: CalibrationStatus.calibrationFailed,
       );
-      _errorMessage = 'No se pudo calcular visibilidad de estrellas: $error';
+      _errorMessage = 'No se pudo calcular visibilidad de referencias: $error';
       debugPrint('[Calibration] Star visibility calculation failed: $error');
     }
-    debugPrint('[Calibration] Method selected: ${method.name}');
+    debugPrint('[Calibration] Stage selected: ${stage.name} / ${method.name}');
     notifyListeners();
   }
 
@@ -265,7 +387,7 @@ class CalibrationController extends ChangeNotifier {
 
     if (option.isAlreadySelected) {
       _errorMessage =
-          '${option.star.name} ya fue registrada como referencia en esta sesion.';
+          '${option.star.name} ya fue registrada como referencia en esta sesión.';
       notifyListeners();
       return;
     }
@@ -278,11 +400,16 @@ class CalibrationController extends ChangeNotifier {
     }
 
     final star = option.star;
+    final session = _session!;
 
     _selectedStar = star;
     _targetPosition = null;
-    _adjustedAltitude = 0.0;
-    _adjustedAzimuth = 0.0;
+    _adjustedAltitude = session.stage == CalibrationStage.initialAlignment
+        ? 0.0
+        : null;
+    _adjustedAzimuth = session.stage == CalibrationStage.initialAlignment
+        ? 0.0
+        : null;
     _flowWarningMessage = null;
     _pendingSeparationWarning = null;
     _flowStep = CalibrationFlowStep.calculatingTarget;
@@ -301,13 +428,17 @@ class CalibrationController extends ChangeNotifier {
         _selectedStar = null;
         _flowStep = CalibrationFlowStep.selectingObject;
         _errorMessage =
-            'La estrella ya no esta visible para referencia. Selecciona otra estrella visible.';
+            'La estrella ya no está visible para referencia. Selecciona otra estrella visible.';
         return;
       }
 
       _targetPosition = target;
-      _adjustedAltitude = 0.0;
-      _adjustedAzimuth = 0.0;
+      _adjustedAltitude = session.stage == CalibrationStage.initialAlignment
+          ? 0.0
+          : target.altitudeDeg;
+      _adjustedAzimuth = session.stage == CalibrationStage.initialAlignment
+          ? 0.0
+          : target.azimuthDeg;
       final closestDistance = _closestReferenceDistance(target);
       if (closestDistance != null &&
           closestDistance < minimumRecommendedSeparationDeg) {
@@ -318,9 +449,13 @@ class CalibrationController extends ChangeNotifier {
         _flowWarningMessage = _pendingSeparationWarning;
       }
       _session = _session?.copyWith(
-        status: CalibrationStatus.waitingForManualCentering,
+        status: session.stage == CalibrationStage.initialAlignment
+            ? CalibrationStatus.waitingForManualCentering
+            : CalibrationStatus.inProgress,
       );
-      _flowStep = CalibrationFlowStep.waitingUserCentering;
+      _flowStep = session.stage == CalibrationStage.initialAlignment
+          ? CalibrationFlowStep.waitingUserCentering
+          : CalibrationFlowStep.movingToTarget;
       debugPrint(
         '[Calibration] Calculated Alt/Az: '
         '${target.altitudeDeg.toStringAsFixed(2)} / '
@@ -334,6 +469,66 @@ class CalibrationController extends ChangeNotifier {
       _errorMessage = 'No se pudo calcular Alt/Az: $error';
       debugPrint('[Calibration] Alt/Az calculation failed: $error');
     } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<void> sendGotoToReference(CalibrationGotoSender sendGoto) async {
+    final session = _session;
+    final star = _selectedStar;
+    if (session == null ||
+        star == null ||
+        session.stage != CalibrationStage.correctionCalibration ||
+        _flowStep != CalibrationFlowStep.movingToTarget) {
+      return;
+    }
+
+    if (_isBusy) return;
+
+    _isBusy = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final observer = observerDataProvider.current();
+      final target = astronomyPositionService.calculateForStar(
+        star: star,
+        observer: observer,
+      );
+      if (!_isVisibleForCalibration(target)) {
+        _targetPosition = target;
+        _flowStep = CalibrationFlowStep.selectingObject;
+        _selectedStar = null;
+        _calibrationStarOptions = _buildCalibrationStarOptions();
+        _errorMessage =
+            'La referencia ya no está visible. Selecciona una estrella sobre ${visibleStarAltitudeThresholdDeg.toStringAsFixed(0)} grados de altitud.';
+        return;
+      }
+
+      final destination = _correctedGotoTarget(target);
+      await sendGoto(destination.altitude, destination.azimuth);
+
+      _targetPosition = target;
+      _adjustedAltitude = destination.altitude;
+      _adjustedAzimuth = destination.azimuth;
+      _session = session.copyWith(
+        status: CalibrationStatus.waitingForManualCentering,
+      );
+      _flowStep = CalibrationFlowStep.waitingUserCentering;
+      debugPrint(
+        '[Calibration] Correction GOTO Alt/Az: '
+        '${destination.altitude.toStringAsFixed(4)} / '
+        '${destination.azimuth.toStringAsFixed(4)}',
+      );
+    } catch (error) {
+      _flowStep = CalibrationFlowStep.failed;
+      _session = _session?.copyWith(
+        status: CalibrationStatus.calibrationFailed,
+      );
+      _errorMessage = 'No se pudo enviar GOTO de corrección: $error';
+      debugPrint('[Calibration] Correction GOTO failed: $error');
+    } finally {
+      _isBusy = false;
       notifyListeners();
     }
   }
@@ -373,7 +568,7 @@ class CalibrationController extends ChangeNotifier {
     }
 
     if (!altitude.isFinite || !azimuth.isFinite) {
-      _errorMessage = 'Ingresa valores numericos validos.';
+      _errorMessage = 'Ingresa valores numéricos válidos.';
       notifyListeners();
       return;
     }
@@ -400,9 +595,9 @@ class CalibrationController extends ChangeNotifier {
     );
   }
 
-  Future<void> confirmCenteredReference(
-    CalibrationSetPositionSender setPosition,
-  ) async {
+  Future<void> confirmCenteredReference({
+    CalibrationSetPositionSender? setInitialPosition,
+  }) async {
     final session = _session;
     final star = _selectedStar;
     if (session == null || star == null) {
@@ -426,11 +621,9 @@ class CalibrationController extends ChangeNotifier {
         _targetPosition = target;
         _flowStep = CalibrationFlowStep.waitingUserCentering;
         _errorMessage =
-            'La estrella ya no esta visible para calibracion. Selecciona otra referencia.';
+            'La referencia ya no está visible. Selecciona otra estrella sobre ${visibleStarAltitudeThresholdDeg.toStringAsFixed(0)} grados de altitud.';
         return;
       }
-
-      await setPosition(target.altitudeDeg, target.azimuthDeg);
 
       var updatedSession = session;
       final separationWarning = _pendingSeparationWarning;
@@ -441,34 +634,53 @@ class CalibrationController extends ChangeNotifier {
         );
       }
 
-      final point = calibrationService.createPositionReferencePoint(
-        objectId: star.id,
-        objectName: star.name,
-        referenceRaJ2000Hours: star.raJ2000Hours,
-        referenceDecJ2000Degrees: star.decJ2000Degrees,
-        altitude: target.altitudeDeg,
-        azimuth: target.azimuthDeg,
-      );
+      final point = session.stage == CalibrationStage.initialAlignment
+          ? await _createInitialAlignmentPoint(
+              star: star,
+              target: target,
+              setInitialPosition: setInitialPosition,
+            )
+          : _createCorrectionPoint(star: star, target: target);
+
       updatedSession = calibrationService.addPoint(updatedSession, point);
-      final result = calibrationService.completeSession(updatedSession);
-      await calibrationRepository.saveCurrentResult(result);
 
       _session = updatedSession;
-      _savedResult = result;
       _pendingResult = null;
       _selectedStar = null;
       _targetPosition = target;
-      _adjustedAltitude = target.altitudeDeg;
-      _adjustedAzimuth = target.azimuthDeg;
       _flowWarningMessage = null;
       _pendingSeparationWarning = null;
-      _flowStep = CalibrationFlowStep.completed;
       _errorMessage = null;
-      debugPrint(
-        '[Calibration] SET_POSITION reference Alt/Az: '
-        '${target.altitudeDeg.toStringAsFixed(4)} / '
-        '${target.azimuthDeg.toStringAsFixed(4)}',
-      );
+
+      if (updatedSession.points.length >=
+          updatedSession.method.requiredPointCount) {
+        final result = calibrationService.completeSession(updatedSession);
+        await _saveCompletedResult(result);
+        if (session.stage == CalibrationStage.initialAlignment) {
+          _session = null;
+          _targetPosition = null;
+          _adjustedAltitude = null;
+          _adjustedAzimuth = null;
+          _activeStage = CalibrationStage.correctionCalibration;
+          _flowStep = CalibrationFlowStep.idle;
+        } else {
+          _adjustedAltitude = point.adjustedAltitude;
+          _adjustedAzimuth = point.adjustedAzimuth;
+          _flowStep = CalibrationFlowStep.completed;
+        }
+        debugPrint(
+          '[Calibration] Completed ${session.stage.name}: '
+          '${result.altitudeOffset.toStringAsFixed(4)} / '
+          '${result.azimuthOffset.toStringAsFixed(4)}',
+        );
+      } else {
+        _targetPosition = null;
+        _adjustedAltitude = null;
+        _adjustedAzimuth = null;
+        _calibrationStarOptions = _buildCalibrationStarOptions();
+        _flowStep = CalibrationFlowStep.selectingObject;
+        _errorMessage = _visibilityRequirementError(_calibrationStarOptions);
+      }
     } catch (error) {
       _flowStep = CalibrationFlowStep.failed;
       _session = _session?.copyWith(
@@ -482,6 +694,60 @@ class CalibrationController extends ChangeNotifier {
     }
   }
 
+  Future<CalibrationPoint> _createInitialAlignmentPoint({
+    required CalibrationStar star,
+    required AltAzResult target,
+    required CalibrationSetPositionSender? setInitialPosition,
+  }) async {
+    if (setInitialPosition == null) {
+      throw StateError('La alineación inicial requiere SET_POSITION.');
+    }
+
+    await setInitialPosition(target.altitudeDeg, target.azimuthDeg);
+    return calibrationService.createPositionReferencePoint(
+      objectId: star.id,
+      objectName: star.name,
+      referenceRaJ2000Hours: star.raJ2000Hours,
+      referenceDecJ2000Degrees: star.decJ2000Degrees,
+      altitude: target.altitudeDeg,
+      azimuth: target.azimuthDeg,
+    );
+  }
+
+  CalibrationPoint _createCorrectionPoint({
+    required CalibrationStar star,
+    required AltAzResult target,
+  }) {
+    final adjustedAltitude = _adjustedAltitude ?? target.altitudeDeg;
+    final adjustedAzimuth = _adjustedAzimuth ?? target.azimuthDeg;
+
+    return calibrationService.createPoint(
+      objectId: star.id,
+      objectName: star.name,
+      calculatedAltitude: target.altitudeDeg,
+      calculatedAzimuth: target.azimuthDeg,
+      adjustedAltitude: adjustedAltitude,
+      adjustedAzimuth: adjustedAzimuth,
+      referenceRaJ2000Hours: star.raJ2000Hours,
+      referenceDecJ2000Degrees: star.decJ2000Degrees,
+      motorAltitudeAtCalibration: adjustedAltitude,
+      motorAzimuthAtCalibration: adjustedAzimuth,
+    );
+  }
+
+  Future<void> _saveCompletedResult(CalibrationResult result) async {
+    if (result.isInitialAlignment) {
+      await calibrationRepository.saveInitialAlignmentResult(result);
+      await calibrationRepository.clearCorrectionCalibrationResult();
+      _initialAlignmentResult = result;
+      _correctionCalibrationResult = null;
+      return;
+    }
+
+    await calibrationRepository.saveCorrectionCalibrationResult(result);
+    _correctionCalibrationResult = result;
+  }
+
   Future<void> savePendingResult() async {
     final result = _pendingResult;
     if (result == null) return;
@@ -491,12 +757,11 @@ class CalibrationController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await calibrationRepository.saveCurrentResult(result);
-      _savedResult = result;
+      await _saveCompletedResult(result);
       _pendingResult = null;
-      debugPrint('[Calibration] Saved calibration');
+      debugPrint('[Calibration] Saved result');
     } catch (error) {
-      _errorMessage = 'No se pudo guardar calibracion: $error';
+      _errorMessage = 'No se pudo guardar resultado: $error';
       debugPrint('[Calibration] Save failed: $error');
     } finally {
       _isBusy = false;
@@ -511,7 +776,8 @@ class CalibrationController extends ChangeNotifier {
 
     try {
       await calibrationRepository.clearCurrentResult();
-      _savedResult = null;
+      _initialAlignmentResult = null;
+      _correctionCalibrationResult = null;
       _pendingResult = null;
       _session = null;
       _selectedStar = null;
@@ -522,10 +788,32 @@ class CalibrationController extends ChangeNotifier {
       _pendingSeparationWarning = null;
       _calibrationStarOptions = const [];
       _flowStep = CalibrationFlowStep.idle;
-      debugPrint('[Calibration] Cleared calibration');
+      _activeStage = CalibrationStage.initialAlignment;
+      debugPrint('[Calibration] Cleared alignment and correction');
     } catch (error) {
-      _errorMessage = 'No se pudo borrar calibracion: $error';
+      _errorMessage = 'No se pudo borrar alineación y corrección: $error';
       debugPrint('[Calibration] Clear failed: $error');
+    } finally {
+      _isBusy = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> clearCorrectionCalibration() async {
+    _isBusy = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      await calibrationRepository.clearCorrectionCalibrationResult();
+      _correctionCalibrationResult = null;
+      if (_activeStage == CalibrationStage.correctionCalibration) {
+        cancelFlow();
+      }
+      debugPrint('[Calibration] Cleared correction calibration');
+    } catch (error) {
+      _errorMessage = 'No se pudo borrar corrección de precisión: $error';
+      debugPrint('[Calibration] Clear correction failed: $error');
     } finally {
       _isBusy = false;
       notifyListeners();
@@ -600,23 +888,23 @@ class CalibrationController extends ChangeNotifier {
   String guideForStar(CalibrationStar star) {
     return switch (star.name) {
       'Acrux' =>
-        'Busca la Cruz del Sur. Acrux es la estrella mas brillante ubicada en el extremo inferior de la cruz.',
+        'Busca la Cruz del Sur. Acrux es la estrella más brillante ubicada en el extremo inferior de la cruz.',
       'Becrux (Mimosa)' =>
         'Busca la Cruz del Sur. Mimosa es una estrella azul brillante en uno de los brazos de la cruz, cerca de Acrux.',
       'Gacrux' =>
         'Busca la Cruz del Sur. Gacrux es la estrella rojiza del extremo superior de la cruz.',
       'Canopus' =>
-        'Canopus es muy brillante y se ve baja o media en cielos australes; queda en Carina y suele destacar lejos de Orion.',
+        'Canopus es muy brillante y se ve baja o media en cielos australes; queda en Carina y suele destacar lejos de Orión.',
       'Sirio' =>
-        'Sirio es la estrella mas brillante del cielo nocturno. Busca Canis Major, cerca de Orion.',
+        'Sirio es la estrella más brillante del cielo nocturno. Busca Canis Major, cerca de Orión.',
       'Achernar' =>
         'Achernar es una estrella azul muy brillante del sur, al final de Eridanus; suele verse aislada y destacada.',
       'Alfa Centauri A' =>
         'Alfa Centauri aparece como una estrella muy brillante cerca de la Cruz del Sur, junto a Hadar.',
       'Hadar (Agena)' =>
-        'Hadar, o Beta Centauri, esta cerca de Alfa Centauri y apunta visualmente hacia la Cruz del Sur.',
+        'Hadar, o Beta Centauri, está cerca de Alfa Centauri y apunta visualmente hacia la Cruz del Sur.',
       _ =>
-        'Usa la constelacion ${star.constellation}, su brillo y la posicion Alt/Az mostrada para reconocerla antes de centrarla.',
+        'Usa la constelación ${star.constellation}, su brillo y la posición Alt/Az mostrada para reconocerla antes de centrarla.',
     };
   }
 
@@ -633,7 +921,7 @@ class CalibrationController extends ChangeNotifier {
     final requiredCount = session.method.requiredPointCount;
     final visibleCount = options.where((option) => option.isVisible).length;
     if (visibleCount < requiredCount) {
-      return _insufficientStarsMessage(session.method);
+      return _insufficientStarsMessage(session);
     }
 
     final remainingRequired = requiredCount - session.points.length;
@@ -641,17 +929,23 @@ class CalibrationController extends ChangeNotifier {
         .where((option) => option.isSelectable)
         .length;
     if (selectableCount < remainingRequired) {
-      return 'No quedan suficientes estrellas visibles sin repetir para completar calibracion con ${session.method.title}. Se requieren $remainingRequired referencias adicionales sobre ${visibleStarAltitudeThresholdDeg.toStringAsFixed(0)} grados de altitud.';
+      final flowName = session.stage == CalibrationStage.initialAlignment
+          ? 'la alineación inicial'
+          : session.method.title;
+      return 'No quedan suficientes estrellas visibles sin repetir para completar $flowName. Se requieren $remainingRequired referencias adicionales sobre ${visibleStarAltitudeThresholdDeg.toStringAsFixed(0)} grados de altitud.';
     }
 
     return null;
   }
 
-  String _insufficientStarsMessage(CalibrationMethod method) {
-    if (method == CalibrationMethod.oneStar) {
-      return 'No hay estrellas visibles para calibracion con ${method.title}. Se requiere al menos una estrella sobre ${visibleStarAltitudeThresholdDeg.toStringAsFixed(0)} grados de altitud.';
+  String _insufficientStarsMessage(CalibrationSession session) {
+    if (session.stage == CalibrationStage.initialAlignment) {
+      return 'No hay estrellas visibles para la alineación inicial. Se requiere una estrella reconocible sobre ${visibleStarAltitudeThresholdDeg.toStringAsFixed(0)} grados de altitud.';
     }
-    return 'No hay suficientes estrellas visibles para calibracion con ${method.title}. Se requieren al menos ${method.requiredPointCount} estrellas sobre ${visibleStarAltitudeThresholdDeg.toStringAsFixed(0)} grados de altitud.';
+    if (session.method == CalibrationMethod.oneStar) {
+      return 'No hay estrellas visibles para ${session.method.title}. Se requiere al menos una estrella sobre ${visibleStarAltitudeThresholdDeg.toStringAsFixed(0)} grados de altitud.';
+    }
+    return 'No hay suficientes estrellas visibles para ${session.method.title}. Se requieren al menos ${session.method.requiredPointCount} estrellas sobre ${visibleStarAltitudeThresholdDeg.toStringAsFixed(0)} grados de altitud.';
   }
 
   double? _closestReferenceDistance(AltAzResult position) {
@@ -672,11 +966,27 @@ class CalibrationController extends ChangeNotifier {
   }
 
   String _separationWarningMessage(String starName, double distanceDeg) {
-    return 'Advertencia: $starName esta a ${distanceDeg.toStringAsFixed(1)} grados de una referencia anterior. La calibracion puede ser menos util.';
+    return 'Advertencia: $starName está a ${distanceDeg.toStringAsFixed(1)} grados de una referencia anterior. La corrección puede ser menos útil.';
   }
 
   bool _isVisibleForCalibration(AltAzResult position) {
     return position.altitudeDeg > visibleStarAltitudeThresholdDeg;
+  }
+
+  ({double altitude, double azimuth}) _correctedGotoTarget(AltAzResult target) {
+    final correction = _correctionCalibrationResult;
+    if (correction == null || !correction.hasCorrectionCalibration) {
+      return (
+        altitude: target.altitudeDeg.clamp(-90.0, 90.0).toDouble(),
+        azimuth: normalizeDegrees360(target.azimuthDeg),
+      );
+    }
+
+    return calibrationService.applyCorrection(
+      targetAltitude: target.altitudeDeg,
+      targetAzimuth: target.azimuthDeg,
+      correction: correction,
+    );
   }
 
   Future<void> _runCommand({

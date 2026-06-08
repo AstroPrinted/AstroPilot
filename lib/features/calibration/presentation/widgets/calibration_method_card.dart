@@ -4,19 +4,29 @@ import '../../domain/models/calibration_method.dart';
 
 class CalibrationMethodCard extends StatelessWidget {
   final CalibrationMethod method;
+  final bool enabled;
+  final String? badgeText;
   final VoidCallback? onTap;
 
-  const CalibrationMethodCard({super.key, required this.method, this.onTap});
+  const CalibrationMethodCard({
+    super.key,
+    required this.method,
+    this.enabled = true,
+    this.badgeText,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final enabled = method.isEnabledInMvp;
-    final accent = enabled ? colorScheme.primary : colorScheme.onSurfaceVariant;
+    final interactive = enabled && method.isEnabledInMvp;
+    final accent = interactive
+        ? colorScheme.primary
+        : colorScheme.onSurfaceVariant;
 
     return Card(
       child: InkWell(
-        onTap: enabled ? onTap : null,
+        onTap: interactive ? onTap : null,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -45,7 +55,8 @@ class CalibrationMethodCard extends StatelessWidget {
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                         ),
-                        if (!enabled) const _SoonBadge(),
+                        if (!interactive)
+                          _MethodBadge(label: badgeText ?? 'Bloqueada'),
                       ],
                     ),
                     const SizedBox(height: 6),
@@ -73,8 +84,10 @@ class CalibrationMethodCard extends StatelessWidget {
   }
 }
 
-class _SoonBadge extends StatelessWidget {
-  const _SoonBadge();
+class _MethodBadge extends StatelessWidget {
+  final String label;
+
+  const _MethodBadge({required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +98,7 @@ class _SoonBadge extends StatelessWidget {
         color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text('Proximamente', style: Theme.of(context).textTheme.bodySmall),
+      child: Text(label, style: Theme.of(context).textTheme.bodySmall),
     );
   }
 }

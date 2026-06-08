@@ -34,7 +34,11 @@ class _BottomNavShellState extends State<BottomNavShell> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.center_focus_strong),
-            label: 'Calibracion',
+            label: 'Calibración',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.school_rounded),
+            label: 'Estudiante',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Config'),
         ],

@@ -1,8 +1,10 @@
 import 'calibration_method.dart';
 import 'calibration_point.dart';
+import 'calibration_stage.dart';
 import 'calibration_status.dart';
 
 class CalibrationSession {
+  final CalibrationStage stage;
   final CalibrationMethod method;
   final CalibrationStatus status;
   final List<CalibrationPoint> points;
@@ -11,6 +13,7 @@ class CalibrationSession {
   final DateTime? completedAt;
 
   const CalibrationSession({
+    required this.stage,
     required this.method,
     required this.status,
     required this.points,
@@ -20,6 +23,7 @@ class CalibrationSession {
   });
 
   CalibrationSession copyWith({
+    CalibrationStage? stage,
     CalibrationMethod? method,
     CalibrationStatus? status,
     List<CalibrationPoint>? points,
@@ -28,6 +32,7 @@ class CalibrationSession {
     DateTime? completedAt,
   }) {
     return CalibrationSession(
+      stage: stage ?? this.stage,
       method: method ?? this.method,
       status: status ?? this.status,
       points: points ?? this.points,
@@ -39,6 +44,7 @@ class CalibrationSession {
 
   Map<String, dynamic> toJson() {
     return {
+      'stage': stage.name,
       'method': method.name,
       'status': status.name,
       'points': points.map((point) => point.toJson()).toList(),
@@ -51,8 +57,15 @@ class CalibrationSession {
   factory CalibrationSession.fromJson(Map<String, dynamic> json) {
     final rawPoints = json['points'] as List<dynamic>? ?? const [];
     final rawWarnings = json['warnings'] as List<dynamic>? ?? const [];
+    final method = calibrationMethodFromName(json['method'] as String?);
     return CalibrationSession(
-      method: calibrationMethodFromName(json['method'] as String?),
+      stage: calibrationStageFromName(
+        json['stage'] as String?,
+        fallback: method == CalibrationMethod.oneStar
+            ? CalibrationStage.initialAlignment
+            : CalibrationStage.correctionCalibration,
+      ),
+      method: method,
       status: calibrationStatusFromName(json['status'] as String?),
       points: rawPoints
           .whereType<Map<String, dynamic>>()

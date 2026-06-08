@@ -115,7 +115,7 @@ class MotorCommandService {
       throw StateError(
         'Servicio OE4 no encontrado. Esperado: ${serviceUuid.str128}. '
         'Servicios encontrados: ${_describeServices(services)}. '
-        'Verifica que el ESP32 este usando el firmware OE4 BLE y que el dispositivo conectado sea AstroPilot-OE4.',
+        'Verifica que el ESP32 esté usando el firmware OE4 BLE y que el dispositivo conectado sea AstroPilot-OE4.',
       );
     }
 

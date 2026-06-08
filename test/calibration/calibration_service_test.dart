@@ -1,4 +1,5 @@
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_method.dart';
+import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_stage.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_status.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/services/calibration_service.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/services/pointing_correction_service.dart';
@@ -10,7 +11,10 @@ void main() {
   );
 
   test('one star calibration stores a logical position reference', () {
-    var session = service.startSession(CalibrationMethod.oneStar);
+    var session = service.startSession(
+      stage: CalibrationStage.initialAlignment,
+      method: CalibrationMethod.oneStar,
+    );
     final point = service.createPositionReferencePoint(
       objectId: 'star_a',
       objectName: 'Star A',
@@ -33,7 +37,10 @@ void main() {
   });
 
   test('two star calibration averages offsets', () {
-    var session = service.startSession(CalibrationMethod.twoStars);
+    var session = service.startSession(
+      stage: CalibrationStage.correctionCalibration,
+      method: CalibrationMethod.twoStars,
+    );
 
     session = service.addPoint(
       session,
@@ -63,12 +70,15 @@ void main() {
     expect(result.method, CalibrationMethod.twoStars);
     expect(result.status, CalibrationStatus.calibratedTwoStars);
     expect(result.points, hasLength(2));
-    expect(result.altitudeOffset, closeTo(-0.5, 0.0001));
-    expect(result.azimuthOffset, closeTo(-7.5, 0.0001));
+    expect(result.altitudeOffset, closeTo(0.5, 0.0001));
+    expect(result.azimuthOffset, closeTo(7.5, 0.0001));
   });
 
   test('three star calibration averages offsets', () {
-    var session = service.startSession(CalibrationMethod.threeStars);
+    var session = service.startSession(
+      stage: CalibrationStage.correctionCalibration,
+      method: CalibrationMethod.threeStars,
+    );
 
     for (final point in [
       service.createPoint(
@@ -104,12 +114,15 @@ void main() {
     expect(result.method, CalibrationMethod.threeStars);
     expect(result.status, CalibrationStatus.calibratedThreeStars);
     expect(result.points, hasLength(3));
-    expect(result.altitudeOffset, closeTo(1, 0.0001));
-    expect(result.azimuthOffset, closeTo(10 / 3, 0.0001));
+    expect(result.altitudeOffset, closeTo(-1, 0.0001));
+    expect(result.azimuthOffset, closeTo(-10 / 3, 0.0001));
   });
 
   test('does not allow repeating a star in one session', () {
-    var session = service.startSession(CalibrationMethod.twoStars);
+    var session = service.startSession(
+      stage: CalibrationStage.correctionCalibration,
+      method: CalibrationMethod.twoStars,
+    );
     session = service.addPoint(
       session,
       service.createPoint(

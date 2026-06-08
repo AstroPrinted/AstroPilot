@@ -240,7 +240,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
     if (objects.isEmpty) {
       return const Center(
         child: Text(
-          'No hay objetos visibles con la ubicacion, fecha y hora actuales.',
+          'No hay objetos visibles con la ubicación, fecha y hora actuales.',
         ),
       );
     }
@@ -356,12 +356,12 @@ class _VisibleModeInfo extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Visible = altitud >= 0°. Advertencia si esta entre 0° y 5°.',
+            'Visible = altitud >= 0°. Advertencia si está entre 0° y 5°.',
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 4),
           Text(
-            'Ubicacion ${latDeg.toStringAsFixed(4)}, ${lonDeg.toStringAsFixed(4)} · UTC ${timestamp.toIso8601String()}',
+            'Ubicación ${latDeg.toStringAsFixed(4)}, ${lonDeg.toStringAsFixed(4)} · UTC ${timestamp.toIso8601String()}',
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),

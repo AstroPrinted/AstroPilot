@@ -16,20 +16,20 @@ enum CalibrationStatus {
 extension CalibrationStatusLabel on CalibrationStatus {
   String get label {
     return switch (this) {
-      CalibrationStatus.notCalibrated => 'Sin calibracion',
+      CalibrationStatus.notCalibrated => 'Sin alineación',
       CalibrationStatus.selectingReferenceStar =>
         'Seleccionando estrella de referencia',
       CalibrationStatus.waitingForManualCentering =>
         'Esperando centrado manual',
-      CalibrationStatus.calibrated => 'Calibrado',
-      CalibrationStatus.calibrationFailed => 'Calibracion fallida',
-      CalibrationStatus.inProgress => 'Calibracion en curso',
-      CalibrationStatus.partiallyCalibrated => 'Calibracion parcial',
-      CalibrationStatus.calibratedOneStar => 'Calibrado: 1 estrella',
-      CalibrationStatus.calibratedTwoStars => 'Calibrado: 2 estrellas',
-      CalibrationStatus.calibratedThreeStars => 'Calibrado: 3 estrellas',
-      CalibrationStatus.localSyncActive => 'Sync local activo',
-      CalibrationStatus.failed => 'Calibracion fallida',
+      CalibrationStatus.calibrated => 'Alineado',
+      CalibrationStatus.calibrationFailed => 'Flujo fallido',
+      CalibrationStatus.inProgress => 'En curso',
+      CalibrationStatus.partiallyCalibrated => 'Corrección parcial',
+      CalibrationStatus.calibratedOneStar => 'Corrección: 1 estrella',
+      CalibrationStatus.calibratedTwoStars => 'Corrección: 2 estrellas',
+      CalibrationStatus.calibratedThreeStars => 'Corrección: 3 estrellas',
+      CalibrationStatus.localSyncActive => 'Corrección local activa',
+      CalibrationStatus.failed => 'Flujo fallido',
     };
   }
 }

@@ -2,6 +2,7 @@ import '../models/calibration_method.dart';
 import '../models/calibration_point.dart';
 import '../models/calibration_result.dart';
 import '../models/calibration_session.dart';
+import '../models/calibration_stage.dart';
 import '../models/calibration_status.dart';
 import 'pointing_correction_service.dart';
 
@@ -10,9 +11,12 @@ class CalibrationService {
 
   const CalibrationService({required this.correctionService});
 
-  // Fase 1 registra una referencia logica de motores; no certifica alineacion optica.
-  CalibrationSession startSession(CalibrationMethod method) {
+  CalibrationSession startSession({
+    required CalibrationStage stage,
+    required CalibrationMethod method,
+  }) {
     return CalibrationSession(
+      stage: stage,
       method: method,
       status: CalibrationStatus.selectingReferenceStar,
       points: const [],
@@ -102,14 +106,14 @@ class CalibrationService {
     );
     if (alreadyRegistered) {
       throw StateError(
-        '${point.objectName} ya fue registrada como referencia en esta sesion.',
+        '${point.objectName} ya fue registrada como referencia en esta sesión.',
       );
     }
 
     final points = [...session.points, point];
     return session.copyWith(
       points: List.unmodifiable(points),
-      status: _statusFor(session.method, points.length),
+      status: _statusFor(session.stage, session.method, points.length),
       completedAt: points.length >= session.method.requiredPointCount
           ? DateTime.now().toUtc()
           : null,
@@ -119,25 +123,46 @@ class CalibrationService {
   CalibrationResult completeSession(CalibrationSession session) {
     if (session.points.length < session.method.requiredPointCount) {
       throw StateError(
-        'La calibracion logica requiere ${session.method.requiredPointCount} referencias.',
+        'El flujo requiere ${session.method.requiredPointCount} referencias.',
       );
     }
 
     return correctionService.calculateCorrection(
       session.method,
       session.points,
+      stage: session.stage,
       warnings: session.warnings,
     );
   }
 
-  CalibrationStatus _statusFor(CalibrationMethod method, int pointCount) {
+  ({double altitude, double azimuth}) applyCorrection({
+    required double targetAltitude,
+    required double targetAzimuth,
+    required CalibrationResult correction,
+  }) {
+    return correctionService.applyCorrection(
+      targetAltitude: targetAltitude,
+      targetAzimuth: targetAzimuth,
+      calibration: correction,
+    );
+  }
+
+  CalibrationStatus _statusFor(
+    CalibrationStage stage,
+    CalibrationMethod method,
+    int pointCount,
+  ) {
     if (pointCount <= 0) return CalibrationStatus.inProgress;
     if (pointCount < method.requiredPointCount) {
       return CalibrationStatus.partiallyCalibrated;
     }
 
+    if (stage == CalibrationStage.initialAlignment) {
+      return CalibrationStatus.calibrated;
+    }
+
     return switch (method) {
-      CalibrationMethod.oneStar => CalibrationStatus.calibrated,
+      CalibrationMethod.oneStar => CalibrationStatus.calibratedOneStar,
       CalibrationMethod.twoStars => CalibrationStatus.calibratedTwoStars,
       CalibrationMethod.threeStars => CalibrationStatus.calibratedThreeStars,
       CalibrationMethod.fixedObjectSync => CalibrationStatus.localSyncActive,

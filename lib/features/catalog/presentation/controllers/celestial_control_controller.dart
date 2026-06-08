@@ -77,7 +77,9 @@ class CelestialControlController extends ChangeNotifier {
   Future<void> refreshPreview() async {
     try {
       final rawPosition = gotoService.calculateCurrentPosition(object);
-      final calibration = await gotoService.loadSavedCalibration();
+      final initialAlignment = await gotoService.loadInitialAlignment();
+      final correctionCalibration = await gotoService
+          .loadCorrectionCalibration();
       AstronomicalGotoCommand? preview;
       String? error;
 
@@ -85,14 +87,15 @@ class CelestialControlController extends ChangeNotifier {
         preview = gotoService.buildCommand(
           object: object,
           rawPosition: rawPosition,
-          calibration: calibration,
+          initialAlignment: initialAlignment,
+          correctionCalibration: correctionCalibration,
         );
       } catch (e) {
         error = _errorText(e);
       }
 
       _currentPosition = rawPosition;
-      _savedCalibration = calibration;
+      _savedCalibration = initialAlignment;
       _previewCommand = preview;
       _lastUpdatedAt = rawPosition.computedAt;
       _errorMessage = error;
@@ -123,7 +126,7 @@ class CelestialControlController extends ChangeNotifier {
 
     _isTracking = true;
     _nextTrackingAt = DateTime.now().toUtc().add(trackingInterval);
-    _statusMessage = 'Tracking logico activo. Actualiza cada 15 segundos.';
+    _statusMessage = 'Tracking lógico activo. Actualiza cada 15 segundos.';
     _safeNotify();
 
     _trackingTimer?.cancel();
@@ -204,10 +207,10 @@ class CelestialControlController extends ChangeNotifier {
 
     _trackingTickInFlight = true;
     try {
-      await _sendAstronomicalGoto('Tracking logico', send);
+      await _sendAstronomicalGoto('Tracking lógico', send);
       if (_isTracking) {
         _nextTrackingAt = DateTime.now().toUtc().add(trackingInterval);
-        _statusMessage = 'Tracking logico activo. Proximo envio programado.';
+        _statusMessage = 'Tracking lógico activo. Proximo envio programado.';
         _safeNotify();
       }
     } catch (_) {
@@ -232,7 +235,7 @@ class CelestialControlController extends ChangeNotifier {
       final command = await gotoService.sendGoto(object: object, send: send);
       final sentAt = DateTime.now().toUtc();
       _currentPosition = command.rawPosition;
-      _savedCalibration = command.calibration;
+      _savedCalibration = command.initialAlignment;
       _previewCommand = command;
       _lastUpdatedAt = command.rawPosition.computedAt;
       _localAltitude = command.finalAltitude;
@@ -245,8 +248,8 @@ class CelestialControlController extends ChangeNotifier {
         sentAt: sentAt,
       );
       _statusMessage = command.usedCorrection
-          ? '$label enviado con correccion multipunto.'
-          : '$label enviado con referencia calibrada.';
+          ? '$label enviado con corrección de precisión.'
+          : '$label enviado con alineación inicial.';
     } catch (e) {
       _errorMessage = _errorText(e);
       _statusMessage = _errorMessage;

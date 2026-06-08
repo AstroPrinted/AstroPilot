@@ -3,44 +3,44 @@
   "created_at": "2025-11-16",
   "solar_system_bodies": [
     {
-      "name": "Jupiter",
-      "notes": "Es el planeta mas grande del sistema solar; su Gran Mancha Roja es una tormenta gigante observada durante siglos."
+      "name": "Júpiter",
+      "notes": "Es el planeta más grande del sistema solar. Su Gran Mancha Roja es una tormenta gigante observada durante siglos."
     },
     {
       "name": "Luna",
-      "notes": "Es el unico satelite natural de la Tierra; sus fases aparecen porque vemos distintas porciones iluminadas por el Sol."
+      "notes": "Es el único satélite natural de la Tierra. Sus fases aparecen porque vemos distintas porciones iluminadas por el Sol."
     },
     {
       "name": "Marte",
-      "notes": "Su color rojizo proviene de minerales de hierro oxidados; conserva huellas de rios, lagos y agua liquida del pasado."
+      "notes": "Su color rojizo proviene de minerales de hierro oxidados. Conserva huellas de ríos, lagos y agua líquida del pasado."
     },
     {
       "name": "Mercurio",
-      "notes": "Es el planeta mas cercano al Sol, pero no el mas caliente; al casi no tener atmosfera, sus noches son extremadamente frias."
+      "notes": "Es el planeta más cercano al Sol, pero no el más caliente. Al casi no tener atmósfera, sus noches son extremadamente frías."
     },
     {
       "name": "Neptuno",
-      "notes": "Fue predicho matematicamente antes de observarse directamente; su color azul se relaciona con metano en la atmosfera."
+      "notes": "Fue predicho matemáticamente antes de observarse directamente. Su color azul se relaciona con metano en la atmósfera."
     },
     {
-      "name": "Pluton",
-      "notes": "Hoy se clasifica como planeta enano; la sonda New Horizons revelo una region clara con forma de corazon llamada Tombaugh Regio."
+      "name": "Plutón",
+      "notes": "Hoy se clasifica como planeta enano. La sonda New Horizons reveló una región clara con forma de corazón llamada Tombaugh Regio."
     },
     {
       "name": "Saturno",
-      "notes": "Sus anillos estan formados sobre todo por particulas de hielo de agua y polvo, desde granos pequenos hasta bloques grandes."
+      "notes": "Sus anillos están formados sobre todo por partículas de hielo de agua y polvo, desde granos pequeños hasta bloques grandes."
     },
     {
       "name": "Sol",
-      "notes": "Es una estrella de unos 4500 millones de anos; en su nucleo la fusion nuclear transforma hidrogeno en helio y libera energia."
+      "notes": "Es una estrella de unos 4500 millones de años. En su núcleo la fusión nuclear transforma hidrógeno en helio y libera energía."
     },
     {
       "name": "Urano",
-      "notes": "Rota practicamente de lado, como si estuviera inclinado sobre su orbita; el metano ayuda a darle su tono azul verdoso."
+      "notes": "Rota prácticamente de lado, como si estuviera inclinado sobre su órbita. El metano ayuda a darle su tono azul verdoso."
     },
     {
       "name": "Venus",
-      "notes": "Es el planeta mas caliente del sistema solar porque su densa atmosfera de dioxido de carbono atrapa calor de forma extrema."
+      "notes": "Es el planeta más caliente del sistema solar porque su densa atmósfera de dióxido de carbono atrapa calor de forma extrema."
     }
   ],
   "deep_sky_objects": [
@@ -54,7 +54,7 @@
       "declination_degrees": -69.756111,
       "magnitude_v": 0.9,
       "catalogs": ["PGC 17223"],
-      "notes": "Galaxia satelite de la Via Lactea y uno de los mejores laboratorios cercanos para estudiar como nacen y evolucionan las estrellas.",
+      "notes": "Galaxia satélite de la Vía Láctea y uno de los mejores laboratorios cercanos para estudiar cómo nacen y evolucionan las estrellas.",
       "source": "SIMBAD"
     },
     {
@@ -67,7 +67,7 @@
       "declination_degrees": -72.828611,
       "magnitude_v": 2.7,
       "catalogs": ["NGC 292"],
-      "notes": "Galaxia enana vecina de la Via Lactea; junto con la Gran Nube de Magallanes esta dejando una gran corriente de gas alrededor de nuestra galaxia.",
+      "notes": "Galaxia enana vecina de la Vía Láctea. Junto con la Gran Nube de Magallanes está dejando una gran corriente de gas alrededor de nuestra galaxia.",
       "source": "SIMBAD"
     },
     {
@@ -80,7 +80,7 @@
       "declination_degrees": -47.479444,
       "magnitude_v": 3.9,
       "catalogs": ["NGC 5139"],
-      "notes": "Uno de los cumulos globulares mas grandes y brillantes del cielo; contiene millones de estrellas antiguas y podria ser el nucleo de una antigua galaxia enana.",
+      "notes": "Uno de los cúmulos globulares más grandes y brillantes del cielo. Contiene millones de estrellas antiguas y podría ser el núcleo de una antigua galaxia enana.",
       "source": "SIMBAD"
     },
     {
@@ -93,7 +93,7 @@
       "declination_degrees": -72.081111,
       "magnitude_v": 4.0,
       "catalogs": ["NGC 104"],
-      "notes": "Tambien llamado 47 Tuc, es uno de los cumulos globulares mas luminosos y densos del cielo austral, visible cerca de la Pequena Nube de Magallanes.",
+      "notes": "También llamado 47 Tuc, es uno de los cúmulos globulares más luminosos y densos del cielo austral, visible cerca de la Pequeña Nube de Magallanes.",
       "source": "SIMBAD"
     },
     {
@@ -106,7 +106,7 @@
       "declination_degrees": -59.867778,
       "magnitude_v": 1.0,
       "catalogs": ["NGC 3372"],
-      "notes": "Enorme region de formacion estelar; alberga a Eta Carinae, una estrella extremadamente masiva e inestable que tuvo una gran erupcion en el siglo XIX.",
+      "notes": "Enorme región de formación estelar. Alberga a Eta Carinae, una estrella extremadamente masiva e inestable que tuvo una gran erupción en el siglo XIX.",
       "source": "SIMBAD"
     },
     {
@@ -119,7 +119,7 @@
       "declination_degrees": -69.094444,
       "magnitude_v": 8.0,
       "catalogs": ["NGC 2070", "30 Dor"],
-      "notes": "Ubicada en la Gran Nube de Magallanes, es una de las regiones de nacimiento estelar mas activas del entorno cercano de la Via Lactea.",
+      "notes": "Ubicada en la Gran Nube de Magallanes, es una de las regiones de nacimiento estelar más activas del entorno cercano de la Vía Láctea.",
       "source": "SIMBAD"
     },
     {
@@ -132,7 +132,7 @@
       "declination_degrees": -60.338889,
       "magnitude_v": 4.2,
       "catalogs": ["NGC 4755"],
-      "notes": "Cumulo abierto joven y colorido junto a la Cruz del Sur; John Herschel lo apodo Joyero por el contraste de sus estrellas azules, blancas y rojizas.",
+      "notes": "Cúmulo abierto joven y colorido junto a la Cruz del Sur. John Herschel lo apodó Joyero por el contraste de sus estrellas azules, blancas y rojizas.",
       "source": "SIMBAD"
     },
     {
@@ -158,12 +158,12 @@
       "declination_degrees": -25.288333,
       "magnitude_v": 8.0,
       "catalogs": ["NGC 253"],
-      "notes": "Tambien conocida como NGC 253, es una galaxia con intensa formacion estelar, por eso se clasifica como una galaxia starburst.",
+      "notes": "También conocida como NGC 253, es una galaxia con intensa formación estelar, por eso se clasifica como una galaxia starburst.",
       "source": "SIMBAD"
     },
     {
       "name": "Nebulosa de Orión",
-      "constellations": ["Orion"],
+      "constellations": ["Orión"],
       "object_type": "Nebulosa de Emisión",
       "right_ascension": "05h 35m 17s",
       "right_ascension_hours": 5.588056,
@@ -171,7 +171,7 @@
       "declination_degrees": -5.391111,
       "magnitude_v": 4.0,
       "catalogs": ["M 42", "NGC 1976"],
-      "notes": "Una de las nebulosas mas estudiadas: es una guarderia estelar cercana donde nacen estrellas dentro de nubes de gas y polvo.",
+      "notes": "Una de las nebulosas más estudiadas: es una guardería estelar cercana donde nacen estrellas dentro de nubes de gas y polvo.",
       "source": "SIMBAD"
     },
     {
@@ -184,7 +184,7 @@
       "declination_degrees": 24.116667,
       "magnitude_v": 1.6,
       "catalogs": ["M 45"],
-      "notes": "Cumulo abierto joven conocido como las Siete Hermanas; sus estrellas azules iluminan polvo interestelar que produce una tenue nebulosidad de reflexion.",
+      "notes": "Cúmulo abierto joven conocido como las Siete Hermanas. Sus estrellas azules iluminan polvo interestelar que produce una tenue nebulosidad de reflexión.",
       "source": "SIMBAD"
     },
     {
@@ -197,7 +197,7 @@
       "declination_degrees": -20.836944,
       "magnitude_v": 7.6,
       "catalogs": ["NGC 7293"],
-      "notes": "Nebulosa planetaria cercana formada por las capas expulsadas de una estrella similar al Sol; por su forma tambien se conoce como el Ojo de Dios.",
+      "notes": "Nebulosa planetaria cercana formada por las capas expulsadas de una estrella similar al Sol. Por su forma también se conoce como el Ojo de Dios.",
       "source": "SIMBAD"
     },
     {
@@ -210,7 +210,7 @@
       "declination_degrees": -63.0,
       "magnitude_v": null,
       "catalogs": ["C 99"],
-      "notes": "Nebulosa oscura visible a simple vista junto a la Cruz del Sur; su polvo bloquea la luz de las estrellas de fondo de la Via Lactea.",
+      "notes": "Nebulosa oscura visible a simple vista junto a la Cruz del Sur. Su polvo bloquea la luz de las estrellas de fondo de la Vía Láctea.",
       "source": "SIMBAD"
     },
     {
@@ -223,7 +223,7 @@
       "declination_degrees": -11.623056,
       "magnitude_v": 8.0,
       "catalogs": ["M 104", "NGC 4594"],
-      "notes": "Galaxia espiral vista casi de canto, con un bulbo brillante y una banda de polvo que le dan su caracteristica forma de sombrero.",
+      "notes": "Galaxia espiral vista casi de canto, con un bulbo brillante y una banda de polvo que le dan su característica forma de sombrero.",
       "source": "SIMBAD"
     },
     {
@@ -236,7 +236,7 @@
       "declination_degrees": -29.865278,
       "magnitude_v": 7.5,
       "catalogs": ["M 83", "NGC 5236"],
-      "notes": "M83 es una galaxia espiral barrada vista casi de frente, rica en regiones rosadas de formacion estelar y conocida por sus numerosas supernovas observadas.",
+      "notes": "M83 es una galaxia espiral barrada vista casi de frente, rica en regiones rosadas de formación estelar y conocida por sus numerosas supernovas observadas.",
       "source": "SIMBAD"
     },
     {
@@ -249,7 +249,7 @@
       "declination_degrees": -34.793333,
       "magnitude_v": 4.6,
       "catalogs": ["M 7", "NGC 6475"],
-      "notes": "M7 es uno de los cumulos abiertos mas faciles de ver a simple vista; ya fue descrito por Claudio Ptolomeo en la Antiguedad.",
+      "notes": "M7 es uno de los cúmulos abiertos más fáciles de ver a simple vista. Ya fue descrito por Claudio Ptolomeo en la Antigüedad.",
       "source": "SIMBAD"
     },
     {
@@ -262,7 +262,7 @@
       "declination_degrees": -32.253333,
       "magnitude_v": 4.2,
       "catalogs": ["M 6", "NGC 6405"],
-      "notes": "Cumulo abierto joven en Scorpius; sus estrellas brillantes dibujan una figura que recuerda a una mariposa con las alas abiertas.",
+      "notes": "Cúmulo abierto joven en Scorpius. Sus estrellas brillantes dibujan una figura que recuerda a una mariposa con las alas abiertas.",
       "source": "SIMBAD"
     },
     {
@@ -275,7 +275,7 @@
       "declination_degrees": -24.386667,
       "magnitude_v": 6.0,
       "catalogs": ["M 8", "NGC 6523"],
-      "notes": "La Nebulosa de la Laguna es una gran region H II donde estrellas jovenes ionizan el hidrogeno y hacen brillar la nube.",
+      "notes": "La Nebulosa de la Laguna es una gran región H II donde estrellas jóvenes ionizan el hidrógeno y hacen brillar la nube.",
       "source": "SIMBAD"
     },
     {
@@ -288,7 +288,7 @@
       "declination_degrees": -23.03,
       "magnitude_v": 6.3,
       "catalogs": ["M 20", "NGC 6514"],
-      "notes": "Su nombre viene de las bandas oscuras de polvo que dividen la nebulosa en tres zonas; combina emision rojiza y reflexion azulada.",
+      "notes": "Su nombre viene de las bandas oscuras de polvo que dividen la nebulosa en tres zonas. Combina emisión rojiza y reflexión azulada.",
       "source": "SIMBAD"
     },
     {
@@ -301,7 +301,7 @@
       "declination_degrees": -16.171667,
       "magnitude_v": 6.0,
       "catalogs": ["M 17", "NGC 6618"],
-      "notes": "M17 es una region de formacion estelar cuyo gas brillante puede parecer un cisne, una herradura o la letra omega segun el telescopio.",
+      "notes": "M17 es una región de formación estelar cuyo gas brillante puede parecer un cisne, una herradura o la letra omega según el telescopio.",
       "source": "SIMBAD"
     },
     {
@@ -314,7 +314,7 @@
       "declination_degrees": -13.798333,
       "magnitude_v": 6.0,
       "catalogs": ["M 16", "NGC 6611"],
-      "notes": "Famosa por los Pilares de la Creacion, columnas de gas y polvo donde la radiacion de estrellas jovenes esculpe la nebulosa.",
+      "notes": "Famosa por los Pilares de la Creación, columnas de gas y polvo donde la radiación de estrellas jóvenes esculpe la nebulosa.",
       "source": "SIMBAD"
     },
     {
@@ -327,7 +327,7 @@
       "declination_degrees": -23.904722,
       "magnitude_v": 5.1,
       "catalogs": ["M 22", "NGC 6656"],
-      "notes": "M22 es uno de los cumulos globulares mas brillantes visibles desde la Tierra y se encuentra proyectado hacia la rica zona de Sagittarius.",
+      "notes": "M22 es uno de los cúmulos globulares más brillantes visibles desde la Tierra y se encuentra proyectado hacia la rica zona de Sagittarius.",
       "source": "SIMBAD"
     },
     {
@@ -340,7 +340,7 @@
       "declination_degrees": -26.525556,
       "magnitude_v": 5.9,
       "catalogs": ["M 4", "NGC 6121"],
-      "notes": "M4 es uno de los cumulos globulares mas cercanos a la Tierra; se localiza facilmente cerca de la estrella Antares.",
+      "notes": "M4 es uno de los cúmulos globulares más cercanos a la Tierra. Se localiza fácilmente cerca de la estrella Antares.",
       "source": "SIMBAD"
     },
     {
@@ -353,7 +353,7 @@
       "declination_degrees": -30.964722,
       "magnitude_v": 6.3,
       "catalogs": ["M 55", "NGC 6809"],
-      "notes": "M55 es un cumulo globular amplio y relativamente suelto, con mas de 100000 estrellas antiguas formadas hace miles de millones de anos.",
+      "notes": "M55 es un cúmulo globular amplio y relativamente suelto, con más de 100000 estrellas antiguas formadas hace miles de millones de años.",
       "source": "SIMBAD"
     },
     {
@@ -366,7 +366,7 @@
       "declination_degrees": -64.393333,
       "magnitude_v": 1.9,
       "catalogs": ["IC 2602"],
-      "notes": "IC 2602 recibe el apodo de Pleyades del Sur porque es un cumulo joven, brillante y azul, dominado visualmente por Theta Carinae.",
+      "notes": "IC 2602 recibe el apodo de Pléyades del Sur porque es un cúmulo joven, brillante y azul, dominado visualmente por Theta Carinae.",
       "source": "SIMBAD"
     },
     {
@@ -379,7 +379,7 @@
       "declination_degrees": -20.766667,
       "magnitude_v": 4.5,
       "catalogs": ["M 41", "NGC 2287"],
-      "notes": "M41 es un cumulo abierto bajo Sirius; con binoculares muestra decenas de estrellas jovenes y brillantes en la constelacion Canis Major.",
+      "notes": "M41 es un cúmulo abierto bajo Sirius. Con binoculares muestra decenas de estrellas jóvenes y brillantes en la constelación Canis Major.",
       "source": "SIMBAD"
     },
     {
@@ -405,7 +405,7 @@
       "declination_degrees": -40.435278,
       "magnitude_v": 10.3,
       "catalogs": ["NGC 3132"],
-      "notes": "Tambien llamada Nebulosa del Anillo Austral, muestra las capas expulsadas por una estrella moribunda; el telescopio Webb revelo detalles de sus estrellas centrales.",
+      "notes": "También llamada Nebulosa del Anillo Austral, muestra las capas expulsadas por una estrella moribunda. El telescopio Webb reveló detalles de sus estrellas centrales.",
       "source": "SIMBAD"
     },
     {
@@ -418,7 +418,7 @@
       "declination_degrees": -59.984444,
       "magnitude_v": 5.4,
       "catalogs": ["NGC 6752"],
-      "notes": "Caldwell 93 contiene mas de 100000 estrellas antiguas; Hubble encontro por casualidad una pequena galaxia enana muy lejana detras del cumulo.",
+      "notes": "Caldwell 93 contiene más de 100000 estrellas antiguas. Hubble encontró por casualidad una pequeña galaxia enana muy lejana detrás del cúmulo.",
       "source": "SIMBAD"
     },
     {
@@ -431,7 +431,7 @@
       "declination_degrees": -53.674167,
       "magnitude_v": 5.7,
       "catalogs": ["NGC 6397"],
-      "notes": "NGC 6397 es uno de los cumulos globulares mas cercanos y antiguos conocidos, con una edad estimada de unos 13400 millones de anos.",
+      "notes": "NGC 6397 es uno de los cúmulos globulares más cercanos y antiguos conocidos, con una edad estimada de unos 13400 millones de años.",
       "source": "SIMBAD"
     },
     {
@@ -444,7 +444,7 @@
       "declination_degrees": -37.208333,
       "magnitude_v": 9.4,
       "catalogs": ["NGC 1316"],
-      "notes": "Fornax A es una galaxia de radio muy potente; sus estructuras de polvo y arcos sugieren que nacio de antiguas fusiones galacticas.",
+      "notes": "Fornax A es una galaxia de radio muy potente. Sus estructuras de polvo y arcos sugieren que nació de antiguas fusiones galácticas.",
       "source": "SIMBAD"
     },
     {
@@ -457,7 +457,7 @@
       "declination_degrees": -36.140278,
       "magnitude_v": 9.6,
       "catalogs": ["NGC 1365"],
-      "notes": "NGC 1365 es un ejemplo espectacular de galaxia espiral barrada, con una barra central muy marcada que canaliza gas hacia su nucleo.",
+      "notes": "NGC 1365 es un ejemplo espectacular de galaxia espiral barrada, con una barra central muy marcada que canaliza gas hacia su núcleo.",
       "source": "SIMBAD"
     },
     {
@@ -470,7 +470,7 @@
       "declination_degrees": -52.7,
       "magnitude_v": 5.1,
       "catalogs": ["NGC 2516"],
-      "notes": "NGC 2516 es conocido como la Colmena del Sur por su parecido con el cumulo de la Colmena del hemisferio norte.",
+      "notes": "NGC 2516 es conocido como la Colmena del Sur por su parecido con el cúmulo de la Colmena del hemisferio norte.",
       "source": "SIMBAD"
     },
     {
@@ -483,7 +483,7 @@
       "declination_degrees": -38.555,
       "magnitude_v": 5.8,
       "catalogs": ["NGC 2477"],
-      "notes": "NGC 2477 es un cumulo abierto muy rico y compacto; su poblacion estelar sirve para estudiar edades y evolucion de estrellas.",
+      "notes": "NGC 2477 es un cúmulo abierto muy rico y compacto. Su población estelar sirve para estudiar edades y evolución de estrellas.",
       "source": "SIMBAD"
     },
     {
@@ -496,7 +496,7 @@
       "declination_degrees": -58.23,
       "magnitude_v": 4.7,
       "catalogs": ["NGC 3293"],
-      "notes": "NGC 3293 es un cumulo abierto muy joven en Carina; sus estrellas azules mas brillantes tienen solo unos pocos millones de anos.",
+      "notes": "NGC 3293 es un cúmulo abierto muy joven en Carina. Sus estrellas azules más brillantes tienen solo unos pocos millones de años.",
       "source": "SIMBAD"
     },
     {
@@ -509,7 +509,7 @@
       "declination_degrees": -41.826667,
       "magnitude_v": 2.6,
       "catalogs": ["NGC 6231"],
-      "notes": "NGC 6231 es un cumulo abierto joven con muchas estrellas calientes y masivas, a veces apodado el Joyero del Norte.",
+      "notes": "NGC 6231 es un cúmulo abierto joven con muchas estrellas calientes y masivas, a veces apodado el Joyero del Norte.",
       "source": "SIMBAD"
     },
     {
@@ -522,12 +522,12 @@
       "declination_degrees": -18.6425,
       "magnitude_v": 8.6,
       "catalogs": ["NGC 3242"],
-      "notes": "El Fantasma de Jupiter es una nebulosa planetaria: una estrella tipo solar expulso sus capas externas y dejo un nucleo caliente que ilumina el gas.",
+      "notes": "El Fantasma de Júpiter es una nebulosa planetaria: una estrella tipo solar expulsó sus capas externas y dejó un núcleo caliente que ilumina el gas.",
       "source": "SIMBAD"
     },
     {
       "name": "Nebulosa del Corredor",
-      "constellations": ["Orion"],
+      "constellations": ["Orión"],
       "object_type": "Nebulosa de Reflejo",
       "right_ascension": "05h 35m 12s",
       "right_ascension_hours": 5.586667,
@@ -535,7 +535,7 @@
       "declination_degrees": -5.066667,
       "magnitude_v": 8.0,
       "catalogs": ["NGC 1977"],
-      "notes": "NGC 1977 es una nebulosa de reflexion en Orion; su tono azulado proviene de polvo que dispersa la luz de estrellas jovenes cercanas.",
+      "notes": "NGC 1977 es una nebulosa de reflexión en Orión. Su tono azulado proviene de polvo que dispersa la luz de estrellas jóvenes cercanas.",
       "source": "SIMBAD"
     },
     {
@@ -548,7 +548,7 @@
       "declination_degrees": -63.8575,
       "magnitude_v": 8.5,
       "catalogs": ["NGC 6744"],
-      "notes": "NGC 6744 se parece mucho a la Via Lactea, pero es mas grande; por eso a veces se presenta como una hermana mayor galactica.",
+      "notes": "NGC 6744 se parece mucho a la Vía Láctea, pero es más grande. Por eso a veces se presenta como una hermana mayor galáctica.",
       "source": "SIMBAD"
     },
     {
@@ -561,7 +561,7 @@
       "declination_degrees": -49.468056,
       "magnitude_v": 8.6,
       "catalogs": ["NGC 4945"],
-      "notes": "NGC 4945 es una espiral vista de canto, similar a la Via Lactea, pero con un agujero negro central mucho mas activo.",
+      "notes": "NGC 4945 es una espiral vista de canto, similar a la Vía Láctea, pero con un agujero negro central mucho más activo.",
       "source": "SIMBAD"
     },
     {
@@ -574,7 +574,7 @@
       "declination_degrees": -63.033333,
       "magnitude_v": 3.0,
       "catalogs": ["IC 2944"],
-      "notes": "IC 2944 combina cumulo abierto, nebulosa de emision y globulos oscuros de Bok, pequenas nubes densas donde pueden formarse nuevas estrellas.",
+      "notes": "IC 2944 combina cúmulo abierto, nebulosa de emisión y globulos oscuros de Bok, pequeñas nubes densas donde pueden formarse nuevas estrellas.",
       "source": "SIMBAD"
     },
     {
@@ -587,7 +587,7 @@
       "declination_degrees": -35.966667,
       "magnitude_v": 10.0,
       "catalogs": ["NGC 6334"],
-      "notes": "La Pata de Gato es una region masiva de formacion estelar; Webb ha observado sus cavidades y nubes esculpidas por estrellas jovenes.",
+      "notes": "La Pata de Gato es una región masiva de formación estelar. Webb ha observado sus cavidades y nubes esculpidas por estrellas jóvenes.",
       "source": "SIMBAD"
     },
     {
@@ -600,7 +600,7 @@
       "declination_degrees": -59.562778,
       "magnitude_v": 10.8,
       "catalogs": ["NGC 3918"],
-      "notes": "NGC 3918 es una nebulosa planetaria azulada en Centaurus; su envoltura externa casi esferica esta siendo atravesada por vientos de la estrella central.",
+      "notes": "NGC 3918 es una nebulosa planetaria azulada en Centaurus. Su envoltura externa casi esférica está siendo atravesada por vientos de la estrella central.",
       "source": "SIMBAD"
     },
     {
@@ -613,7 +613,7 @@
       "declination_degrees": -37.105,
       "magnitude_v": 14.7,
       "catalogs": ["NGC 6302"],
-      "notes": "NGC 6302, la Nebulosa del Insecto o Mariposa, contiene una de las estrellas centrales mas calientes conocidas en una nebulosa planetaria.",
+      "notes": "NGC 6302, la Nebulosa del Insecto o Mariposa, contiene una de las estrellas centrales más calientes conocidas en una nebulosa planetaria.",
       "source": "SIMBAD"
     },
     {
@@ -626,7 +626,7 @@
       "declination_degrees": -0.823056,
       "magnitude_v": 6.3,
       "catalogs": ["M 2", "NGC 7089"],
-      "notes": "M2 es un cumulo globular de Aquarius con mas de 150000 estrellas, un enjambre antiguo que orbita el halo de la Via Lactea.",
+      "notes": "M2 es un cúmulo globular de Aquarius con más de 150000 estrellas, un enjambre antiguo que orbita el halo de la Vía Láctea.",
       "source": "SIMBAD"
     },
     {
@@ -639,7 +639,7 @@
       "declination_degrees": 12.166944,
       "magnitude_v": 6.2,
       "catalogs": ["M 15", "NGC 7078"],
-      "notes": "M15 es uno de los cumulos globulares mas densos; su nucleo ha sido estudiado por la posible presencia de un agujero negro de masa intermedia.",
+      "notes": "M15 es uno de los cúmulos globulares más densos. Su núcleo ha sido estudiado por la posible presencia de un agujero negro de masa intermedia.",
       "source": "SIMBAD"
     },
     {
@@ -652,7 +652,7 @@
       "declination_degrees": -23.179722,
       "magnitude_v": 7.2,
       "catalogs": ["M 30", "NGC 7099"],
-      "notes": "M30 muestra estrellas rezagadas azules, objetos que parecen mas jovenes porque se formaron por colisiones o transferencia de masa entre estrellas.",
+      "notes": "M30 muestra estrellas rezagadas azules, objetos que parecen más jóvenes porque se formaron por colisiones o transferencia de masa entre estrellas.",
       "source": "SIMBAD"
     },
     {
@@ -665,7 +665,7 @@
       "declination_degrees": -14.81,
       "magnitude_v": 6.1,
       "catalogs": ["M 46", "NGC 2437"],
-      "notes": "M46 es un cumulo abierto en Puppis; en el mismo campo se ve la nebulosa planetaria NGC 2438, como una pequena burbuja azulada.",
+      "notes": "M46 es un cúmulo abierto en Puppis. En el mismo campo se ve la nebulosa planetaria NGC 2438, como una pequeña burbuja azulada.",
       "source": "SIMBAD"
     },
     {
@@ -678,7 +678,7 @@
       "declination_degrees": -14.485,
       "magnitude_v": 4.4,
       "catalogs": ["M 47", "NGC 2422"],
-      "notes": "M47 es un cumulo abierto brillante y cercano en Puppis, ideal para binoculares porque sus estrellas principales aparecen separadas y faciles de resolver.",
+      "notes": "M47 es un cúmulo abierto brillante y cercano en Puppis, ideal para binoculares porque sus estrellas principales aparecen separadas y fáciles de resolver.",
       "source": "SIMBAD"
     },
     {
@@ -691,7 +691,7 @@
       "declination_degrees": -42.8,
       "magnitude_v": 10.0,
       "catalogs": ["NGC 2736"],
-      "notes": "La Nebulosa Lapiz es parte del remanente de la supernova de Vela; su filamento brilla donde una onda de choque golpea gas interestelar.",
+      "notes": "La Nebulosa Lápiz es parte del remanente de la supernova de Vela. Su filamento brilla donde una onda de choque golpea gas interestelar.",
       "source": "SIMBAD"
     }
   ],
@@ -706,7 +706,7 @@
       "declination_degrees": -16.716111,
       "magnitude_v": -1.46,
       "catalogs": ["α CMa", "HR 2491", "HD 48915"],
-      "notes": "Es la estrella mas brillante del cielo nocturno; forma un sistema binario con Sirius B, una pequena enana blanca.",
+      "notes": "Es la estrella más brillante del cielo nocturno. Forma un sistema binario con Sirius B, una pequeña enana blanca.",
       "source": "SIMBAD"
     },
     {
@@ -719,7 +719,7 @@
       "declination_degrees": -52.695556,
       "magnitude_v": -0.74,
       "catalogs": ["α Car", "HR 2326", "HD 45348"],
-      "notes": "Es la segunda estrella mas brillante del cielo nocturno y una referencia clasica para navegacion, especialmente en el hemisferio sur.",
+      "notes": "Es la segunda estrella más brillante del cielo nocturno y una referencia clásica para navegación, especialmente en el hemisferio sur.",
       "source": "SIMBAD"
     },
     {
@@ -732,7 +732,7 @@
       "declination_degrees": -60.833889,
       "magnitude_v": -0.01,
       "catalogs": ["α Cen A", "HR 5459", "HD 128620"],
-      "notes": "Es una estrella parecida al Sol dentro del sistema Alfa Centauri, el sistema estelar mas cercano a nosotros.",
+      "notes": "Es una estrella parecida al Sol dentro del sistema Alfa Centauri, el sistema estelar más cercano a nosotros.",
       "source": "SIMBAD"
     },
     {
@@ -745,12 +745,12 @@
       "declination_degrees": 19.182222,
       "magnitude_v": -0.05,
       "catalogs": ["α Boo", "HR 5340", "HD 124897"],
-      "notes": "Es una gigante naranja y una de las estrellas mas brillantes del hemisferio norte; su color revela una superficie mas fria que la del Sol.",
+      "notes": "Es una gigante naranja y una de las estrellas más brillantes del hemisferio norte. Su color revela una superficie más fría que la del Sol.",
       "source": "SIMBAD"
     },
     {
       "name": "Rigel",
-      "constellation": "Orion",
+      "constellation": "Orión",
       "spectral_type": "B8Ia",
       "right_ascension": "05h 14m 32s",
       "right_ascension_hours": 5.242222,
@@ -758,7 +758,7 @@
       "declination_degrees": -8.201389,
       "magnitude_v": 0.13,
       "catalogs": ["β Ori", "HR 1713", "HD 34085"],
-      "notes": "Es una supergigante azul en Orion; aunque esta muy lejos, brilla tanto que marca uno de los pies del cazador.",
+      "notes": "Es una supergigante azul en Orión. Aunque está muy lejos, brilla tanto que marca uno de los pies del cazador.",
       "source": "SIMBAD"
     },
     {
@@ -771,7 +771,7 @@
       "declination_degrees": 5.224722,
       "magnitude_v": 0.34,
       "catalogs": ["α CMi", "HR 2943", "HD 61421"],
-      "notes": "Es una estrella cercana acompanada por Procyon B, una enana blanca que permite estudiar el destino final de estrellas tipo solar.",
+      "notes": "Es una estrella cercana acompañada por Proción B, una enana blanca que permite estudiar el destino final de estrellas tipo solar.",
       "source": "SIMBAD"
     },
     {
@@ -784,12 +784,12 @@
       "declination_degrees": -57.236667,
       "magnitude_v": 0.45,
       "catalogs": ["α Eri", "HR 472", "HD 10144"],
-      "notes": "Gira tan rapido que esta notablemente achatada; ESO la destaco como una de las estrellas brillantes menos esfericas observadas.",
+      "notes": "Gira tan rápido que está notablemente achatada. ESO la destacó como una de las estrellas brillantes menos esféricas observadas.",
       "source": "SIMBAD"
     },
     {
       "name": "Betelgeuse",
-      "constellation": "Orion",
+      "constellation": "Orión",
       "spectral_type": "M1-M2Ia-Iab",
       "right_ascension": "05h 55m 10s",
       "right_ascension_hours": 5.919444,
@@ -797,7 +797,7 @@
       "declination_degrees": 7.406944,
       "magnitude_v": 0.5,
       "catalogs": ["α Ori", "HR 2061", "HD 39801"],
-      "notes": "Es una supergigante roja cerca del final de su vida; su gran oscurecimiento de 2019 se relaciono con una expulsion de material.",
+      "notes": "Es una supergigante roja cerca del final de su vida. Su gran oscurecimiento de 2019 se relacionó con una expulsión de material.",
       "source": "SIMBAD"
     },
     {
@@ -810,7 +810,7 @@
       "declination_degrees": -60.372778,
       "magnitude_v": 0.61,
       "catalogs": ["β Cen", "HR 5267", "HD 122451"],
-      "notes": "Es una estrella azul muy caliente de Centaurus y parte de un sistema multiple, visible junto a Alfa Centauri en cielos australes.",
+      "notes": "Es una estrella azul muy caliente de Centaurus y parte de un sistema múltiple, visible junto a Alfa Centauri en cielos australes.",
       "source": "SIMBAD"
     },
     {
@@ -823,7 +823,7 @@
       "declination_degrees": 8.868056,
       "magnitude_v": 0.76,
       "catalogs": ["α Aql", "HR 7557", "HD 187642"],
-      "notes": "Forma parte del Triangulo de Verano; rota tan rapido que su ecuador se abulta y resulta mas frio que sus polos.",
+      "notes": "Forma parte del Triángulo de Verano. Rota tan rápido que su ecuador se abulta y resulta más frío que sus polos.",
       "source": "SIMBAD"
     },
     {
@@ -836,7 +836,7 @@
       "declination_degrees": -63.098889,
       "magnitude_v": 0.77,
       "catalogs": ["α Cru", "HR 4730", "HD 108248"],
-      "notes": "Es la estrella mas brillante de la Cruz del Sur; en telescopio se resuelve como un sistema de estrellas azules muy calientes.",
+      "notes": "Es la estrella más brillante de la Cruz del Sur. En telescopio se resuelve como un sistema de estrellas azules muy calientes.",
       "source": "SIMBAD"
     },
     {
@@ -849,7 +849,7 @@
       "declination_degrees": 16.509167,
       "magnitude_v": 0.87,
       "catalogs": ["α Tau", "HR 1457", "HD 29139"],
-      "notes": "Marca el ojo rojizo de Taurus; aunque parece estar dentro de las Hiades, en realidad es una estrella de primer plano.",
+      "notes": "Marca el ojo rojizo de Taurus. Aunque parece estar dentro de las Hiades, en realidad es una estrella de primer plano.",
       "source": "SIMBAD"
     },
     {
@@ -862,7 +862,7 @@
       "declination_degrees": -26.431944,
       "magnitude_v": 1.09,
       "catalogs": ["α Sco", "HR 6134", "HD 148478"],
-      "notes": "Su nombre alude al rival de Marte por su color rojizo; es una supergigante roja con una estrella companera azulada.",
+      "notes": "Su nombre alude al rival de Marte por su color rojizo. Es una supergigante roja con una estrella compañera azulada.",
       "source": "SIMBAD"
     },
     {
@@ -875,7 +875,7 @@
       "declination_degrees": -11.161111,
       "magnitude_v": 0.97,
       "catalogs": ["α Vir", "HR 5056", "HD 116658"],
-      "notes": "Es un sistema binario muy cercano; sus estrellas se orbitan tan juntas que sus formas se deforman por gravedad.",
+      "notes": "Es un sistema binario muy cercano. Sus estrellas se orbitan tan juntas que sus formas se deforman por gravedad.",
       "source": "SIMBAD"
     },
     {
@@ -888,7 +888,7 @@
       "declination_degrees": -29.621667,
       "magnitude_v": 1.16,
       "catalogs": ["α PsA", "HR 8728", "HD 216956"],
-      "notes": "Esta rodeada por un gran disco de escombros, una pista de material donde los astronomos estudian procesos parecidos a la formacion planetaria.",
+      "notes": "Está rodeada por un gran disco de escombros, una pista de material donde los astrónomos estudian procesos parecidos a la formación planetaria.",
       "source": "SIMBAD"
     },
     {
@@ -914,7 +914,7 @@
       "declination_degrees": 11.966944,
       "magnitude_v": 1.36,
       "catalogs": ["α Leo", "HR 3982", "HD 87901"],
-      "notes": "Marca el corazon de Leo; gira muy rapido, por eso esta achatada y su ecuador es mas frio que sus polos.",
+      "notes": "Marca el corazón de Leo. Gira muy rápido, por eso está achatada y su ecuador es más frío que sus polos.",
       "source": "SIMBAD"
     },
     {
@@ -927,7 +927,7 @@
       "declination_degrees": -28.971944,
       "magnitude_v": 1.5,
       "catalogs": ["ε CMa", "HR 2618", "HD 52089"],
-      "notes": "Es una gigante azul en Canis Major; pese a estar mucho mas lejos que Sirius, sigue entre las estrellas mas brillantes del cielo.",
+      "notes": "Es una gigante azul en Canis Major. Pese a estar mucho más lejos que Sirius, sigue entre las estrellas más brillantes del cielo.",
       "source": "SIMBAD"
     },
     {
@@ -940,7 +940,7 @@
       "declination_degrees": -37.103611,
       "magnitude_v": 1.62,
       "catalogs": ["λ Sco", "HR 6527", "HD 158926"],
-      "notes": "Junto con Lesath forma el aguijon de Scorpius; es un sistema multiple de estrellas azules calientes.",
+      "notes": "Junto con Lesath forma el aguijón de Scorpius. Es un sistema múltiple de estrellas azules calientes.",
       "source": "SIMBAD"
     },
     {
@@ -953,7 +953,7 @@
       "declination_degrees": -57.113056,
       "magnitude_v": 1.64,
       "catalogs": ["γ Cru", "HR 4763", "HD 108903"],
-      "notes": "Es la estrella rojiza en la parte superior de la Cruz del Sur, un contraste visible frente a las estrellas azules de la constelacion.",
+      "notes": "Es la estrella rojiza en la parte superior de la Cruz del Sur, un contraste visible frente a las estrellas azules de la constelación.",
       "source": "SIMBAD"
     },
     {
@@ -992,7 +992,7 @@
       "declination_degrees": -56.735,
       "magnitude_v": 1.94,
       "catalogs": ["α Pav", "HR 7790", "HD 193924"],
-      "notes": "Es la estrella principal de Pavo; su brillo azul-blanco revela una estrella caliente y joven comparada con gigantes anaranjadas.",
+      "notes": "Es la estrella principal de Pavo. Su brillo azul-blanco revela una estrella caliente y joven comparada con gigantes anaranjadas.",
       "source": "SIMBAD"
     },
     {
@@ -1005,7 +1005,7 @@
       "declination_degrees": -17.986389,
       "magnitude_v": 2.02,
       "catalogs": ["β Cet", "HR 188", "HD 4128"],
-      "notes": "Su nombre significa cola de la ballena o monstruo marino; es una gigante naranja en la constelacion Cetus.",
+      "notes": "Su nombre significa cola de la ballena o monstruo marino. Es una gigante naranja en la constelación Cetus.",
       "source": "SIMBAD"
     },
     {
@@ -1018,7 +1018,7 @@
       "declination_degrees": -42.305833,
       "magnitude_v": 2.37,
       "catalogs": ["α Phe", "HR 88", "HD 2489"],
-      "notes": "Es la estrella mas brillante de Phoenix; su nombre se asocia con el ave mitica que renace de sus cenizas.",
+      "notes": "Es la estrella más brillante de Phoenix. Su nombre se asocia con el ave mítica que renace de sus cenizas.",
       "source": "SIMBAD"
     }
   ]

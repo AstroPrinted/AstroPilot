@@ -128,17 +128,17 @@ class _CelestialDetailScreenState extends State<CelestialDetailScreen> {
     if (object is DeepSkyObject) {
       return [
         _InfoRow(
-          label: 'Constelacion',
+          label: 'Constelación',
           value: object.constellations.join(', '),
         ),
-        _InfoRow(label: 'Catalogos', value: object.catalogs.join(', ')),
+        _InfoRow(label: 'Catálogos', value: object.catalogs.join(', ')),
       ];
     }
     if (object is CalibrationStar) {
       return [
-        _InfoRow(label: 'Constelacion', value: object.constellation),
+        _InfoRow(label: 'Constelación', value: object.constellation),
         _InfoRow(label: 'Tipo espectral', value: object.spectralType),
-        _InfoRow(label: 'Catalogos', value: object.catalogs.join(', ')),
+        _InfoRow(label: 'Catálogos', value: object.catalogs.join(', ')),
       ];
     }
     return const [];
@@ -180,7 +180,7 @@ class _CelestialDetailScreenState extends State<CelestialDetailScreen> {
   String _objectTypeLabel(CelestialObject object) {
     if (object is SolarSystemBody) return 'Sistema Solar';
     if (object is DeepSkyObject) return object.objectType;
-    return 'Estrella de Calibracion';
+    return 'Estrella de Calibración';
   }
 }
 
@@ -499,7 +499,7 @@ class _OpenControlCard extends StatelessWidget {
         const _StatusMessage(
           icon: Icons.info_outline_rounded,
           message:
-              'El GoTo inicial, ajustes finos, STOP y tracking logico se realizan desde la pantalla de control del objeto.',
+              'El GoTo inicial, ajustes finos, STOP y tracking lógico se realizan desde la pantalla de control del objeto.',
         ),
         const SizedBox(height: 14),
         FilledButton.icon(

@@ -10,11 +10,13 @@ import '../../domain/models/calibration_flow_step.dart';
 import '../../domain/models/calibration_method.dart';
 import '../../domain/models/calibration_result.dart';
 import '../../domain/models/calibration_status.dart';
+import '../../domain/models/correction_calibration_status.dart';
+import '../../domain/models/correction_model.dart';
+import '../../domain/models/initial_alignment_status.dart';
 import '../controllers/calibration_controller.dart';
 import '../widgets/calibration_controls.dart';
 import '../widgets/calibration_method_card.dart';
 import '../widgets/calibration_point_list.dart';
-import '../widgets/calibration_status_badge.dart';
 import '../widgets/calibration_step_card.dart';
 
 class CalibrationScreen extends StatefulWidget {
@@ -42,7 +44,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Calibracion')),
+      appBar: AppBar(title: const Text('Alineación y corrección')),
       body:
           Consumer3<
             CalibrationController,
@@ -120,35 +122,41 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
     BuildContext context,
     CalibrationController calibration,
   ) {
-    final result = calibration.visibleResult;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (result != null) ...[
-          _ResultSummaryCard(result: result, isSaved: true),
+        _InitialAlignmentBlock(calibration: calibration),
+        const SizedBox(height: 14),
+        _CorrectionCalibrationBlock(calibration: calibration),
+        if (calibration.isInitialAligned) ...[
           const SizedBox(height: 14),
-        ],
-        Text(
-          'Elige un metodo de calibracion',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-        const SizedBox(height: 10),
-        for (final method in CalibrationMethod.values) ...[
-          CalibrationMethodCard(
-            method: method,
-            onTap: () => calibration.startMethod(method),
+          OutlinedButton.icon(
+            onPressed: calibration.isBusy
+                ? null
+                : () => _openVisibleObjects(context),
+            icon: const Icon(Icons.visibility_rounded),
+            label: const Text('Ver objetos disponibles para observar'),
           ),
-          const SizedBox(height: 10),
         ],
-        if (calibration.savedResult != null) ...[
-          const SizedBox(height: 4),
+        if (calibration.initialAlignmentResult != null ||
+            calibration.correctionCalibrationResult != null) ...[
+          const SizedBox(height: 14),
           OutlinedButton.icon(
             onPressed: calibration.isBusy
                 ? null
                 : () => _confirmClearCalibration(context, calibration),
             icon: const Icon(Icons.delete_outline_rounded),
-            label: const Text('Borrar calibracion guardada'),
+            label: const Text('Borrar alineación y corrección'),
+          ),
+        ],
+        if (calibration.correctionCalibrationResult != null) ...[
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: calibration.isBusy
+                ? null
+                : calibration.clearCorrectionCalibration,
+            icon: const Icon(Icons.tune_rounded),
+            label: const Text('Borrar solo corrección de precisión'),
           ),
         ],
       ],
@@ -172,6 +180,14 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
         stepNumber: calibration.currentFlowStepNumber,
         totalSteps: calibration.totalFlowSteps,
         referenceLabel: calibration.referenceProgressLabel,
+      ),
+      CalibrationFlowStep.movingToTarget => _GotoReferenceStep(
+        calibration: calibration,
+        controlsEnabled: isConnected,
+        isBusy: calibration.isBusy,
+        onSendGoto: () =>
+            _sendReferenceGoto(calibration, oe4Controller, deviceId),
+        onCancel: calibration.cancelFlow,
       ),
       CalibrationFlowStep.waitingUserCentering => _CenteringStep(
         calibration: calibration,
@@ -201,11 +217,11 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
         onViewVisibleObjects: () => _openVisibleObjects(context),
       ),
       CalibrationFlowStep.failed => _FailedStep(
-        message: calibration.errorMessage ?? 'El flujo de calibracion fallo.',
+        message: calibration.errorMessage ?? 'El flujo no pudo completarse.',
         onBack: calibration.cancelFlow,
       ),
       _ => _FailedStep(
-        message: 'Estado de correccion no soportado en el MVP.',
+        message: 'Estado de corrección no soportado en el MVP.',
         onBack: calibration.cancelFlow,
       ),
     };
@@ -218,8 +234,25 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
   ) async {
     if (!_ensureConnected(deviceId)) return;
     await calibration.confirmCenteredReference(
+      setInitialPosition: calibration.isInitialAlignmentFlow
+          ? (altitude, azimuth) => oe4Controller.sendSetPosition(
+              deviceId!,
+              alt: altitude,
+              az: azimuth,
+            )
+          : null,
+    );
+  }
+
+  Future<void> _sendReferenceGoto(
+    CalibrationController calibration,
+    Oe4ControlController oe4Controller,
+    String? deviceId,
+  ) async {
+    if (!_ensureConnected(deviceId)) return;
+    await calibration.sendGotoToReference(
       (altitude, azimuth) =>
-          oe4Controller.sendSetPosition(deviceId!, alt: altitude, az: azimuth),
+          oe4Controller.sendGoto(deviceId!, alt: altitude, az: azimuth),
     );
   }
 
@@ -275,9 +308,9 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Borrar calibracion'),
+          title: const Text('Borrar alineación y corrección'),
           content: const Text(
-            'Se eliminara la referencia de calibracion guardada en este dispositivo.',
+            'Se eliminará la alineación inicial guardada y cualquier corrección de precisión asociada.',
           ),
           actions: [
             TextButton(
@@ -337,7 +370,7 @@ class _HeaderCard extends StatelessWidget {
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
-                    'Calibracion con una estrella',
+                    'Alineación inicial y corrección de precisión',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
@@ -345,9 +378,141 @@ class _HeaderCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Centra manualmente una estrella conocida y fija la posicion Alt/Az real del telescopio antes de usar GoTo.',
+              'Primero sincroniza la posición lógica del telescopio con una estrella reconocible. Después puedes agregar correcciones finas para mejorar futuros GOTO.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InitialAlignmentBlock extends StatelessWidget {
+  final CalibrationController calibration;
+
+  const _InitialAlignmentBlock({required this.calibration});
+
+  @override
+  Widget build(BuildContext context) {
+    final result = calibration.initialAlignmentResult;
+    final reference = calibration.initialAlignmentReferenceName;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              '1. Alineación inicial del telescopio',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Este paso le indica al sistema hacia donde está apuntando fisicamente el telescopio. Debes hacerlo al iniciar una sesión de observación.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            _InlineNotice(
+              icon: calibration.isInitialAligned
+                  ? Icons.check_circle_outline_rounded
+                  : Icons.info_outline_rounded,
+              message: reference == null
+                  ? 'Estado: ${calibration.initialAlignmentStatus.label}'
+                  : 'Estado: alineado con $reference a las ${_formatTime(result!.createdAt)}',
+            ),
+            if (result != null) ...[
+              const SizedBox(height: 12),
+              _SummaryRow(
+                label: 'Referencia',
+                value: result.lastReference?.objectName ?? 'N/A',
+              ),
+              _SummaryRow(
+                label: 'Fecha/hora',
+                value: _formatDate(result.createdAt),
+              ),
+              if (calibration.initialAlignedPosition != null)
+                _SummaryRow(
+                  label: 'Alt/Az usada',
+                  value:
+                      'Alt ${_formatDeg(calibration.initialAlignedPosition!.altitude)} / Az ${_formatDeg(calibration.initialAlignedPosition!.azimuth)}',
+                ),
+            ],
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              onPressed: calibration.isBusy
+                  ? null
+                  : calibration.startInitialAlignment,
+              icon: const Icon(Icons.center_focus_strong_rounded),
+              label: Text(
+                calibration.isInitialAligned
+                    ? 'Rehacer alineación con una estrella'
+                    : 'Iniciar alineación con una estrella',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CorrectionCalibrationBlock extends StatelessWidget {
+  final CalibrationController calibration;
+
+  const _CorrectionCalibrationBlock({required this.calibration});
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = calibration.isInitialAligned;
+    final correction = calibration.correctionCalibrationResult;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              '2. Corrección de precisión',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Después de alinear el telescopio, puedes usar una o más estrellas para corregir errores de apuntamiento y mejorar futuros GOTO.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            _InlineNotice(
+              icon: enabled ? Icons.tune_rounded : Icons.lock_outline_rounded,
+              message: enabled
+                  ? 'Estado: ${calibration.correctionCalibrationStatus.label}'
+                  : 'Primero realiza la alineación inicial del telescopio para habilitar las correcciones de precisión.',
+            ),
+            if (correction != null) ...[
+              const SizedBox(height: 12),
+              _SummaryRow(label: 'Modo activo', value: correction.method.title),
+              _SummaryRow(
+                label: 'Modelo',
+                value: correction.correctionModel.label,
+              ),
+              _SummaryRow(
+                label: 'Offset Alt/Az',
+                value:
+                    '${_formatDeg(correction.altitudeOffset)} / ${_formatDeg(correction.azimuthOffset)}',
+              ),
+            ],
+            const SizedBox(height: 12),
+            for (final method in CalibrationMethod.values) ...[
+              CalibrationMethodCard(
+                method: method,
+                enabled: enabled,
+                badgeText: enabled ? null : 'Bloqueada',
+                onTap: () => calibration.startCorrectionMethod(method),
+              ),
+              const SizedBox(height: 10),
+            ],
           ],
         ),
       ),
@@ -373,18 +538,65 @@ class _StatusPanel extends StatelessWidget {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 12),
-            CalibrationStatusBadge(status: calibration.status),
-            if (calibration.savedResult != null) ...[
+            _SummaryRow(
+              label: 'Alineación inicial',
+              value: _initialAlignmentStatusText(calibration),
+            ),
+            _SummaryRow(
+              label: 'Corrección',
+              value: _correctionStatusText(calibration),
+            ),
+            if (calibration.initialAlignedPosition != null) ...[
               const SizedBox(height: 10),
-              Text(
-                'Ultima calibracion: ${_formatDate(calibration.savedResult!.createdAt)}',
-                style: Theme.of(context).textTheme.bodySmall,
+              Row(
+                children: [
+                  Expanded(
+                    child: _MetricTile(
+                      label: 'Altitud lógica',
+                      value: _formatDeg(
+                        calibration.initialAlignedPosition!.altitude,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _MetricTile(
+                      label: 'Azimut lógico',
+                      value: _formatDeg(
+                        calibration.initialAlignedPosition!.azimuth,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
           ],
         ),
       ),
     );
+  }
+
+  String _initialAlignmentStatusText(CalibrationController calibration) {
+    final reference = calibration.initialAlignmentReferenceName;
+    final timestamp = calibration.initialAlignmentTimestamp;
+    if (reference == null) {
+      return calibration.initialAlignmentStatus.label;
+    }
+    final time = timestamp == null ? '' : ' a las ${_formatTime(timestamp)}';
+    return '${calibration.initialAlignmentStatus.label} con $reference$time';
+  }
+
+  String _correctionStatusText(CalibrationController calibration) {
+    if (!calibration.isInitialAligned) {
+      return 'Bloqueada hasta completar la alineación inicial';
+    }
+    if (!calibration.hasCorrectionCalibration) {
+      return 'Disponible';
+    }
+    final result = calibration.correctionCalibrationResult;
+    final mode = result?.method.title ?? 'Corrección';
+    final model = result?.correctionModel.label ?? 'modelo activo';
+    return '$mode activa ($model)';
   }
 }
 
@@ -519,13 +731,17 @@ class _SelectingObjectStep extends StatelessWidget {
     final notVisibleOptions = starOptions
         .where((option) => !option.isVisible)
         .toList(growable: false);
+    final isInitialAlignment = calibration.isInitialAlignmentFlow;
 
     return CalibrationStepCard(
       stepNumber: calibration.currentFlowStepNumber,
       totalSteps: calibration.totalFlowSteps,
-      title: 'Seleccionar estrella visible',
-      description:
-          'Elige una estrella visible. Luego mueve manualmente el telescopio hasta centrarla en el ocular.',
+      title: isInitialAlignment
+          ? 'Seleccionar estrella reconocible'
+          : 'Seleccionar referencia de corrección',
+      description: isInitialAlignment
+          ? 'Elige una estrella visible y reconocible. Luego mueve manualmente el telescopio hasta centrarla en el ocular.'
+          : 'Elige una estrella visible. La app hará GOTO y luego usarás el joystick para medir la corrección real.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -533,7 +749,7 @@ class _SelectingObjectStep extends StatelessWidget {
             _InlineNotice(
               icon: Icons.visibility_off_rounded,
               message:
-                  'No hay estrellas recomendadas visibles para calibracion con ${calibration.currentMethod?.title ?? 'este metodo'}.\nSe requiere al menos una estrella sobre ${CalibrationController.visibleStarAltitudeThresholdDeg.toStringAsFixed(0)} grados de altitud.',
+                  'No hay estrellas recomendadas visibles para ${isInitialAlignment ? 'la alineación inicial' : calibration.currentMethod?.title ?? 'este método'}.\nSe requiere al menos una estrella sobre ${CalibrationController.visibleStarAltitudeThresholdDeg.toStringAsFixed(0)} grados de altitud.',
             ),
             const SizedBox(height: 12),
           ],
@@ -541,7 +757,7 @@ class _SelectingObjectStep extends StatelessWidget {
             const _InlineNotice(
               icon: Icons.info_outline_rounded,
               message:
-                  'Para mejorar la calibracion futura, elige una estrella separada de la anterior.',
+                  'Para mejorar la corrección, elige una estrella separada de la referencia anterior.',
             ),
             const SizedBox(height: 12),
           ],
@@ -614,7 +830,7 @@ class _StarTile extends StatelessWidget {
         ? 'Visible ahora'
         : position.altitudeDeg < 0
         ? 'No visible - bajo el horizonte'
-        : 'No visible para calibracion';
+        : 'No visible para este flujo';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -659,7 +875,7 @@ class _StarTile extends StatelessWidget {
                   !option.isAlreadySelected) ...[
                 const SizedBox(height: 2),
                 Text(
-                  'Advertencia: esta estrella esta cerca de una referencia anterior.',
+                  'Advertencia: esta estrella está cerca de una referencia anterior.',
                   style: TextStyle(color: colorScheme.tertiary),
                 ),
               ],
@@ -692,10 +908,62 @@ class _CalculatingStep extends StatelessWidget {
     return CalibrationStepCard(
       stepNumber: stepNumber,
       totalSteps: totalSteps,
-      title: 'Calculando posicion Alt/Az',
+      title: 'Calculando posición Alt/Az',
       description:
-          '$referenceLabel. La app esta usando fecha, hora, latitud y longitud actuales.',
+          '$referenceLabel. La app está usando fecha, hora, latitud y longitud actuales.',
       child: const Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+class _GotoReferenceStep extends StatelessWidget {
+  final CalibrationController calibration;
+  final bool controlsEnabled;
+  final bool isBusy;
+  final VoidCallback onSendGoto;
+  final VoidCallback onCancel;
+
+  const _GotoReferenceStep({
+    required this.calibration,
+    required this.controlsEnabled,
+    required this.isBusy,
+    required this.onSendGoto,
+    required this.onCancel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return CalibrationStepCard(
+      stepNumber: calibration.currentFlowStepNumber,
+      totalSteps: calibration.totalFlowSteps,
+      title: 'Enviar GOTO a la referencia',
+      description:
+          '${calibration.referenceProgressLabel}. El telescopio ya tiene alineación inicial; ahora se moverá al objetivo para medir el error real de apuntamiento.',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (calibration.targetPosition != null) ...[
+            _TargetPanel(target: calibration.targetPosition!),
+            const SizedBox(height: 12),
+          ],
+          _InlineNotice(
+            icon: Icons.info_outline_rounded,
+            message:
+                'Después del GOTO, centra manualmente la referencia si quedó fuera del ocular y confirma la corrección.',
+          ),
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: !controlsEnabled || isBusy ? null : onSendGoto,
+            icon: const Icon(Icons.near_me_rounded),
+            label: const Text('Enviar GOTO a la referencia'),
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: isBusy ? null : onCancel,
+            child: const Text('Cancelar'),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -722,12 +990,16 @@ class _CenteringStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isInitialAlignment = calibration.isInitialAlignmentFlow;
     return CalibrationStepCard(
       stepNumber: calibration.currentFlowStepNumber,
       totalSteps: calibration.totalFlowSteps,
-      title: 'Centra la estrella manualmente',
-      description:
-          'Usa los controles manuales para centrar ${calibration.selectedStar?.name ?? 'la estrella'} en el ocular. No se permite GoTo automatico antes de confirmar la calibracion.',
+      title: isInitialAlignment
+          ? 'Centra la estrella manualmente'
+          : 'Corrige y centra la referencia',
+      description: isInitialAlignment
+          ? 'Usa los controles manuales para centrar ${calibration.selectedStar?.name ?? 'la estrella'} en el ocular. Al confirmar, la app fijará la posición lógica actual del telescopio.'
+          : 'Si el GOTO no dejó ${calibration.selectedStar?.name ?? 'la referencia'} centrada, corrige con el joystick. Al confirmar, la app guardará el offset de precisión.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -743,6 +1015,7 @@ class _CenteringStep extends StatelessWidget {
             const SizedBox(height: 12),
           ],
           _AdjustedPositionPanel(
+            isInitialAlignment: isInitialAlignment,
             altitude: calibration.adjustedAltitude,
             azimuth: calibration.adjustedAzimuth,
           ),
@@ -758,7 +1031,11 @@ class _CenteringStep extends StatelessWidget {
           FilledButton.icon(
             onPressed: isBusy ? null : onConfirm,
             icon: const Icon(Icons.check_circle_outline_rounded),
-            label: const Text('Confirmar estrella centrada'),
+            label: Text(
+              isInitialAlignment
+                  ? 'Confirmar estrella centrada'
+                  : 'Confirmar corrección',
+            ),
           ),
           const SizedBox(height: 8),
           TextButton(
@@ -795,13 +1072,17 @@ class _CompletedStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final visibleResult = result;
+    final isInitialAlignment = visibleResult?.isInitialAlignment ?? false;
 
     return CalibrationStepCard(
       stepNumber: stepNumber,
       totalSteps: totalSteps,
-      title: 'Calibracion guardada',
-      description:
-          'La posicion logica del telescopio fue fijada con la Alt/Az real de la estrella centrada.',
+      title: isInitialAlignment
+          ? 'Alineación inicial guardada'
+          : 'Corrección de precisión guardada',
+      description: isInitialAlignment
+          ? 'La posición lógica del telescopio fue fijada con la Alt/Az real de la estrella centrada.'
+          : 'La app guardó el offset entre la posición esperada y la posición donde centraste la referencia.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -815,7 +1096,11 @@ class _CompletedStep extends StatelessWidget {
             onPressed: isBusy || !hasUnsavedResult ? null : onSave,
             icon: const Icon(Icons.save_rounded),
             label: Text(
-              hasUnsavedResult ? 'Guardar calibracion' : 'Calibracion guardada',
+              hasUnsavedResult
+                  ? 'Guardar resultado'
+                  : isInitialAlignment
+                  ? 'Alineación guardada'
+                  : 'Corrección guardada',
             ),
           ),
           const SizedBox(height: 8),
@@ -828,7 +1113,9 @@ class _CompletedStep extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: isBusy ? null : onNewCalibration,
             icon: const Icon(Icons.restart_alt_rounded),
-            label: const Text('Nueva calibracion'),
+            label: Text(
+              isInitialAlignment ? 'Nueva alineación' : 'Nueva corrección',
+            ),
           ),
         ],
       ),
@@ -869,7 +1156,7 @@ class _TargetPanel extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Posicion calculada actual',
+          'Posición calculada actual',
           style: Theme.of(context).textTheme.titleSmall,
         ),
         const SizedBox(height: 8),
@@ -901,10 +1188,15 @@ class _TargetPanel extends StatelessWidget {
 }
 
 class _AdjustedPositionPanel extends StatelessWidget {
+  final bool isInitialAlignment;
   final double? altitude;
   final double? azimuth;
 
-  const _AdjustedPositionPanel({required this.altitude, required this.azimuth});
+  const _AdjustedPositionPanel({
+    required this.isInitialAlignment,
+    required this.altitude,
+    required this.azimuth,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -912,14 +1204,16 @@ class _AdjustedPositionPanel extends StatelessWidget {
       children: [
         Expanded(
           child: _MetricTile(
-            label: 'Movimiento altitud',
+            label: isInitialAlignment
+                ? 'Movimiento altitud'
+                : 'Altitud centrada',
             value: altitude == null ? 'N/A' : _formatDeg(altitude!),
           ),
         ),
         const SizedBox(width: 10),
         Expanded(
           child: _MetricTile(
-            label: 'Movimiento azimut',
+            label: isInitialAlignment ? 'Movimiento azimut' : 'Azimut centrado',
             value: azimuth == null ? 'N/A' : _formatDeg(azimuth!),
           ),
         ),
@@ -995,9 +1289,12 @@ class _ResultSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isInitialAlignment = result.isInitialAlignment;
     final stateLabel = isSaved
-        ? 'Calibracion guardada'
-        : 'Calibracion sin guardar';
+        ? isInitialAlignment
+              ? 'Alineación guardada'
+              : 'Corrección guardada'
+        : 'Resultado sin guardar';
     final reference = result.points.isNotEmpty ? result.points.last : null;
 
     return Card(
@@ -1012,7 +1309,9 @@ class _ResultSummaryCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Resumen de calibracion',
+                    isInitialAlignment
+                        ? 'Resumen de alineación inicial'
+                        : 'Resumen de corrección de precisión',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
@@ -1024,24 +1323,32 @@ class _ResultSummaryCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: _MetricTile(
-                    label: 'Altitud fijada',
+                    label: isInitialAlignment
+                        ? 'Altitud fijada'
+                        : 'Offset altitud',
                     value: reference == null
                         ? 'N/A'
                         : _formatDeg(
-                            reference.motorAltitudeAtCalibration ??
-                                reference.calculatedAltitude,
+                            isInitialAlignment
+                                ? reference.motorAltitudeAtCalibration ??
+                                      reference.calculatedAltitude
+                                : result.altitudeOffset,
                           ),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: _MetricTile(
-                    label: 'Azimut fijado',
+                    label: isInitialAlignment
+                        ? 'Azimut fijado'
+                        : 'Offset azimut',
                     value: reference == null
                         ? 'N/A'
                         : _formatDeg(
-                            reference.motorAzimuthAtCalibration ??
-                                reference.calculatedAzimuth,
+                            isInitialAlignment
+                                ? reference.motorAzimuthAtCalibration ??
+                                      reference.calculatedAzimuth
+                                : result.azimuthOffset,
                           ),
                   ),
                 ),
@@ -1050,7 +1357,14 @@ class _ResultSummaryCard extends StatelessWidget {
             const SizedBox(height: 12),
             _SummaryRow(label: 'Estado', value: stateLabel),
             _SummaryRow(label: 'Estado guardado', value: result.status.label),
-            _SummaryRow(label: 'Metodo', value: result.method.title),
+            _SummaryRow(
+              label: 'Etapa',
+              value: isInitialAlignment
+                  ? 'Alineación inicial'
+                  : 'Corrección de precisión',
+            ),
+            _SummaryRow(label: 'Método', value: result.method.title),
+            _SummaryRow(label: 'Modelo', value: result.correctionModel.label),
             _SummaryRow(
               label: 'Referencias',
               value: result.points.length.toString(),
@@ -1081,7 +1395,9 @@ class _ResultSummaryCard extends StatelessWidget {
             ],
             const SizedBox(height: 14),
             Text(
-              'Esta calibracion fija una referencia inicial. No corrige por si sola errores mecanicos, desnivel del tripode o desalineacion avanzada.',
+              isInitialAlignment
+                  ? 'Esta alineación solo establece hacia donde apunta el telescopio al iniciar. Las correcciones de precisión se agregan después.'
+                  : 'Esta corrección mejora futuros GOTO aplicando el offset medido después de la alineación inicial.',
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 14),
@@ -1156,4 +1472,11 @@ String _formatDeg(double value) => '${value.toStringAsFixed(2)}°';
 
 String _formatDate(DateTime value) {
   return value.toLocal().toString().split('.').first;
+}
+
+String _formatTime(DateTime value) {
+  final local = value.toLocal();
+  final hour = local.hour.toString().padLeft(2, '0');
+  final minute = local.minute.toString().padLeft(2, '0');
+  return '$hour:$minute';
 }

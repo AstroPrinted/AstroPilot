@@ -141,12 +141,12 @@ class CelestialCatalogRepository {
     Map<String, String> notesByName,
   ) {
     const bodies = <({Body body, String name})>[
-      (body: Body.Jupiter, name: 'Jupiter'),
+      (body: Body.Jupiter, name: 'Júpiter'),
       (body: Body.Moon, name: 'Luna'),
       (body: Body.Mars, name: 'Marte'),
       (body: Body.Mercury, name: 'Mercurio'),
       (body: Body.Neptune, name: 'Neptuno'),
-      (body: Body.Pluto, name: 'Pluton'),
+      (body: Body.Pluto, name: 'Plutón'),
       (body: Body.Saturn, name: 'Saturno'),
       (body: Body.Sun, name: 'Sol'),
       (body: Body.Uranus, name: 'Urano'),

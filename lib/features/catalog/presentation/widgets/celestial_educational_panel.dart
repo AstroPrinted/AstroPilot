@@ -41,7 +41,7 @@ class CelestialEducationalPanel extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Que esta haciendo AstroPilot?',
+                    'Qué está haciendo AstroPilot?',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
@@ -50,8 +50,8 @@ class CelestialEducationalPanel extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Modo visual para explicar el flujo del prototipo educativo. '
-              'No envia comandos, no recalcula posiciones y no cambia el '
-              'tracking logico.',
+              'No envía comandos, no recalcula posiciones y no cambia el '
+              'tracking lógico.',
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 14),
@@ -61,12 +61,12 @@ class CelestialEducationalPanel extends StatelessWidget {
               children: [
                 _FlowStep(
                   number: '1',
-                  text: 'Se calcula la posicion del objeto: $objectName.',
+                  text: 'Se calcula la posición del objeto: $objectName.',
                 ),
                 const _FlowStep(
                   number: '2',
                   text:
-                      'Se verifica que exista una referencia de calibracion guardada.',
+                      'Se verifica que exista una referencia de calibración guardada.',
                 ),
                 const _FlowStep(
                   number: '3',
@@ -75,23 +75,23 @@ class CelestialEducationalPanel extends StatelessWidget {
                 const _FlowStep(
                   number: '4',
                   text:
-                      'Si el tracking logico esta activo, se repite cada '
+                      'Si el tracking lógico está activo, se repite cada '
                       '15 segundos.',
                 ),
               ],
             ),
             _EducationalTile(
               icon: Icons.explore_rounded,
-              title: 'Que es Altitud y Azimut?',
+              title: 'Qué es Altitud y Azimut?',
               children: [
                 const _BodyText(
-                  'Altitud indica que tan alto esta el objeto sobre el '
+                  'Altitud indica qué tan alto está el objeto sobre el '
                   'horizonte. Altitud 0 grados es el horizonte y altitud '
                   '90 grados es sobre la cabeza.',
                 ),
                 const SizedBox(height: 8),
                 const _BodyText(
-                  'Azimut indica la direccion horizontal alrededor del '
+                  'Azimut indica la dirección horizontal alrededor del '
                   'horizonte: 0/360 grados es norte, 90 grados es este, '
                   '180 grados es sur y 270 grados es oeste.',
                 ),
@@ -112,22 +112,22 @@ class CelestialEducationalPanel extends StatelessWidget {
             ),
             _EducationalTile(
               icon: Icons.tune_rounded,
-              title: 'Que hace la referencia calibrada?',
+              title: 'Qué hace la referencia calibrada?',
               children: [
                 const _BodyText(
-                  'La calibracion con una estrella fija la posicion logica '
+                  'La calibración con una estrella fija la posición lógica '
                   'actual del telescopio usando la Alt/Az real de una estrella '
                   'centrada manualmente.',
                 ),
                 const SizedBox(height: 8),
                 const _BodyText(
-                  'Luego el firmware mueve los motores desde esa posicion '
-                  'logica hacia la Alt/Az real del objeto objetivo.',
+                  'Luego el firmware mueve los motores desde esa posición '
+                  'lógica hacia la Alt/Az real del objeto objetivo.',
                 ),
                 const SizedBox(height: 8),
                 const _BodyText(
-                  'Es una referencia inicial; no corrige automaticamente '
-                  'errores mecanicos, desnivel del tripode o desalineacion '
+                  'Es una referencia inicial; no corrige automáticamente '
+                  'errores mecánicos, desnivel del trípode o desalineación '
                   'avanzada.',
                 ),
                 const SizedBox(height: 12),
@@ -135,7 +135,7 @@ class CelestialEducationalPanel extends StatelessWidget {
                   const _SafeNotice(
                     icon: Icons.info_outline_rounded,
                     text:
-                        'Sin calibracion guardada. El GoTo automatico debe '
+                        'Sin calibración guardada. El GoTo automático debe '
                         'permanecer bloqueado hasta centrar una estrella.',
                   ),
                   const SizedBox(height: 12),
@@ -156,17 +156,17 @@ class CelestialEducationalPanel extends StatelessWidget {
             ),
             _EducationalTile(
               icon: Icons.send_rounded,
-              title: 'Que comando se envia al telescopio?',
+              title: 'Qué comando se envía al telescopio?',
               children: [
                 const _BodyText(
-                  'La app calcula la posicion real del objeto en Alt/Az usando '
-                  'fecha, hora y ubicacion actuales.',
+                  'La app calcula la posición real del objeto en Alt/Az usando '
+                  'fecha, hora y ubicación actuales.',
                 ),
                 const SizedBox(height: 8),
                 const _BodyText(
                   'Luego prepara un comando GOTO final hacia esa Alt/Az. La '
                   'diferencia de movimiento la resuelve el firmware desde su '
-                  'posicion logica actual.',
+                  'posición lógica actual.',
                 ),
                 const SizedBox(height: 12),
                 _DataLine(
@@ -179,17 +179,17 @@ class CelestialEducationalPanel extends StatelessWidget {
             ),
             _EducationalTile(
               icon: Icons.track_changes_rounded,
-              title: 'Como funciona el tracking logico?',
+              title: 'Cómo funciona el tracking lógico?',
               children: [
                 const _BodyText(
                   'El cielo cambia con el tiempo. La app recalcula la '
-                  'posicion del objeto cada 15 segundos y prepara un nuevo '
+                  'posición del objeto cada 15 segundos y prepara un nuevo '
                   'GOTO.',
                 ),
                 const SizedBox(height: 8),
                 const _BodyText(
-                  'Esto es tracking logico por app. No es validacion optica ni '
-                  'seguimiento fisico continuo de alta precision.',
+                  'Esto es tracking lógico por app. No es validación óptica ni '
+                  'seguimiento físico continuo de alta precisión.',
                 ),
                 const SizedBox(height: 12),
                 _DataLine(
@@ -197,8 +197,8 @@ class CelestialEducationalPanel extends StatelessWidget {
                   value: '${trackingInterval.inSeconds} segundos',
                 ),
                 _DataLine(
-                  label: 'Ultima actualizacion',
-                  value: _dateText(lastUpdatedAt, fallback: 'Aun no calculado'),
+                  label: 'Última actualización',
+                  value: _dateText(lastUpdatedAt, fallback: 'Aún no calculado'),
                 ),
                 _DataLine(
                   label: 'Proximo envio',
@@ -217,19 +217,19 @@ class CelestialEducationalPanel extends StatelessWidget {
 
   String get _currentAltitudeText {
     final position = currentPosition;
-    if (position == null) return 'Aun no calculado';
+    if (position == null) return 'Aún no calculado';
     return _formatSigned(position.altitudeDeg);
   }
 
   String get _currentAzimuthText {
     final position = currentPosition;
-    if (position == null) return 'Aun no calculado';
+    if (position == null) return 'Aún no calculado';
     return _formatUnsigned(position.azimuthDeg);
   }
 
   String get _altitudeOffsetText {
     final calibration = savedCalibration;
-    if (calibration == null) return 'Sin calibracion';
+    if (calibration == null) return 'Sin calibración';
     final point = calibration.points.isNotEmpty
         ? calibration.points.last
         : null;
@@ -241,7 +241,7 @@ class CelestialEducationalPanel extends StatelessWidget {
 
   String get _azimuthOffsetText {
     final calibration = savedCalibration;
-    if (calibration == null) return 'Sin calibracion';
+    if (calibration == null) return 'Sin calibración';
     final point = calibration.points.isNotEmpty
         ? calibration.points.last
         : null;
@@ -253,19 +253,19 @@ class CelestialEducationalPanel extends StatelessWidget {
 
   String get _calculatedPairText {
     final position = currentPosition;
-    if (position == null) return 'Aun no calculado';
+    if (position == null) return 'Aún no calculado';
     return _formatPair(position.altitudeDeg, position.azimuthDeg);
   }
 
   String get _correctedPairText {
     final command = previewCommand;
-    if (command == null) return 'Aun no calculado';
+    if (command == null) return 'Aún no calculado';
     return _formatPair(command.finalAltitude, command.finalAzimuth);
   }
 
   String get _finalCommandText {
     final command = previewCommand;
-    if (command == null) return 'Aun no calculado';
+    if (command == null) return 'Aún no calculado';
     return 'GOTO(${_formatSigned(command.finalAltitude)}, '
         '${_formatUnsigned(command.finalAzimuth)})';
   }
