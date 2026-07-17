@@ -99,7 +99,7 @@ class _CelestialDetailScreenState extends State<CelestialDetailScreen> {
                     if (result == null) {
                       return const _StatusMessage(
                         icon: Icons.sync_rounded,
-                        message: 'Calculando efemerides...',
+                        message: 'Calculando efemérides...',
                       );
                     }
                     return _HorizontalCoordinatesPanel(result: result);
@@ -172,7 +172,7 @@ class _CelestialDetailScreenState extends State<CelestialDetailScreen> {
     return const [
       _StatusMessage(
         icon: Icons.info_outline_rounded,
-        message: 'Los cuerpos del sistema solar se calculan dinamicamente.',
+        message: 'Los cuerpos del Sistema Solar se calculan dinámicamente.',
       ),
     ];
   }

@@ -2,27 +2,27 @@
   "questions": [
     {
       "id": "easy_001_jupiter_size",
-      "prompt": "Cuál es el planeta más grande del sistema solar?",
+      "prompt": "¿Cuál es el planeta más grande del Sistema Solar?",
       "choices": ["Marte", "Júpiter", "Venus", "Mercurio"],
       "correctIndex": 1,
       "difficulty": "easy",
-      "topic": "Sistema solar",
-      "explanation": "Júpiter es el planeta más grande del sistema solar.",
+      "topic": "Sistema Solar",
+      "explanation": "Júpiter es el planeta más grande del Sistema Solar.",
       "objectId": "solar_jupiter"
     },
     {
       "id": "easy_002_lunar_phases",
-      "prompt": "Por qué vemos fases de la Luna?",
+      "prompt": "¿Por qué vemos fases de la Luna?",
       "choices": ["Porque cambia de tamaño", "Porque vemos distintas partes iluminadas por el Sol", "Porque se apaga de noche", "Porque siempre está detrás de la Tierra"],
       "correctIndex": 1,
       "difficulty": "easy",
-      "topic": "Sistema solar",
+      "topic": "Sistema Solar",
       "explanation": "Las fases ocurren porque desde la Tierra vemos diferentes porciones iluminadas de la Luna.",
       "objectId": "solar_moon"
     },
     {
       "id": "easy_003_mars_color",
-      "prompt": "Qué le da a Marte su color rojizo?",
+      "prompt": "¿Qué le da a Marte su color rojizo?",
       "choices": ["Hielo de agua", "Minerales de hierro oxidados", "Nubes de metano", "Anillos de polvo"],
       "correctIndex": 1,
       "difficulty": "easy",
@@ -32,7 +32,7 @@
     },
     {
       "id": "easy_004_mercury_sun",
-      "prompt": "Cuál es el planeta más cercano al Sol?",
+      "prompt": "¿Cuál es el planeta más cercano al Sol?",
       "choices": ["Venus", "Mercurio", "Tierra", "Marte"],
       "correctIndex": 1,
       "difficulty": "easy",
@@ -42,7 +42,7 @@
     },
     {
       "id": "easy_005_venus_heat",
-      "prompt": "Cuál es el planeta más caliente del sistema solar?",
+      "prompt": "¿Cuál es el planeta más caliente del Sistema Solar?",
       "choices": ["Mercurio", "Venus", "Marte", "Júpiter"],
       "correctIndex": 1,
       "difficulty": "easy",
@@ -52,7 +52,7 @@
     },
     {
       "id": "easy_006_saturn_rings",
-      "prompt": "De qué están formados principalmente los anillos de Saturno?",
+      "prompt": "¿De qué están formados principalmente los anillos de Saturno?",
       "choices": ["Hielo y polvo", "Fuego", "Plantas", "Agua líquida"],
       "correctIndex": 0,
       "difficulty": "easy",
@@ -62,7 +62,7 @@
     },
     {
       "id": "easy_007_sun_type",
-      "prompt": "Qué tipo de objeto astronómico es el Sol?",
+      "prompt": "¿Qué tipo de objeto celeste es el Sol?",
       "choices": ["Un planeta", "Una estrella", "Un cometa", "Una luna"],
       "correctIndex": 1,
       "difficulty": "easy",
@@ -72,7 +72,7 @@
     },
     {
       "id": "easy_008_uranus_tilt",
-      "prompt": "Qué característica especial tiene Urano?",
+      "prompt": "¿Qué característica especial tiene Urano?",
       "choices": ["Rota casi de lado", "No gira", "Es una estrella", "Tiene lava visible"],
       "correctIndex": 0,
       "difficulty": "easy",
@@ -82,7 +82,7 @@
     },
     {
       "id": "easy_009_neptune_prediction",
-      "prompt": "Qué hace especial el descubrimiento de Neptuno?",
+      "prompt": "¿Qué hace especial el descubrimiento de Neptuno?",
       "choices": ["Fue predicho matemáticamente", "Fue visto primero por astronautas", "Es una luna de Saturno", "No tiene atmósfera"],
       "correctIndex": 0,
       "difficulty": "easy",
@@ -92,17 +92,17 @@
     },
     {
       "id": "easy_010_pluto_class",
-      "prompt": "Cómo se clasifica Plutón actualmente?",
+      "prompt": "¿Cómo se clasifica Plutón actualmente?",
       "choices": ["Planeta gigante", "Planeta enano", "Estrella azul", "Nebulosa"],
       "correctIndex": 1,
       "difficulty": "easy",
-      "topic": "Sistema solar",
+      "topic": "Sistema Solar",
       "explanation": "Plutón se clasifica actualmente como planeta enano.",
       "objectId": "solar_pluto"
     },
     {
       "id": "easy_011_sirio_bright",
-      "prompt": "Cuál es la estrella más brillante del cielo nocturno?",
+      "prompt": "¿Cuál es la estrella más brillante del cielo nocturno?",
       "choices": ["Sirio", "Acrux", "Rigel", "Antares"],
       "correctIndex": 0,
       "difficulty": "easy",
@@ -112,7 +112,7 @@
     },
     {
       "id": "easy_012_canopus_bright",
-      "prompt": "Qué lugar ocupa Canopus por brillo aparente en el cielo nocturno?",
+      "prompt": "¿Qué lugar ocupa Canopus por brillo aparente en el cielo nocturno?",
       "choices": ["La más tenue", "La segunda más brillante", "La única roja", "La más cercana a la Tierra"],
       "correctIndex": 1,
       "difficulty": "easy",
@@ -122,8 +122,8 @@
     },
     {
       "id": "easy_013_acrux_constellation",
-      "prompt": "A qué constelación pertenece Acrux?",
-      "choices": ["Cruz del Sur", "Orión", "Leo", "Taurus"],
+      "prompt": "¿A qué constelación pertenece Acrux?",
+      "choices": ["Cruz del Sur", "Orión", "Leo", "Tauro"],
       "correctIndex": 0,
       "difficulty": "easy",
       "topic": "Estrellas",
@@ -132,7 +132,7 @@
     },
     {
       "id": "easy_014_antares_color",
-      "prompt": "Por qué Antares se asocia con Marte?",
+      "prompt": "¿Por qué Antares se asocia con Marte?",
       "choices": ["Por su color rojizo", "Porque orbita Marte", "Porque es una luna", "Porque no brilla"],
       "correctIndex": 0,
       "difficulty": "easy",
@@ -142,7 +142,7 @@
     },
     {
       "id": "easy_015_rigel_type",
-      "prompt": "Qué tipo de estrella es Rigel?",
+      "prompt": "¿Qué tipo de estrella es Rigel?",
       "choices": ["Una supergigante azul", "Una enana roja muy fría", "Un planeta", "Una nebulosa oscura"],
       "correctIndex": 0,
       "difficulty": "easy",
@@ -152,7 +152,7 @@
     },
     {
       "id": "easy_016_alfa_centauri",
-      "prompt": "Qué tiene de especial Alfa Centauri A?",
+      "prompt": "¿Qué tiene de especial Alfa Centauri A?",
       "choices": ["Es parte del sistema estelar más cercano a nosotros", "Es un planeta enano", "Es la Luna", "No emite luz"],
       "correctIndex": 0,
       "difficulty": "easy",
@@ -162,7 +162,7 @@
     },
     {
       "id": "easy_017_orion_nebula",
-      "prompt": "Qué ocurre en la Nebulosa de Orión?",
+      "prompt": "¿Qué ocurre en la Nebulosa de Orión?",
       "choices": ["Nacen estrellas", "Se forman anillos de hielo", "Se apaga el Sol", "Orbitan planetas enanos"],
       "correctIndex": 0,
       "difficulty": "easy",
@@ -172,7 +172,7 @@
     },
     {
       "id": "easy_018_pleiades",
-      "prompt": "Qué son las Pléyades?",
+      "prompt": "¿Qué son las Pléyades?",
       "choices": ["Un cúmulo abierto joven", "Una galaxia espiral", "Un planeta", "Una nebulosa planetaria"],
       "correctIndex": 0,
       "difficulty": "easy",
@@ -182,7 +182,7 @@
     },
     {
       "id": "easy_019_omega_centauri",
-      "prompt": "Qué tipo de objeto es Omega Centauri?",
+      "prompt": "¿Qué tipo de objeto es Omega Centauri?",
       "choices": ["Cúmulo globular", "Planeta", "Cometa", "Luna"],
       "correctIndex": 0,
       "difficulty": "easy",
@@ -192,7 +192,7 @@
     },
     {
       "id": "easy_020_large_magellanic",
-      "prompt": "Qué es la Gran Nube de Magallanes?",
+      "prompt": "¿Qué es la Gran Nube de Magallanes?",
       "choices": ["Una galaxia satélite de la Vía Láctea", "Un planeta", "Un cráter lunar", "Una estrella cercana"],
       "correctIndex": 0,
       "difficulty": "easy",
@@ -202,7 +202,7 @@
     },
     {
       "id": "easy_021_coalsack",
-      "prompt": "Qué es el Saco de Carbón?",
+      "prompt": "¿Qué es el Saco de Carbón?",
       "choices": ["Una nebulosa oscura", "Un planeta gigante", "Una luna de Júpiter", "Una estrella azul"],
       "correctIndex": 0,
       "difficulty": "easy",
@@ -212,7 +212,7 @@
     },
     {
       "id": "easy_022_lagoon",
-      "prompt": "Qué tipo de región es la Nebulosa de la Laguna?",
+      "prompt": "¿Qué tipo de región es la Nebulosa de la Laguna?",
       "choices": ["Región H II de formación estelar", "Planeta rocoso", "Estrella muerta", "Cometa congelado"],
       "correctIndex": 0,
       "difficulty": "easy",
@@ -222,7 +222,7 @@
     },
     {
       "id": "easy_023_eagle",
-      "prompt": "Qué estructura famosa se asocia con la Nebulosa del Águila?",
+      "prompt": "¿Qué estructura famosa se asocia con la Nebulosa del Águila?",
       "choices": ["Los Pilares de la Creación", "La Gran Mancha Roja", "Los anillos principales", "El Mar de la Tranquilidad"],
       "correctIndex": 0,
       "difficulty": "easy",
@@ -232,7 +232,7 @@
     },
     {
       "id": "easy_024_ptolemy_cluster",
-      "prompt": "Qué es el Cúmulo de Ptolomeo?",
+      "prompt": "¿Qué es el Cúmulo de Ptolomeo?",
       "choices": ["Un cúmulo abierto fácil de observar", "Un planeta enano", "Una galaxia lejana", "Una estrella solitaria"],
       "correctIndex": 0,
       "difficulty": "easy",
@@ -242,7 +242,7 @@
     },
     {
       "id": "easy_025_m4",
-      "prompt": "Cerca de qué estrella se localiza fácilmente el Cúmulo Globular M4?",
+      "prompt": "¿Cerca de qué estrella se localiza fácilmente el Cúmulo Globular M4?",
       "choices": ["Antares", "Sirio", "Canopus", "Acrux"],
       "correctIndex": 0,
       "difficulty": "easy",
@@ -252,7 +252,7 @@
     },
     {
       "id": "easy_026_helix",
-      "prompt": "Qué tipo de nebulosa es la Nebulosa de la Hélice?",
+      "prompt": "¿Qué tipo de nebulosa es la Nebulosa de la Hélice?",
       "choices": ["Nebulosa planetaria", "Nebulosa oscura", "Galaxia irregular", "Cúmulo abierto"],
       "correctIndex": 0,
       "difficulty": "easy",
@@ -262,7 +262,7 @@
     },
     {
       "id": "easy_027_sombrero",
-      "prompt": "Por qué la Galaxia del Sombrero recibe ese nombre?",
+      "prompt": "¿Por qué la Galaxia del Sombrero recibe ese nombre?",
       "choices": ["Por su bulbo brillante y banda de polvo", "Porque tiene anillos de Saturno", "Porque es roja como Marte", "Porque está junto a la Luna"],
       "correctIndex": 0,
       "difficulty": "easy",
@@ -272,7 +272,7 @@
     },
     {
       "id": "easy_028_m83",
-      "prompt": "Qué tipo de galaxia es el Molinillo Austral?",
+      "prompt": "¿Qué tipo de galaxia es el Molinillo Austral?",
       "choices": ["Espiral barrada", "Planeta gaseoso", "Cúmulo globular", "Nebulosa oscura"],
       "correctIndex": 0,
       "difficulty": "easy",
@@ -282,7 +282,7 @@
     },
     {
       "id": "easy_029_southern_pleiades",
-      "prompt": "Qué apodo recibe IC 2602?",
+      "prompt": "¿Qué apodo recibe IC 2602?",
       "choices": ["Pléyades del Sur", "Ojo de Dios", "Gran Mancha Roja", "Cinturón de Orión"],
       "correctIndex": 0,
       "difficulty": "easy",
@@ -292,17 +292,17 @@
     },
     {
       "id": "easy_030_m41",
-      "prompt": "Dónde se observa el Cúmulo de Can Mayor?",
-      "choices": ["Bajo Sirio", "Dentro de Saturno", "Junto al Sol", "En la superficie lunar"],
+      "prompt": "¿Dónde se observa M41, el cúmulo abierto de Can Mayor?",
+      "choices": ["Bajo Sirio, en Can Mayor", "Dentro de Saturno", "Junto al Sol", "En la superficie lunar"],
       "correctIndex": 0,
       "difficulty": "easy",
       "topic": "Cúmulos",
-      "explanation": "M41 aparece bajo Sirio en la constelación Canis Major.",
+      "explanation": "M41 es el cúmulo abierto de Can Mayor y aparece bajo Sirio en el cielo.",
       "objectId": "dso_c_mulo_de_can_mayor"
     },
     {
       "id": "medium_031_venus_mercury",
-      "prompt": "Si Mercurio está más cerca del Sol, por qué Venus es más caliente?",
+      "prompt": "¿Si Mercurio está más cerca del Sol, por qué Venus es más caliente?",
       "choices": ["Por su atmósfera densa que atrapa calor", "Porque está hecho de fuego", "Porque no gira", "Porque recibe luz de Júpiter"],
       "correctIndex": 0,
       "difficulty": "medium",
@@ -312,7 +312,7 @@
     },
     {
       "id": "medium_032_dark_nebula",
-      "prompt": "Qué hace visible a una nebulosa oscura como el Saco de Carbón?",
+      "prompt": "¿Qué hace visible a una nebulosa oscura como el Saco de Carbón?",
       "choices": ["Bloquea la luz de estrellas de fondo", "Produce luz propia intensa", "Refleja anillos de Saturno", "Es un planeta sin atmósfera"],
       "correctIndex": 0,
       "difficulty": "medium",
@@ -322,17 +322,17 @@
     },
     {
       "id": "medium_033_planetary_nebula",
-      "prompt": "Qué origen tiene una nebulosa planetaria como la Hélice?",
-      "choices": ["Capas expulsadas por una estrella tipo solar", "Choque entre dos planetas gigantes", "Hielo de los anillos de Saturno", "Una nube creada por Marte"],
+      "prompt": "¿Qué origen tiene una nebulosa planetaria como la Hélice?",
+      "choices": ["Capas externas expulsadas por una estrella tipo solar", "Choque entre dos planetas gigantes", "Hielo de los anillos de Saturno", "Una nube creada por Marte"],
       "correctIndex": 0,
       "difficulty": "medium",
       "topic": "Nebulosas",
-      "explanation": "Las nebulosas planetarias se forman cuando estrellas tipo solar expulsan sus capas externas.",
+      "explanation": "Las nebulosas planetarias se forman cuando estrellas tipo solar expulsan sus capas externas en las fases finales de su vida.",
       "objectId": "dso_nebulosa_de_la_h_lice"
     },
     {
       "id": "medium_034_reflection_nebula",
-      "prompt": "Por qué una nebulosa de reflexión puede verse azulada?",
+      "prompt": "¿Por qué una nebulosa de reflexión puede verse azulada?",
       "choices": ["Porque el polvo dispersa luz de estrellas cercanas", "Porque está cubierta de océanos", "Porque emite luz de lava", "Porque no contiene polvo"],
       "correctIndex": 0,
       "difficulty": "medium",
@@ -342,7 +342,7 @@
     },
     {
       "id": "medium_035_open_cluster",
-      "prompt": "Qué describe mejor a un cúmulo abierto como las Pléyades?",
+      "prompt": "¿Qué describe mejor a un cúmulo abierto como las Pléyades?",
       "choices": ["Grupo joven de estrellas nacidas juntas", "Agujero negro solitario", "Planeta con anillos", "Nube oscura sin estrellas"],
       "correctIndex": 0,
       "difficulty": "medium",
@@ -352,7 +352,7 @@
     },
     {
       "id": "medium_036_white_dwarf",
-      "prompt": "Qué compañera tiene Sirio en su sistema?",
+      "prompt": "¿Qué compañera tiene Sirio en su sistema?",
       "choices": ["Una enana blanca", "Un planeta enano visible", "Una nebulosa oscura", "Un cúmulo globular"],
       "correctIndex": 0,
       "difficulty": "medium",
@@ -362,27 +362,27 @@
     },
     {
       "id": "medium_037_solar_fusion",
-      "prompt": "Qué proceso libera energía en el núcleo del Sol?",
-      "choices": ["Fusión de hidrógeno en helio", "Combustión de madera", "Choque de cometas", "Reflexión de la Luna"],
+      "prompt": "¿Qué proceso libera energía en el núcleo del Sol?",
+      "choices": ["Fusión nuclear de hidrógeno en helio", "Combustión de madera", "Choque de cometas", "Reflexión de la Luna"],
       "correctIndex": 0,
       "difficulty": "medium",
       "topic": "Estrellas",
-      "explanation": "El Sol produce energía fusionando hidrógeno para formar helio.",
+      "explanation": "El Sol produce energía en su núcleo mediante fusión nuclear, juntando átomos de hidrógeno para formar helio.",
       "objectId": "solar_sun"
     },
     {
       "id": "medium_038_omega_nebula_shape",
-      "prompt": "Por qué la Nebulosa Omega también puede llamarse Cisne?",
+      "prompt": "¿Por qué la Nebulosa Omega también puede llamarse Cisne?",
       "choices": ["Por la forma aparente de su gas brillante", "Porque orbita un cisne real", "Porque es una luna", "Porque no tiene estrellas cercanas"],
       "correctIndex": 0,
       "difficulty": "medium",
       "topic": "Nebulosas",
-      "explanation": "Su forma visual puede recordar a un cisne, una herradura o la letra omega.",
+      "explanation": "Su forma visual puede recordar a un cisne, una herradura o la letra griega omega (ω).",
       "objectId": "dso_nebulosa_omega_cisne"
     },
     {
       "id": "medium_039_globular_cluster",
-      "prompt": "Qué suele contener un cúmulo globular como Omega Centauri?",
+      "prompt": "¿Qué suele contener un cúmulo globular como Omega Centauri?",
       "choices": ["Muchas estrellas antiguas", "Solo planetas rocosos", "Un único cometa", "Anillos de hielo"],
       "correctIndex": 0,
       "difficulty": "medium",
@@ -392,7 +392,7 @@
     },
     {
       "id": "medium_040_satellite_galaxy",
-      "prompt": "Qué significa que la Gran Nube de Magallanes sea satélite de la Vía Láctea?",
+      "prompt": "¿Qué significa que la Gran Nube de Magallanes sea satélite de la Vía Láctea?",
       "choices": ["Es una galaxia vecina ligada a nuestra galaxia", "Es una luna de Júpiter", "Es un cráter de Marte", "Es una parte de los anillos de Saturno"],
       "correctIndex": 0,
       "difficulty": "medium",
@@ -402,17 +402,17 @@
     },
     {
       "id": "medium_041_m22_location",
-      "prompt": "Hacia qué zona del cielo se proyecta el Cúmulo de Sagitario?",
-      "choices": ["Sagittarius", "Orión", "Leo", "Canis Major"],
+      "prompt": "¿En qué constelación se encuentra M22, el Cúmulo de Sagitario?",
+      "choices": ["Sagitario", "Orión", "Leo", "Can Mayor"],
       "correctIndex": 0,
       "difficulty": "medium",
       "topic": "Cúmulos",
-      "explanation": "M22 se encuentra proyectado hacia la rica zona de Sagittarius.",
+      "explanation": "M22 se encuentra proyectado hacia la rica zona de Sagitario.",
       "objectId": "dso_c_mulo_de_sagitario"
     },
     {
       "id": "medium_042_hubble_first_field",
-      "prompt": "Qué objeto fue el primer campo estelar observado por el Hubble en 1990?",
+      "prompt": "¿Qué objeto fue el primer campo estelar observado por el Hubble en 1990?",
       "choices": ["Cúmulo del Pozo de los Deseos", "Júpiter", "Acrux", "Plutón"],
       "correctIndex": 0,
       "difficulty": "medium",
@@ -422,7 +422,7 @@
     },
     {
       "id": "medium_043_fornax_radio",
-      "prompt": "Por qué Fornax A es destacada en astronomía?",
+      "prompt": "¿Por qué Fornax A es destacada en astronomía?",
       "choices": ["Es una galaxia de radio muy potente", "Es el planeta más caliente", "Es una luna de Marte", "Es un cometa cercano"],
       "correctIndex": 0,
       "difficulty": "medium",
@@ -432,7 +432,7 @@
     },
     {
       "id": "medium_044_tarantula",
-      "prompt": "Dónde se ubica la Nebulosa de la Tarántula?",
+      "prompt": "¿Dónde se ubica la Nebulosa de la Tarántula?",
       "choices": ["En la Gran Nube de Magallanes", "En los anillos de Saturno", "En la superficie de Venus", "Dentro de la Luna"],
       "correctIndex": 0,
       "difficulty": "medium",
@@ -442,7 +442,7 @@
     },
     {
       "id": "medium_045_47_tuc",
-      "prompt": "Cerca de qué nube galáctica se ve 47 Tucanae?",
+      "prompt": "¿Cerca de qué Nube de Magallanes se ve 47 Tucanae?",
       "choices": ["Pequeña Nube de Magallanes", "Nube de Oort", "Nube de Venus", "Gran Mancha Roja"],
       "correctIndex": 0,
       "difficulty": "medium",
@@ -452,17 +452,17 @@
     },
     {
       "id": "medium_046_acrux_system",
-      "prompt": "Qué se puede resolver en Acrux con telescopio?",
-      "choices": ["Un sistema de estrellas azules calientes", "Un planeta con anillos", "Una nebulosa oscura", "Un cráter lunar"],
+      "prompt": "¿Qué revela un telescopio al observar Acrux?",
+      "choices": ["Que es un sistema estelar múltiple", "Un planeta con anillos", "Una nebulosa oscura", "Un cráter lunar"],
       "correctIndex": 0,
       "difficulty": "medium",
       "topic": "Estrellas",
-      "explanation": "Acrux puede resolverse como un sistema de estrellas azules calientes.",
+      "explanation": "A simple vista Acrux parece una sola estrella, pero un telescopio separa sus dos componentes principales y otros métodos revelan más miembros del sistema.",
       "objectId": "star_acrux"
     },
     {
       "id": "medium_047_mars_water",
-      "prompt": "Qué evidencia conserva Marte de su pasado?",
+      "prompt": "¿Qué evidencia conserva Marte de su pasado?",
       "choices": ["Huellas de ríos, lagos y agua líquida", "Bosques actuales", "Anillos gigantes", "Océanos de metano líquido"],
       "correctIndex": 0,
       "difficulty": "medium",
@@ -472,7 +472,7 @@
     },
     {
       "id": "medium_048_ngc_6744",
-      "prompt": "Por qué NGC 6744 se compara con la Vía Láctea?",
+      "prompt": "¿Por qué NGC 6744 se compara con la Vía Láctea?",
       "choices": ["Tiene una forma parecida, pero es más grande", "Es un planeta idéntico a la Tierra", "Es la Luna vista de lado", "Es una estrella roja cercana"],
       "correctIndex": 0,
       "difficulty": "medium",
@@ -482,23 +482,523 @@
     },
     {
       "id": "medium_049_achernar_rotation",
-      "prompt": "Qué provoca la rotación muy rápida de Achernar?",
+      "prompt": "¿Qué le ocurre a Achernar por rotar tan rápido?",
       "choices": ["Se ve notablemente achatada", "Deja de emitir luz", "Se transforma en planeta", "Pierde toda su masa al instante"],
       "correctIndex": 0,
       "difficulty": "medium",
       "topic": "Estrellas",
-      "explanation": "Achernar rota tan rápido que su forma se achata.",
+      "explanation": "Achernar es una estrella que rota tan rápido que su forma se achata.",
       "objectId": "star_achernar"
     },
     {
       "id": "medium_050_ngc_4945",
-      "prompt": "Qué rasgo destaca en NGC 4945?",
+      "prompt": "¿Qué rasgo destaca en NGC 4945?",
       "choices": ["Un agujero negro central muy activo", "Una superficie con volcanes", "Un anillo visible como Saturno", "Una atmósfera de metano azul"],
       "correctIndex": 0,
       "difficulty": "medium",
       "topic": "Galaxias",
       "explanation": "NGC 4945 es una espiral vista de canto con un agujero negro central activo.",
       "objectId": "dso_galaxia_ngc_4945"
+    },
+    {
+      "id": "easy_051_small_magellanic_cloud",
+      "prompt": "¿Qué tipo de galaxia es la Pequeña Nube de Magallanes?",
+      "choices": ["Una galaxia irregular enana", "Una galaxia espiral gigante", "Una nebulosa planetaria", "Un cúmulo abierto"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Galaxias",
+      "explanation": "La Pequeña Nube de Magallanes es una galaxia irregular enana vecina de la Vía Láctea.",
+      "objectId": "dso_peque_a_nube_de_magallanes"
+    },
+    {
+      "id": "easy_052_eta_carinae_region",
+      "prompt": "¿Qué ocurre en la Nebulosa de Eta Carinae?",
+      "choices": ["Formación de estrellas", "Erosión de anillos planetarios", "Impactos en la Luna", "Fusión de galaxias cercanas"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Nebulosas",
+      "explanation": "Eta Carinae es una enorme región de formación estelar con gas iluminado por estrellas masivas.",
+      "objectId": "dso_nebulosa_de_eta_carinae"
+    },
+    {
+      "id": "easy_053_jewel_box_colors",
+      "prompt": "¿Por qué el Cúmulo del Joyero recibe ese nombre?",
+      "choices": ["Por el contraste de estrellas de distintos colores", "Por tener forma de planeta con anillos", "Por estar dentro de una galaxia oscura", "Por emitir solo luz infrarroja"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Cúmulos",
+      "explanation": "El Cúmulo del Joyero muestra estrellas azules, blancas y rojizas que recuerdan piedras brillantes.",
+      "objectId": "dso_c_mulo_del_joyero"
+    },
+    {
+      "id": "easy_054_centaurus_a_dust",
+      "prompt": "¿Qué rasgo visual hace famosa a la galaxia Centaurus A?",
+      "choices": ["Una franja oscura de polvo", "Una superficie con cráteres", "Una cola de cometa", "Un anillo de hielo"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Galaxias",
+      "explanation": "Centaurus A es una galaxia activa que destaca por una franja de polvo que cruza su zona central.",
+      "objectId": "dso_centaurus_a"
+    },
+    {
+      "id": "easy_055_sculptor_starburst",
+      "prompt": "¿Qué significa que la Galaxia del Escultor tenga un brote de formación estelar?",
+      "choices": ["Tiene formación estelar muy intensa", "Está hecha solo de estrellas apagadas", "Es un planeta fuera del Sistema Solar", "No contiene gas ni polvo"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Galaxias",
+      "explanation": "Una galaxia con brote de formación estelar produce estrellas a un ritmo especialmente alto.",
+      "objectId": "dso_galaxia_del_escultor"
+    },
+    {
+      "id": "easy_056_butterfly_cluster_type",
+      "prompt": "¿Qué tipo de objeto es el Cúmulo de la Mariposa?",
+      "choices": ["Un cúmulo abierto", "Un planeta enano", "Una nebulosa oscura", "Una galaxia irregular"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Cúmulos",
+      "explanation": "El Cúmulo de la Mariposa es un cúmulo abierto joven en Escorpio.",
+      "objectId": "dso_c_mulo_de_la_mariposa"
+    },
+    {
+      "id": "easy_057_trifid_name",
+      "prompt": "¿De dónde viene el nombre de la Nebulosa Trífida?",
+      "choices": ["De bandas oscuras que la dividen en tres zonas", "De tres lunas que la orbitan", "De tres anillos de hielo", "De tres manchas en Júpiter"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Nebulosas",
+      "explanation": "Trífida alude a las bandas de polvo que parecen separar la nebulosa en tres partes.",
+      "objectId": "dso_nebulosa_tr_fida"
+    },
+    {
+      "id": "easy_058_m55_type",
+      "prompt": "¿Qué tipo de cúmulo es M55?",
+      "choices": ["Un cúmulo globular", "Un cúmulo abierto joven", "Una galaxia espiral", "Una nebulosa planetaria"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Cúmulos",
+      "explanation": "M55 es un cúmulo globular con muchas estrellas antiguas.",
+      "objectId": "dso_c_mulo_m55"
+    },
+    {
+      "id": "easy_059_eight_burst_type",
+      "prompt": "¿Qué otro nombre recibe NGC 3132, también llamada Nebulosa de los Ocho Estallidos?",
+      "choices": ["Nebulosa del Anillo Sur", "Nebulosa de Orión", "Cúmulo de la Mariposa", "Galaxia del Sombrero"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Nebulosas",
+      "explanation": "NGC 3132 es una nebulosa planetaria conocida como Nebulosa del Anillo Sur y también como Nebulosa de los Ocho Estallidos.",
+      "objectId": "dso_nebulosa_del_anillo_sur"
+    },
+    {
+      "id": "easy_060_ngc_6752_old_stars",
+      "prompt": "¿Qué contiene principalmente el Cúmulo Globular NGC 6752?",
+      "choices": ["Estrellas antiguas", "Planetas con océanos", "Anillos de hielo", "Nubes de lluvia"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Cúmulos",
+      "explanation": "NGC 6752 contiene más de 100000 estrellas antiguas agrupadas por gravedad.",
+      "objectId": "dso_c_mulo_globular_ngc_6752"
+    },
+    {
+      "id": "easy_061_ngc_6397_age",
+      "prompt": "¿Qué destaca en NGC 6397?",
+      "choices": ["Es un cúmulo globular muy antiguo", "Es una luna de Saturno", "Es una nube de la atmósfera terrestre", "Es un cráter marciano"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Cúmulos",
+      "explanation": "NGC 6397 es uno de los cúmulos globulares cercanos y antiguos más estudiados.",
+      "objectId": "dso_c_mulo_globular_ngc_6397"
+    },
+    {
+      "id": "easy_062_ngc_1365_bar",
+      "prompt": "¿Qué estructura destaca en NGC 1365?",
+      "choices": ["Una barra central marcada", "Un gran cráter de impacto", "Una cola de polvo como cometa", "Una superficie cubierta de hielo"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Galaxias",
+      "explanation": "NGC 1365 es una galaxia espiral barrada con una barra central muy visible.",
+      "objectId": "dso_ngc_1365"
+    },
+    {
+      "id": "easy_063_southern_beehive",
+      "prompt": "¿Qué objeto también se conoce como la Colmena del Sur?",
+      "choices": ["NGC 2516", "La Luna", "Fornax A", "Betelgeuse"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Cúmulos",
+      "explanation": "NGC 2516 recibe el apodo de Colmena del Sur por su parecido con la Colmena del hemisferio norte.",
+      "objectId": "dso_c_mulo_de_la_colmena_del_sur"
+    },
+    {
+      "id": "easy_064_ngc_2477_type",
+      "prompt": "¿Qué tipo de objeto es NGC 2477?",
+      "choices": ["Un cúmulo abierto", "Una estrella solitaria", "Un planeta gigante", "Una nebulosa oscura"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Cúmulos",
+      "explanation": "NGC 2477 es un cúmulo abierto muy rico y compacto.",
+      "objectId": "dso_ngc_2477"
+    },
+    {
+      "id": "easy_065_ngc_3293_young",
+      "prompt": "¿Qué describe mejor a NGC 3293?",
+      "choices": ["Un cúmulo abierto muy joven", "Una galaxia sin estrellas", "Un cometa cercano", "Una región polar de Marte"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Cúmulos",
+      "explanation": "NGC 3293 es un cúmulo abierto joven con estrellas azules brillantes.",
+      "objectId": "dso_ngc_3293"
+    },
+    {
+      "id": "easy_066_ngc_6231_hot_stars",
+      "prompt": "¿Qué tipo de estrellas abundan en NGC 6231?",
+      "choices": ["Estrellas calientes y masivas", "Enanas marrones frías", "Estrellas apagadas", "Planetas rocosos"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Cúmulos",
+      "explanation": "NGC 6231 es un cúmulo abierto joven con muchas estrellas calientes y masivas.",
+      "objectId": "dso_ngc_6231"
+    },
+    {
+      "id": "easy_067_ghost_jupiter_type",
+      "prompt": "¿Qué es la Nebulosa del Fantasma de Júpiter?",
+      "choices": ["Una nebulosa planetaria", "Una luna de Júpiter", "Una tormenta de Saturno", "Una galaxia irregular"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Nebulosas",
+      "explanation": "El Fantasma de Júpiter es una nebulosa planetaria iluminada por el núcleo caliente de una estrella.",
+      "objectId": "dso_nebulosa_del_fantasma_de_j_piter"
+    },
+    {
+      "id": "easy_068_running_chicken_bok",
+      "prompt": "¿Qué pequeños objetos oscuros aparecen en la Nebulosa de la Gallina Corredora?",
+      "choices": ["Glóbulos de Bok", "Anillos de Saturno", "Cráteres lunares", "Rayos de Júpiter"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Nebulosas",
+      "explanation": "IC 2944 contiene glóbulos de Bok, nubes densas donde pueden formarse estrellas.",
+      "objectId": "dso_nebulosa_de_la_gallina_corredora"
+    },
+    {
+      "id": "easy_069_cat_paw_birthplace",
+      "prompt": "¿Qué ocurre en la Nebulosa de la Pata de Gato?",
+      "choices": ["Nacen estrellas nuevas", "Se forman cráteres lunares", "Se congelan océanos de metano", "Se apagan todas las estrellas"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Nebulosas",
+      "explanation": "La Pata de Gato es una región masiva de formación estelar.",
+      "objectId": "dso_nebulosa_de_la_pata_de_gato"
+    },
+    {
+      "id": "easy_070_blue_planetary_nebula",
+      "prompt": "¿Qué tipo de nebulosa es la Nebulosa Planetaria Azul?",
+      "choices": ["Nebulosa planetaria", "Nebulosa oscura", "Remanente de supernova", "Cúmulo abierto"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Nebulosas",
+      "explanation": "NGC 3918 es una nebulosa planetaria azulada en Centauro.",
+      "objectId": "dso_nebulosa_planetaria_azul"
+    },
+    {
+      "id": "easy_071_bug_nebula_hot_star",
+      "prompt": "¿Qué destaca en la Nebulosa del Insecto?",
+      "choices": ["Una estrella central extremadamente caliente", "Un océano visible", "Un sistema de anillos planetarios", "Una superficie rocosa"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Nebulosas",
+      "explanation": "La Nebulosa del Insecto contiene una de las estrellas centrales más calientes conocidas en una nebulosa planetaria.",
+      "objectId": "dso_nebulosa_del_insecto"
+    },
+    {
+      "id": "easy_072_m46_field",
+      "prompt": "¿Qué objeto se ve en el mismo campo que el Cúmulo Abierto M46?",
+      "choices": ["La nebulosa planetaria NGC 2438", "La Gran Mancha Roja", "La Luna de la Tierra", "El anillo principal de Saturno"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Cúmulos",
+      "explanation": "En el campo de M46 se observa NGC 2438 como una pequeña burbuja azulada.",
+      "objectId": "dso_c_mulo_abierto_m46"
+    },
+    {
+      "id": "easy_073_m47_binoculars",
+      "prompt": "¿Por qué M47 es cómodo para observar con binoculares?",
+      "choices": ["Sus estrellas principales aparecen separadas", "Tiene una superficie sólida", "Está dentro de la atmósfera", "Oculta al Sol durante el día"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Cúmulos",
+      "explanation": "M47 es un cúmulo abierto brillante y cercano, con estrellas fáciles de resolver.",
+      "objectId": "dso_c_mulo_abierto_m47"
+    },
+    {
+      "id": "easy_074_pencil_nebula",
+      "prompt": "¿Qué es la Nebulosa Lápiz?",
+      "choices": ["Parte de un remanente de supernova", "Un planeta enano", "Un cúmulo abierto joven", "Una estrella doble"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Nebulosas",
+      "explanation": "La Nebulosa Lápiz pertenece al remanente de la supernova de Vela.",
+      "objectId": "dso_nebulosa_l_piz"
+    },
+    {
+      "id": "easy_075_arcturus_color",
+      "prompt": "¿Qué color describe mejor a Arturo?",
+      "choices": ["Naranja", "Azul intenso", "Verde", "Violeta oscuro"],
+      "correctIndex": 0,
+      "difficulty": "easy",
+      "topic": "Estrellas",
+      "explanation": "Arturo es una gigante naranja, señal de una superficie más fría que la del Sol.",
+      "objectId": "star_arturo"
+    },
+    {
+      "id": "medium_076_procyon_white_dwarf",
+      "prompt": "¿Qué compañera tiene Proción en su sistema?",
+      "choices": ["Una enana blanca", "Un planeta con anillos", "Una nebulosa oscura", "Un cúmulo globular"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Estrellas",
+      "explanation": "Proción está acompañada por Proción B, una enana blanca útil para estudiar la evolución estelar.",
+      "objectId": "star_proci_n"
+    },
+    {
+      "id": "medium_077_betelgeuse_dimming",
+      "prompt": "¿Con qué se relacionó el gran oscurecimiento de Betelgeuse en 2019?",
+      "choices": ["Una expulsión de material", "La llegada de una luna nueva", "La desaparición de Orión", "Un eclipse causado por Júpiter"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Estrellas",
+      "explanation": "El oscurecimiento de Betelgeuse se asoció con material expulsado por la estrella.",
+      "objectId": "star_betelgeuse"
+    },
+    {
+      "id": "medium_078_hadar_system",
+      "prompt": "¿Qué describe mejor a Hadar o Agena?",
+      "choices": ["Una estrella azul en un sistema múltiple", "Un planeta enano helado", "Una nebulosa planetaria", "Un cúmulo de galaxias"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Estrellas",
+      "explanation": "Hadar es una estrella azul caliente de Centauro y forma parte de un sistema múltiple.",
+      "objectId": "star_hadar_agena"
+    },
+    {
+      "id": "medium_079_altair_rotation",
+      "prompt": "¿Qué efecto produce la rápida rotación de Altair?",
+      "choices": ["Su ecuador se abulta y queda más frío", "Se convierte en una nebulosa", "Deja de tener gravedad", "Cambia de constelación cada noche"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Estrellas",
+      "explanation": "Altair rota tan rápido que su ecuador se abulta y resulta más frío que sus polos.",
+      "objectId": "star_altair"
+    },
+    {
+      "id": "medium_080_aldebaran_hyades",
+      "prompt": "¿Qué relación tiene Aldebarán con las Hiades?",
+      "choices": ["Parece estar allí, pero es una estrella de primer plano", "Es el centro físico del cúmulo", "Es una luna del cúmulo", "No se ve cerca de Tauro"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Estrellas",
+      "explanation": "Aldebarán se ve en dirección a las Hiades, pero está más cerca y no pertenece físicamente al cúmulo.",
+      "objectId": "star_aldebar_n"
+    },
+    {
+      "id": "medium_081_spica_binary",
+      "prompt": "¿Qué hace especial al sistema de Spica?",
+      "choices": ["Sus estrellas orbitan muy juntas y se deforman por gravedad", "Es una única estrella fría sin compañeras", "Es una luna de Virgo", "Es un cometa visible todo el año"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Estrellas",
+      "explanation": "Spica es un sistema binario muy cercano, con estrellas deformadas por su interacción gravitatoria.",
+      "objectId": "star_spica"
+    },
+    {
+      "id": "medium_082_fomalhaut_disk",
+      "prompt": "¿Qué rodea a Fomalhaut?",
+      "choices": ["Un disco de escombros", "Un océano de agua líquida", "Una nube de lava", "Un anillo sólido artificial"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Estrellas",
+      "explanation": "Fomalhaut está rodeada por un disco de escombros relacionado con procesos de formación planetaria.",
+      "objectId": "star_fomalhaut"
+    },
+    {
+      "id": "medium_083_becrux_variable",
+      "prompt": "¿Qué tipo de variabilidad presenta Becrux o Mimosa?",
+      "choices": ["Pulsaciones tipo Beta Cephei", "Fases como la Luna", "Tormentas de polvo marcianas", "Cambios por anillos de hielo"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Estrellas",
+      "explanation": "Mimosa es una variable tipo Beta Cephei, con pulsaciones medibles.",
+      "objectId": "star_becrux_mimosa"
+    },
+    {
+      "id": "medium_084_regulus_rotation",
+      "prompt": "¿Qué causa la rotación rápida de Regulus?",
+      "choices": ["Está achatada y su ecuador es más frío", "Se vuelve invisible desde la Tierra", "Pierde toda su luz roja", "Se transforma en un cúmulo abierto"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Estrellas",
+      "explanation": "Regulus gira muy rápido, lo que la achata y enfría relativamente su ecuador.",
+      "objectId": "star_regulus"
+    },
+    {
+      "id": "medium_085_adhara_brightness",
+      "prompt": "¿Por qué Adhara sigue siendo brillante aunque está mucho más lejos que Sirio?",
+      "choices": ["Porque es una gigante azul muy luminosa", "Porque refleja luz de Marte", "Porque está dentro de la atmósfera", "Porque no emite luz propia"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Estrellas",
+      "explanation": "Adhara es una gigante azul muy luminosa, por eso destaca aunque se encuentre lejos.",
+      "objectId": "star_adhara"
+    },
+    {
+      "id": "medium_086_shaula_scorpion",
+      "prompt": "¿Qué parte de Escorpio ayuda a formar Shaula junto con Lesath?",
+      "choices": ["El aguijón", "La cabeza de Leo", "El cinturón de Orión", "La cola de la Ballena"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Estrellas",
+      "explanation": "Shaula y Lesath marcan el aguijón de Escorpio.",
+      "objectId": "star_shaula"
+    },
+    {
+      "id": "medium_087_gacrux_color",
+      "prompt": "¿Qué color ayuda a reconocer a Gacrux en la Cruz del Sur?",
+      "choices": ["Rojizo", "Verde intenso", "Azul eléctrico", "Negro absoluto"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Estrellas",
+      "explanation": "Gacrux es la estrella rojiza de la parte superior de la Cruz del Sur.",
+      "objectId": "star_gacrux"
+    },
+    {
+      "id": "medium_088_avior_binary",
+      "prompt": "¿Qué combinación de estrellas tiene Avior?",
+      "choices": ["Una gigante naranja y una estrella azul caliente", "Dos enanas blancas invisibles", "Un planeta y una luna", "Una nebulosa y un cometa"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Estrellas",
+      "explanation": "Avior combina una gigante naranja con una estrella azul caliente en un sistema binario.",
+      "objectId": "star_avior"
+    },
+    {
+      "id": "medium_089_miaplacidus_reference",
+      "prompt": "¿Por qué Miaplacidus sirve como referencia visual en cielos australes?",
+      "choices": ["Por su brillo estable", "Porque cambia de posición cada minuto", "Porque no pertenece a ninguna constelación", "Porque es una nebulosa oscura"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Estrellas",
+      "explanation": "Miaplacidus es una estrella blanca brillante de Quilla con brillo estable.",
+      "objectId": "star_miaplacidus"
+    },
+    {
+      "id": "medium_090_peacock_color",
+      "prompt": "¿Qué indica el brillo azul-blanco de Peacock?",
+      "choices": ["Es una estrella caliente", "Es una estrella sin temperatura", "Es un planeta cubierto de hielo", "Es una nube oscura cercana"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Estrellas",
+      "explanation": "El color azul-blanco de Peacock revela una estrella caliente y relativamente joven.",
+      "objectId": "star_peacock"
+    },
+    {
+      "id": "medium_091_deneb_kaitos_name",
+      "prompt": "¿Qué significa el nombre Deneb Kaitos?",
+      "choices": ["Cola de la ballena o monstruo marino", "Ojo del toro", "Corazón del león", "Ala del águila"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Estrellas",
+      "explanation": "Deneb Kaitos se asocia con la cola de la Ballena, representada como un monstruo marino.",
+      "objectId": "star_deneb_kaitos"
+    },
+    {
+      "id": "medium_092_ankaa_name",
+      "prompt": "¿Con qué ave mítica se asocia el nombre Ankaa?",
+      "choices": ["El fénix", "El cisne", "El águila", "El pavo real"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Estrellas",
+      "explanation": "Ankaa es la estrella más brillante del Fénix y su nombre se relaciona con esa ave mítica.",
+      "objectId": "star_ankaa"
+    },
+    {
+      "id": "medium_093_eta_carinae_eruption",
+      "prompt": "¿Qué evento histórico se asocia con Eta Carinae?",
+      "choices": ["Una gran erupción en el siglo XIX", "El primer alunizaje", "La predicción de Neptuno", "El impacto que formó la Luna"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Nebulosas",
+      "explanation": "Eta Carinae tuvo una gran erupción en el siglo XIX y sigue siendo una estrella muy masiva e inestable.",
+      "objectId": "dso_nebulosa_de_eta_carinae"
+    },
+    {
+      "id": "medium_094_centaurus_a_jets",
+      "prompt": "¿Qué alimenta los enormes chorros de radio de Centaurus A?",
+      "choices": ["Un agujero negro supermasivo central", "Los anillos de Saturno", "El hielo de Plutón", "La rotación de la Luna"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Galaxias",
+      "explanation": "Centaurus A es una galaxia activa con chorros alimentados por un agujero negro supermasivo.",
+      "objectId": "dso_centaurus_a"
+    },
+    {
+      "id": "medium_095_sculptor_ngc253",
+      "prompt": "¿Qué otro nombre recibe la Galaxia del Escultor?",
+      "choices": ["NGC 253", "M47", "Acrux", "Tombaugh Regio"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Galaxias",
+      "explanation": "La Galaxia del Escultor también se conoce como NGC 253.",
+      "objectId": "dso_galaxia_del_escultor"
+    },
+    {
+      "id": "medium_096_trifid_mixed_light",
+      "prompt": "¿Qué tipos de luz combina la Nebulosa Trífida?",
+      "choices": ["Emisión rojiza y reflexión azulada", "Solo luz verde de oxígeno", "Luz de auroras terrestres", "Reflejos de la Luna"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Nebulosas",
+      "explanation": "La Trífida combina regiones de emisión rojiza con zonas de reflexión azulada.",
+      "objectId": "dso_nebulosa_tr_fida"
+    },
+    {
+      "id": "medium_097_eight_burst_webb",
+      "prompt": "¿Qué tipo de objeto celeste es la Nebulosa del Anillo Sur (NGC 3132)?",
+      "choices": ["Una nebulosa planetaria", "Un cúmulo globular", "Una galaxia espiral", "Un remanente de supernova"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Nebulosas",
+      "explanation": "La Nebulosa del Anillo Sur es una nebulosa planetaria formada por capas expulsadas por una estrella en las fases finales de su vida.",
+      "objectId": "dso_nebulosa_del_anillo_sur"
+    },
+    {
+      "id": "medium_098_ngc_6752_background",
+      "prompt": "¿Qué encontró Hubble por casualidad detrás de NGC 6752?",
+      "choices": ["Una pequeña galaxia enana lejana", "Una luna nueva de Marte", "Un anillo alrededor de Mercurio", "Un cráter recién formado"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Cúmulos",
+      "explanation": "Hubble detectó una pequeña galaxia enana muy lejana detrás del cúmulo NGC 6752.",
+      "objectId": "dso_c_mulo_globular_ngc_6752"
+    },
+    {
+      "id": "medium_099_ngc_6397_age_estimate",
+      "prompt": "¿Qué edad aproximada se atribuye a NGC 6397?",
+      "choices": ["Unos 13400 millones de años", "Unos 45 años", "Unos 8000 días", "Unos 3 meses"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Cúmulos",
+      "explanation": "NGC 6397 es un cúmulo globular muy antiguo, con una edad estimada cercana a 13400 millones de años.",
+      "objectId": "dso_c_mulo_globular_ngc_6397"
+    },
+    {
+      "id": "medium_100_pencil_shock_wave",
+      "prompt": "¿Por qué brilla el filamento de la Nebulosa Lápiz?",
+      "choices": ["Por una onda de choque que golpea gas interestelar", "Por reflejar luces de ciudades", "Por estar cubierto de hielo de agua", "Por ser un anillo de un planeta"],
+      "correctIndex": 0,
+      "difficulty": "medium",
+      "topic": "Nebulosas",
+      "explanation": "La Nebulosa Lápiz brilla donde una onda de choque del remanente de Vela golpea gas interestelar.",
+      "objectId": "dso_nebulosa_l_piz"
     }
   ]
 }

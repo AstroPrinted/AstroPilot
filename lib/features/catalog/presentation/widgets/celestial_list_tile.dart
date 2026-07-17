@@ -82,14 +82,14 @@ class CelestialListTile extends StatelessWidget {
       final constellation = object.constellations.isNotEmpty
           ? object.constellations.first
           : 'N/A';
-      return '$catalogs · Mag: ${object.magnitude ?? 'N/A'}\n${object.objectType} · $constellation';
+      return '${object.objectType} · $constellation\n$catalogs · Mag: ${object.magnitude ?? 'N/A'}';
     }
 
     final star = object as CalibrationStar;
     final primaryCatalog = star.catalogs.isNotEmpty
         ? star.catalogs.first
         : 'N/A';
-    return '$primaryCatalog · Mag: ${star.magnitude ?? 'N/A'}\n${star.spectralType} · ${star.constellation}';
+    return 'Estrella de calibración · ${star.constellation}\n$primaryCatalog · Mag: ${star.magnitude ?? 'N/A'} · ${star.spectralType}';
   }
 
   String _visibleSubtitleLines(VisibleCelestialObject info) {

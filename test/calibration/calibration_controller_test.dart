@@ -24,6 +24,13 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
+  test('manual nudge step exceeds pulse motor tolerance', () {
+    expect(
+      CalibrationController.fineStepDegrees,
+      greaterThan(CalibrationController.pulseMotorToleranceDegrees),
+    );
+  });
+
   test('detects when there is no visible reference star', () async {
     final controller = _controller(_position(10, 120));
     addTearDown(controller.dispose);

@@ -97,6 +97,8 @@ class _ManualAdjustmentFormState extends State<_ManualAdjustmentForm> {
   final FocusNode _altitudeFocus = FocusNode();
   final FocusNode _azimuthFocus = FocusNode();
 
+  double? _lastSyncedAltitude;
+  double? _lastSyncedAzimuth;
   bool _isSubmitting = false;
   String? _errorText;
 
@@ -151,17 +153,24 @@ class _ManualAdjustmentFormState extends State<_ManualAdjustmentForm> {
   }
 
   void _syncControllers({bool force = false}) {
-    if (force || !_altitudeFocus.hasFocus) {
+    final altitudeChanged =
+        force || widget.adjustedAltitude != _lastSyncedAltitude;
+    final azimuthChanged =
+        force || widget.adjustedAzimuth != _lastSyncedAzimuth;
+
+    if (altitudeChanged && (force || !_altitudeFocus.hasFocus)) {
       _setControllerText(
         _altitudeController,
         _formatInput(widget.adjustedAltitude),
       );
+      _lastSyncedAltitude = widget.adjustedAltitude;
     }
-    if (force || !_azimuthFocus.hasFocus) {
+    if (azimuthChanged && (force || !_azimuthFocus.hasFocus)) {
       _setControllerText(
         _azimuthController,
         _formatInput(widget.adjustedAzimuth),
       );
+      _lastSyncedAzimuth = widget.adjustedAzimuth;
     }
   }
 
@@ -209,13 +218,14 @@ class _ManualAdjustmentFormState extends State<_ManualAdjustmentForm> {
                   decimal: true,
                   signed: true,
                 ),
+                textInputAction: TextInputAction.next,
                 inputFormatters: inputFormatters,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Altitud',
                   suffixText: 'deg',
                 ),
-                onSubmitted: (_) => unawaited(_submit()),
+                onSubmitted: (_) => _azimuthFocus.requestFocus(),
               ),
             ),
             const SizedBox(width: 10),
@@ -228,6 +238,7 @@ class _ManualAdjustmentFormState extends State<_ManualAdjustmentForm> {
                   decimal: true,
                   signed: true,
                 ),
+                textInputAction: TextInputAction.done,
                 inputFormatters: inputFormatters,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),

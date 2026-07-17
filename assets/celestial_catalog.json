@@ -1,10 +1,11 @@
 {
   "source": "SIMBAD via TABLA REVISAR",
   "created_at": "2025-11-16",
+  "visibility_disclaimer": "Este catálogo está orientado principalmente a objetos destacados observables desde el hemisferio sur. La visibilidad real depende de la ubicación del observador, la fecha, la hora, la contaminación lumínica y las condiciones del cielo.",
   "solar_system_bodies": [
     {
       "name": "Júpiter",
-      "notes": "Es el planeta más grande del sistema solar. Su Gran Mancha Roja es una tormenta gigante observada durante siglos."
+      "notes": "Es el planeta más grande del Sistema Solar. Su Gran Mancha Roja es una tormenta gigante observada durante siglos."
     },
     {
       "name": "Luna",
@@ -27,6 +28,22 @@
       "notes": "Hoy se clasifica como planeta enano. La sonda New Horizons reveló una región clara con forma de corazón llamada Tombaugh Regio."
     },
     {
+      "name": "Ceres",
+      "notes": "Es el planeta enano más cercano a la Tierra y el objeto más grande del cinturón de asteroides entre Marte y Júpiter."
+    },
+    {
+      "name": "Haumea",
+      "notes": "Es un planeta enano del cinturón de Kuiper. Destaca por su rotación muy rápida y su forma alargada."
+    },
+    {
+      "name": "Makemake",
+      "notes": "Es un planeta enano del cinturón de Kuiper. Su superficie helada refleja bastante luz solar."
+    },
+    {
+      "name": "Eris",
+      "notes": "Es un planeta enano muy distante. Su descubrimiento ayudó a redefinir la clasificación de Plutón como planeta enano."
+    },
+    {
       "name": "Saturno",
       "notes": "Sus anillos están formados sobre todo por partículas de hielo de agua y polvo, desde granos pequeños hasta bloques grandes."
     },
@@ -40,13 +57,13 @@
     },
     {
       "name": "Venus",
-      "notes": "Es el planeta más caliente del sistema solar porque su densa atmósfera de dióxido de carbono atrapa calor de forma extrema."
+      "notes": "Es el planeta más caliente del Sistema Solar porque su densa atmósfera de dióxido de carbono atrapa calor de forma extrema."
     }
   ],
   "deep_sky_objects": [
     {
       "name": "Gran Nube de Magallanes",
-      "constellations": ["Dorado", "Mensa"],
+      "constellations": ["Dorado", "Mesa"],
       "object_type": "Galaxia (Irregular)",
       "right_ascension": "05h 23m 34s",
       "right_ascension_hours": 5.392778,
@@ -59,7 +76,7 @@
     },
     {
       "name": "Pequeña Nube de Magallanes",
-      "constellations": ["Tucana"],
+      "constellations": ["Tucán"],
       "object_type": "Galaxia (Irregular)",
       "right_ascension": "00h 52m 44s",
       "right_ascension_hours": 0.878889,
@@ -72,7 +89,7 @@
     },
     {
       "name": "Omega Centauri",
-      "constellations": ["Centaurus"],
+      "constellations": ["Centauro"],
       "object_type": "Cúmulo Globular",
       "right_ascension": "13h 26m 47s",
       "right_ascension_hours": 13.446389,
@@ -85,7 +102,7 @@
     },
     {
       "name": "47 Tucanae",
-      "constellations": ["Tucana"],
+      "constellations": ["Tucán"],
       "object_type": "Cúmulo Globular",
       "right_ascension": "00h 24m 05s",
       "right_ascension_hours": 0.401389,
@@ -98,7 +115,7 @@
     },
     {
       "name": "Nebulosa de Eta Carinae",
-      "constellations": ["Carina"],
+      "constellations": ["Quilla"],
       "object_type": "Nebulosa de Emisión",
       "right_ascension": "10h 45m 03s",
       "right_ascension_hours": 10.750833,
@@ -124,7 +141,7 @@
     },
     {
       "name": "Cúmulo del Joyero",
-      "constellations": ["Crux"],
+      "constellations": ["Cruz del Sur"],
       "object_type": "Cúmulo Abierto",
       "right_ascension": "12h 52m 49s",
       "right_ascension_hours": 12.880278,
@@ -137,7 +154,7 @@
     },
     {
       "name": "Centaurus A",
-      "constellations": ["Centaurus"],
+      "constellations": ["Centauro"],
       "object_type": "Galaxia (Lenticular)",
       "right_ascension": "13h 25m 27s",
       "right_ascension_hours": 13.424167,
@@ -150,7 +167,7 @@
     },
     {
       "name": "Galaxia del Escultor",
-      "constellations": ["Sculptor"],
+      "constellations": ["Escultor"],
       "object_type": "Galaxia (Espiral)",
       "right_ascension": "00h 47m 33s",
       "right_ascension_hours": 0.7925,
@@ -158,7 +175,7 @@
       "declination_degrees": -25.288333,
       "magnitude_v": 8.0,
       "catalogs": ["NGC 253"],
-      "notes": "También conocida como NGC 253, es una galaxia con intensa formación estelar, por eso se clasifica como una galaxia starburst.",
+      "notes": "También conocida como NGC 253, es una galaxia con un brote de formación estelar. Esta actividad hace que produzca estrellas a un ritmo especialmente alto.",
       "source": "SIMBAD"
     },
     {
@@ -176,7 +193,7 @@
     },
     {
       "name": "Pléyades",
-      "constellations": ["Taurus"],
+      "constellations": ["Tauro"],
       "object_type": "Cúmulo Abierto",
       "right_ascension": "03h 47m 24s",
       "right_ascension_hours": 3.79,
@@ -189,7 +206,7 @@
     },
     {
       "name": "Nebulosa de la Hélice",
-      "constellations": ["Aquarius"],
+      "constellations": ["Acuario"],
       "object_type": "Nebulosa Planetaria",
       "right_ascension": "22h 29m 38s",
       "right_ascension_hours": 22.493889,
@@ -202,7 +219,7 @@
     },
     {
       "name": "Saco de Carbón",
-      "constellations": ["Crux"],
+      "constellations": ["Cruz del Sur"],
       "object_type": "Nebulosa Oscura",
       "right_ascension": "12h 52m 00s",
       "right_ascension_hours": 12.866667,
@@ -228,7 +245,7 @@
     },
     {
       "name": "Molinillo Austral",
-      "constellations": ["Hydra"],
+      "constellations": ["Hidra"],
       "object_type": "Galaxia (Espiral)",
       "right_ascension": "13h 37m 00s",
       "right_ascension_hours": 13.616667,
@@ -241,7 +258,7 @@
     },
     {
       "name": "Cúmulo de Ptolomeo",
-      "constellations": ["Scorpius"],
+      "constellations": ["Escorpio"],
       "object_type": "Cúmulo Abierto",
       "right_ascension": "17h 40m 18s",
       "right_ascension_hours": 17.671667,
@@ -249,12 +266,12 @@
       "declination_degrees": -34.793333,
       "magnitude_v": 4.6,
       "catalogs": ["M 7", "NGC 6475"],
-      "notes": "M7 es uno de los cúmulos abiertos más fáciles de ver a simple vista. Ya fue descrito por Claudio Ptolomeo en la Antigüedad.",
+      "notes": "M7 es uno de los cúmulos abiertos más fáciles de ver a simple vista. Ya fue descrito por Ptolomeo en la Antigüedad.",
       "source": "SIMBAD"
     },
     {
       "name": "Cúmulo de la Mariposa",
-      "constellations": ["Scorpius"],
+      "constellations": ["Escorpio"],
       "object_type": "Cúmulo Abierto",
       "right_ascension": "17h 36m 48s",
       "right_ascension_hours": 17.613333,
@@ -262,12 +279,12 @@
       "declination_degrees": -32.253333,
       "magnitude_v": 4.2,
       "catalogs": ["M 6", "NGC 6405"],
-      "notes": "Cúmulo abierto joven en Scorpius. Sus estrellas brillantes dibujan una figura que recuerda a una mariposa con las alas abiertas.",
+      "notes": "Cúmulo abierto joven en Escorpio. Sus estrellas brillantes dibujan una figura que recuerda a una mariposa con las alas abiertas.",
       "source": "SIMBAD"
     },
     {
       "name": "Nebulosa de la Laguna",
-      "constellations": ["Sagittarius"],
+      "constellations": ["Sagitario"],
       "object_type": "Nebulosa de Emisión",
       "right_ascension": "18h 03m 48s",
       "right_ascension_hours": 18.063333,
@@ -280,7 +297,7 @@
     },
     {
       "name": "Nebulosa Trífida",
-      "constellations": ["Sagittarius"],
+      "constellations": ["Sagitario"],
       "object_type": "Nebulosa de Emisión",
       "right_ascension": "18h 02m 23s",
       "right_ascension_hours": 18.039722,
@@ -293,7 +310,7 @@
     },
     {
       "name": "Nebulosa Omega (Cisne)",
-      "constellations": ["Sagittarius"],
+      "constellations": ["Sagitario"],
       "object_type": "Nebulosa de Emisión",
       "right_ascension": "18h 20m 47s",
       "right_ascension_hours": 18.346389,
@@ -301,12 +318,12 @@
       "declination_degrees": -16.171667,
       "magnitude_v": 6.0,
       "catalogs": ["M 17", "NGC 6618"],
-      "notes": "M17 es una región de formación estelar cuyo gas brillante puede parecer un cisne, una herradura o la letra omega según el telescopio.",
+      "notes": "M17 es una nebulosa de emisión y región de formación estelar. Su gas brillante puede parecer un cisne, una herradura o la letra griega omega (ω) según el telescopio.",
       "source": "SIMBAD"
     },
     {
       "name": "Nebulosa del Águila",
-      "constellations": ["Serpens"],
+      "constellations": ["Serpiente"],
       "object_type": "Nebulosa de Emisión",
       "right_ascension": "18h 18m 48s",
       "right_ascension_hours": 18.313333,
@@ -319,7 +336,7 @@
     },
     {
       "name": "Cúmulo de Sagitario",
-      "constellations": ["Sagittarius"],
+      "constellations": ["Sagitario"],
       "object_type": "Cúmulo Globular",
       "right_ascension": "18h 36m 23s",
       "right_ascension_hours": 18.606389,
@@ -327,12 +344,12 @@
       "declination_degrees": -23.904722,
       "magnitude_v": 5.1,
       "catalogs": ["M 22", "NGC 6656"],
-      "notes": "M22 es uno de los cúmulos globulares más brillantes visibles desde la Tierra y se encuentra proyectado hacia la rica zona de Sagittarius.",
+      "notes": "M22 es uno de los cúmulos globulares más brillantes visibles desde la Tierra y se encuentra proyectado hacia la rica zona de Sagitario.",
       "source": "SIMBAD"
     },
     {
       "name": "Cúmulo Globular M4",
-      "constellations": ["Scorpius"],
+      "constellations": ["Escorpio"],
       "object_type": "Cúmulo Globular",
       "right_ascension": "16h 23m 35s",
       "right_ascension_hours": 16.393056,
@@ -344,8 +361,21 @@
       "source": "SIMBAD"
     },
     {
+      "name": "Cúmulo Globular M9",
+      "constellations": ["Ofiuco"],
+      "object_type": "Cúmulo Globular",
+      "right_ascension": "17h 19m 12s",
+      "right_ascension_hours": 17.32,
+      "declination": "-18° 30' 59\"",
+      "declination_degrees": -18.516389,
+      "magnitude_v": 7.7,
+      "catalogs": ["M 9", "NGC 6333"],
+      "notes": "M9 es un cúmulo globular de Ofiuco ubicado cerca de nubes oscuras de polvo. Es observable con binoculares o telescopios pequeños bajo cielos oscuros.",
+      "source": "SIMBAD"
+    },
+    {
       "name": "Cúmulo M55",
-      "constellations": ["Sagittarius"],
+      "constellations": ["Sagitario"],
       "object_type": "Cúmulo Globular",
       "right_ascension": "19h 39m 59s",
       "right_ascension_hours": 19.666389,
@@ -358,7 +388,7 @@
     },
     {
       "name": "Pléyades del Sur",
-      "constellations": ["Carina"],
+      "constellations": ["Quilla"],
       "object_type": "Cúmulo Abierto",
       "right_ascension": "10h 43m 06s",
       "right_ascension_hours": 10.718333,
@@ -371,7 +401,7 @@
     },
     {
       "name": "Cúmulo de Can Mayor",
-      "constellations": ["Canis Major"],
+      "constellations": ["Can Mayor"],
       "object_type": "Cúmulo Abierto",
       "right_ascension": "06h 45m 54s",
       "right_ascension_hours": 6.765,
@@ -379,12 +409,12 @@
       "declination_degrees": -20.766667,
       "magnitude_v": 4.5,
       "catalogs": ["M 41", "NGC 2287"],
-      "notes": "M41 es un cúmulo abierto bajo Sirius. Con binoculares muestra decenas de estrellas jóvenes y brillantes en la constelación Canis Major.",
+      "notes": "M41 es un cúmulo abierto bajo Sirio. Con binoculares muestra decenas de estrellas jóvenes y brillantes en la constelación Can Mayor.",
       "source": "SIMBAD"
     },
     {
       "name": "Cúmulo del Pozo de los Deseos",
-      "constellations": ["Carina"],
+      "constellations": ["Quilla"],
       "object_type": "Cúmulo Abierto",
       "right_ascension": "11h 06m 13s",
       "right_ascension_hours": 11.103611,
@@ -396,7 +426,7 @@
       "source": "SIMBAD"
     },
     {
-      "name": "Nebulosa del Ocho Estallido",
+      "name": "Nebulosa del Anillo Sur",
       "constellations": ["Vela"],
       "object_type": "Nebulosa Planetaria",
       "right_ascension": "10h 07m 01s",
@@ -405,7 +435,7 @@
       "declination_degrees": -40.435278,
       "magnitude_v": 10.3,
       "catalogs": ["NGC 3132"],
-      "notes": "También llamada Nebulosa del Anillo Austral, muestra las capas expulsadas por una estrella moribunda. El telescopio Webb reveló detalles de sus estrellas centrales.",
+      "notes": "NGC 3132 es una nebulosa planetaria conocida como Nebulosa del Anillo Sur y también como Nebulosa de los Ocho Estallidos. Muestra capas expulsadas por una estrella en las fases finales de su vida.",
       "source": "SIMBAD"
     },
     {
@@ -423,7 +453,7 @@
     },
     {
       "name": "Cúmulo Globular NGC 6397",
-      "constellations": ["Ara"],
+      "constellations": ["Altar"],
       "object_type": "Cúmulo Globular",
       "right_ascension": "17h 40m 41s",
       "right_ascension_hours": 17.678056,
@@ -436,7 +466,7 @@
     },
     {
       "name": "Fornax A",
-      "constellations": ["Fornax"],
+      "constellations": ["Horno"],
       "object_type": "Galaxia (Lenticular)",
       "right_ascension": "03h 22m 41s",
       "right_ascension_hours": 3.378056,
@@ -449,7 +479,7 @@
     },
     {
       "name": "NGC 1365",
-      "constellations": ["Fornax"],
+      "constellations": ["Horno"],
       "object_type": "Galaxia (Espiral)",
       "right_ascension": "03h 33m 36s",
       "right_ascension_hours": 3.56,
@@ -462,7 +492,7 @@
     },
     {
       "name": "Cúmulo de la Colmena del Sur",
-      "constellations": ["Carina"],
+      "constellations": ["Quilla"],
       "object_type": "Cúmulo Abierto",
       "right_ascension": "08h 04m 06s",
       "right_ascension_hours": 8.068333,
@@ -475,7 +505,7 @@
     },
     {
       "name": "NGC 2477",
-      "constellations": ["Puppis"],
+      "constellations": ["Popa"],
       "object_type": "Cúmulo Abierto",
       "right_ascension": "07h 52m 10s",
       "right_ascension_hours": 7.869444,
@@ -488,7 +518,7 @@
     },
     {
       "name": "NGC 3293",
-      "constellations": ["Carina"],
+      "constellations": ["Quilla"],
       "object_type": "Cúmulo Abierto",
       "right_ascension": "10h 35m 51s",
       "right_ascension_hours": 10.5975,
@@ -496,12 +526,12 @@
       "declination_degrees": -58.23,
       "magnitude_v": 4.7,
       "catalogs": ["NGC 3293"],
-      "notes": "NGC 3293 es un cúmulo abierto muy joven en Carina. Sus estrellas azules más brillantes tienen solo unos pocos millones de años.",
+      "notes": "NGC 3293 es un cúmulo abierto muy joven en Quilla. Sus estrellas azules más brillantes tienen solo unos pocos millones de años.",
       "source": "SIMBAD"
     },
     {
       "name": "NGC 6231",
-      "constellations": ["Scorpius"],
+      "constellations": ["Escorpio"],
       "object_type": "Cúmulo Abierto",
       "right_ascension": "16h 54m 11s",
       "right_ascension_hours": 16.903056,
@@ -514,7 +544,7 @@
     },
     {
       "name": "Nebulosa del Fantasma de Júpiter",
-      "constellations": ["Hydra"],
+      "constellations": ["Hidra"],
       "object_type": "Nebulosa Planetaria",
       "right_ascension": "10h 21m 34s",
       "right_ascension_hours": 10.359444,
@@ -548,12 +578,12 @@
       "declination_degrees": -63.8575,
       "magnitude_v": 8.5,
       "catalogs": ["NGC 6744"],
-      "notes": "NGC 6744 se parece mucho a la Vía Láctea, pero es más grande. Por eso a veces se presenta como una hermana mayor galáctica.",
+      "notes": "NGC 6744 se parece mucho a la Vía Láctea, pero es más grande. Debido a esta semejanza, a veces se presenta como una hermana mayor galáctica.",
       "source": "SIMBAD"
     },
     {
       "name": "Galaxia NGC 4945",
-      "constellations": ["Centaurus"],
+      "constellations": ["Centauro"],
       "object_type": "Galaxia (Espiral)",
       "right_ascension": "13h 05m 27s",
       "right_ascension_hours": 13.090833,
@@ -566,7 +596,7 @@
     },
     {
       "name": "Nebulosa de la Gallina Corredora",
-      "constellations": ["Centaurus"],
+      "constellations": ["Centauro"],
       "object_type": "Nebulosa de Emisión",
       "right_ascension": "11h 40m 24s",
       "right_ascension_hours": 11.673333,
@@ -579,7 +609,7 @@
     },
     {
       "name": "Nebulosa de la Pata de Gato",
-      "constellations": ["Scorpius"],
+      "constellations": ["Escorpio"],
       "object_type": "Nebulosa de Emisión",
       "right_ascension": "17h 20m 00s",
       "right_ascension_hours": 17.333333,
@@ -592,7 +622,7 @@
     },
     {
       "name": "Nebulosa Planetaria Azul",
-      "constellations": ["Crux"],
+      "constellations": ["Centauro"],
       "object_type": "Nebulosa Planetaria",
       "right_ascension": "11h 58m 46s",
       "right_ascension_hours": 11.979444,
@@ -600,12 +630,12 @@
       "declination_degrees": -59.562778,
       "magnitude_v": 10.8,
       "catalogs": ["NGC 3918"],
-      "notes": "NGC 3918 es una nebulosa planetaria azulada en Centaurus. Su envoltura externa casi esférica está siendo atravesada por vientos de la estrella central.",
+      "notes": "NGC 3918 es una nebulosa planetaria azulada en Centauro. Su envoltura externa casi esférica está siendo atravesada por vientos de la estrella central.",
       "source": "SIMBAD"
     },
     {
       "name": "Nebulosa del Insecto",
-      "constellations": ["Scorpius"],
+      "constellations": ["Escorpio"],
       "object_type": "Nebulosa Planetaria",
       "right_ascension": "17h 13m 44s",
       "right_ascension_hours": 17.228889,
@@ -618,7 +648,7 @@
     },
     {
       "name": "Cúmulo Globular M2",
-      "constellations": ["Aquarius"],
+      "constellations": ["Acuario"],
       "object_type": "Cúmulo Globular",
       "right_ascension": "21h 33m 27s",
       "right_ascension_hours": 21.5575,
@@ -626,12 +656,12 @@
       "declination_degrees": -0.823056,
       "magnitude_v": 6.3,
       "catalogs": ["M 2", "NGC 7089"],
-      "notes": "M2 es un cúmulo globular de Aquarius con más de 150000 estrellas, un enjambre antiguo que orbita el halo de la Vía Láctea.",
+      "notes": "M2 es un cúmulo globular de Acuario con más de 150000 estrellas, un enjambre antiguo que orbita el halo de la Vía Láctea.",
       "source": "SIMBAD"
     },
     {
       "name": "Cúmulo Globular M15",
-      "constellations": ["Pegasus"],
+      "constellations": ["Pegaso"],
       "object_type": "Cúmulo Globular",
       "right_ascension": "21h 29m 58s",
       "right_ascension_hours": 21.499444,
@@ -644,7 +674,7 @@
     },
     {
       "name": "Cúmulo Globular M30",
-      "constellations": ["Capricornus"],
+      "constellations": ["Capricornio"],
       "object_type": "Cúmulo Globular",
       "right_ascension": "21h 40m 22s",
       "right_ascension_hours": 21.672778,
@@ -657,7 +687,7 @@
     },
     {
       "name": "Cúmulo Abierto M46",
-      "constellations": ["Puppis"],
+      "constellations": ["Popa"],
       "object_type": "Cúmulo Abierto",
       "right_ascension": "07h 41m 46s",
       "right_ascension_hours": 7.696111,
@@ -665,12 +695,12 @@
       "declination_degrees": -14.81,
       "magnitude_v": 6.1,
       "catalogs": ["M 46", "NGC 2437"],
-      "notes": "M46 es un cúmulo abierto en Puppis. En el mismo campo se ve la nebulosa planetaria NGC 2438, como una pequeña burbuja azulada.",
+      "notes": "M46 es un cúmulo abierto en Popa. En el mismo campo se ve la nebulosa planetaria NGC 2438, como una pequeña burbuja azulada.",
       "source": "SIMBAD"
     },
     {
       "name": "Cúmulo Abierto M47",
-      "constellations": ["Puppis"],
+      "constellations": ["Popa"],
       "object_type": "Cúmulo Abierto",
       "right_ascension": "07h 36m 34s",
       "right_ascension_hours": 7.609444,
@@ -678,7 +708,7 @@
       "declination_degrees": -14.485,
       "magnitude_v": 4.4,
       "catalogs": ["M 47", "NGC 2422"],
-      "notes": "M47 es un cúmulo abierto brillante y cercano en Puppis, ideal para binoculares porque sus estrellas principales aparecen separadas y fáciles de resolver.",
+      "notes": "M47 es un cúmulo abierto brillante y cercano en Popa, ideal para binoculares porque sus estrellas principales aparecen separadas y fáciles de resolver.",
       "source": "SIMBAD"
     },
     {
@@ -698,7 +728,7 @@
   "calibration_targets": [
     {
       "name": "Sirio",
-      "constellation": "Canis Major",
+      "constellation": "Can Mayor",
       "spectral_type": "A1V",
       "right_ascension": "06h 45m 08s",
       "right_ascension_hours": 6.752222,
@@ -706,12 +736,12 @@
       "declination_degrees": -16.716111,
       "magnitude_v": -1.46,
       "catalogs": ["α CMa", "HR 2491", "HD 48915"],
-      "notes": "Es la estrella más brillante del cielo nocturno. Forma un sistema binario con Sirius B, una pequeña enana blanca.",
+      "notes": "Es la estrella más brillante del cielo nocturno. Forma un sistema binario con Sirio B, una pequeña enana blanca.",
       "source": "SIMBAD"
     },
     {
       "name": "Canopus",
-      "constellation": "Carina",
+      "constellation": "Quilla",
       "spectral_type": "A9II",
       "right_ascension": "06h 23m 57s",
       "right_ascension_hours": 6.399167,
@@ -724,7 +754,7 @@
     },
     {
       "name": "Alfa Centauri A",
-      "constellation": "Centaurus",
+      "constellation": "Centauro",
       "spectral_type": "G2V",
       "right_ascension": "14h 39m 36s",
       "right_ascension_hours": 14.66,
@@ -737,7 +767,7 @@
     },
     {
       "name": "Arturo",
-      "constellation": "Boötes",
+      "constellation": "Boyero",
       "spectral_type": "K1.5III",
       "right_ascension": "14h 15m 39s",
       "right_ascension_hours": 14.260833,
@@ -763,7 +793,7 @@
     },
     {
       "name": "Proción",
-      "constellation": "Canis Minor",
+      "constellation": "Can Menor",
       "spectral_type": "F5IV-V",
       "right_ascension": "07h 39m 18s",
       "right_ascension_hours": 7.655,
@@ -776,7 +806,7 @@
     },
     {
       "name": "Achernar",
-      "constellation": "Eridanus",
+      "constellation": "Erídano",
       "spectral_type": "B6Vpe",
       "right_ascension": "01h 37m 42s",
       "right_ascension_hours": 1.628333,
@@ -784,7 +814,7 @@
       "declination_degrees": -57.236667,
       "magnitude_v": 0.45,
       "catalogs": ["α Eri", "HR 472", "HD 10144"],
-      "notes": "Gira tan rápido que está notablemente achatada. ESO la destacó como una de las estrellas brillantes menos esféricas observadas.",
+      "notes": "Gira tan rápido que está notablemente achatada, una señal clara de cómo la rotación extrema puede deformar una estrella brillante.",
       "source": "SIMBAD"
     },
     {
@@ -802,7 +832,7 @@
     },
     {
       "name": "Hadar (Agena)",
-      "constellation": "Centaurus",
+      "constellation": "Centauro",
       "spectral_type": "B1III",
       "right_ascension": "14h 03m 49s",
       "right_ascension_hours": 14.063611,
@@ -810,12 +840,12 @@
       "declination_degrees": -60.372778,
       "magnitude_v": 0.61,
       "catalogs": ["β Cen", "HR 5267", "HD 122451"],
-      "notes": "Es una estrella azul muy caliente de Centaurus y parte de un sistema múltiple, visible junto a Alfa Centauri en cielos australes.",
+      "notes": "Es una estrella azul muy caliente de Centauro y parte de un sistema múltiple, visible junto a Alfa Centauri en cielos australes.",
       "source": "SIMBAD"
     },
     {
       "name": "Altair",
-      "constellation": "Aquila",
+      "constellation": "Águila",
       "spectral_type": "A7Vn",
       "right_ascension": "19h 50m 46s",
       "right_ascension_hours": 19.846111,
@@ -828,7 +858,7 @@
     },
     {
       "name": "Acrux",
-      "constellation": "Crux",
+      "constellation": "Cruz del Sur",
       "spectral_type": "B0.5IV + B1V",
       "right_ascension": "12h 26m 35s",
       "right_ascension_hours": 12.443056,
@@ -841,7 +871,7 @@
     },
     {
       "name": "Aldebarán",
-      "constellation": "Taurus",
+      "constellation": "Tauro",
       "spectral_type": "K5+III",
       "right_ascension": "04h 35m 55s",
       "right_ascension_hours": 4.598611,
@@ -849,12 +879,12 @@
       "declination_degrees": 16.509167,
       "magnitude_v": 0.87,
       "catalogs": ["α Tau", "HR 1457", "HD 29139"],
-      "notes": "Marca el ojo rojizo de Taurus. Aunque parece estar dentro de las Hiades, en realidad es una estrella de primer plano.",
+      "notes": "Marca el ojo rojizo de Tauro. Aunque parece estar dentro de las Hiades, en realidad es una estrella de primer plano.",
       "source": "SIMBAD"
     },
     {
       "name": "Antares",
-      "constellation": "Scorpius",
+      "constellation": "Escorpio",
       "spectral_type": "M1.5Iab-Ib",
       "right_ascension": "16h 29m 24s",
       "right_ascension_hours": 16.49,
@@ -880,7 +910,7 @@
     },
     {
       "name": "Fomalhaut",
-      "constellation": "Piscis Austrinus",
+      "constellation": "Pez Austral",
       "spectral_type": "A4V",
       "right_ascension": "22h 57m 39s",
       "right_ascension_hours": 22.960833,
@@ -893,7 +923,7 @@
     },
     {
       "name": "Becrux (Mimosa)",
-      "constellation": "Crux",
+      "constellation": "Cruz del Sur",
       "spectral_type": "B0.5III",
       "right_ascension": "12h 47m 43s",
       "right_ascension_hours": 12.795278,
@@ -914,12 +944,12 @@
       "declination_degrees": 11.966944,
       "magnitude_v": 1.36,
       "catalogs": ["α Leo", "HR 3982", "HD 87901"],
-      "notes": "Marca el corazón de Leo. Gira muy rápido, por eso está achatada y su ecuador es más frío que sus polos.",
+      "notes": "Marca el corazón de Leo. Su rápida rotación la achata y hace que su ecuador sea más frío que sus polos.",
       "source": "SIMBAD"
     },
     {
       "name": "Adhara",
-      "constellation": "Canis Major",
+      "constellation": "Can Mayor",
       "spectral_type": "B2II",
       "right_ascension": "06h 58m 37s",
       "right_ascension_hours": 6.976944,
@@ -927,12 +957,12 @@
       "declination_degrees": -28.971944,
       "magnitude_v": 1.5,
       "catalogs": ["ε CMa", "HR 2618", "HD 52089"],
-      "notes": "Es una gigante azul en Canis Major. Pese a estar mucho más lejos que Sirius, sigue entre las estrellas más brillantes del cielo.",
+      "notes": "Es una gigante azul en Can Mayor. Pese a estar mucho más lejos que Sirio, sigue entre las estrellas más brillantes del cielo.",
       "source": "SIMBAD"
     },
     {
       "name": "Shaula",
-      "constellation": "Scorpius",
+      "constellation": "Escorpio",
       "spectral_type": "B2IV",
       "right_ascension": "17h 33m 36s",
       "right_ascension_hours": 17.56,
@@ -940,12 +970,12 @@
       "declination_degrees": -37.103611,
       "magnitude_v": 1.62,
       "catalogs": ["λ Sco", "HR 6527", "HD 158926"],
-      "notes": "Junto con Lesath forma el aguijón de Scorpius. Es un sistema múltiple de estrellas azules calientes.",
+      "notes": "Junto con Lesath forma el aguijón de Escorpio. Es un sistema múltiple de estrellas azules calientes.",
       "source": "SIMBAD"
     },
     {
       "name": "Gacrux",
-      "constellation": "Crux",
+      "constellation": "Cruz del Sur",
       "spectral_type": "M3.5III",
       "right_ascension": "12h 31m 09s",
       "right_ascension_hours": 12.519167,
@@ -958,7 +988,7 @@
     },
     {
       "name": "Avior",
-      "constellation": "Carina",
+      "constellation": "Quilla",
       "spectral_type": "K3III + B2V",
       "right_ascension": "08h 22m 30s",
       "right_ascension_hours": 8.375,
@@ -971,7 +1001,7 @@
     },
     {
       "name": "Miaplacidus",
-      "constellation": "Carina",
+      "constellation": "Quilla",
       "spectral_type": "A0III",
       "right_ascension": "09h 13m 12s",
       "right_ascension_hours": 9.22,
@@ -979,7 +1009,7 @@
       "declination_degrees": -69.716944,
       "magnitude_v": 1.68,
       "catalogs": ["β Car", "HR 3685", "HD 79469"],
-      "notes": "Es una estrella blanca brillante de Carina, muy usada como referencia visual en cielos australes por su brillo estable.",
+      "notes": "Es una estrella blanca brillante de Quilla, muy usada como referencia visual en cielos australes por su brillo estable.",
       "source": "SIMBAD"
     },
     {
@@ -997,7 +1027,7 @@
     },
     {
       "name": "Deneb Kaitos",
-      "constellation": "Cetus",
+      "constellation": "Ballena",
       "spectral_type": "K0III",
       "right_ascension": "00h 43m 35s",
       "right_ascension_hours": 0.726389,
@@ -1005,12 +1035,12 @@
       "declination_degrees": -17.986389,
       "magnitude_v": 2.02,
       "catalogs": ["β Cet", "HR 188", "HD 4128"],
-      "notes": "Su nombre significa cola de la ballena o monstruo marino. Es una gigante naranja en la constelación Cetus.",
+      "notes": "Su nombre significa cola de la ballena o monstruo marino. Es una gigante naranja en la constelación de la Ballena.",
       "source": "SIMBAD"
     },
     {
       "name": "Ankaa",
-      "constellation": "Phoenix",
+      "constellation": "Fénix",
       "spectral_type": "K0.5III",
       "right_ascension": "00h 26m 17s",
       "right_ascension_hours": 0.438056,
@@ -1018,7 +1048,7 @@
       "declination_degrees": -42.305833,
       "magnitude_v": 2.37,
       "catalogs": ["α Phe", "HR 88", "HD 2489"],
-      "notes": "Es la estrella más brillante de Phoenix. Su nombre se asocia con el ave mítica que renace de sus cenizas.",
+      "notes": "Es la estrella más brillante del Fénix. Su nombre se asocia con el ave mítica que renace de sus cenizas.",
       "source": "SIMBAD"
     }
   ]

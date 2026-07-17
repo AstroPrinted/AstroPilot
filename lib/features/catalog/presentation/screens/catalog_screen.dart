@@ -131,7 +131,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(_visibleOnly ? 'Objetos visibles' : 'Catalogo Celestial'),
+        title: Text(_visibleOnly ? 'Objetos visibles' : 'Catálogo Celestial'),
         actions: [
           if (_visibleOnly)
             IconButton(
@@ -168,6 +168,10 @@ class _CatalogScreenState extends State<CatalogScreen> {
             const SizedBox(height: 10),
             CategoryFilterChips(selected: _category, onSelected: _setCategory),
             const SizedBox(height: 8),
+            if (!_visibleOnly) ...[
+              const _CatalogCoverageNote(),
+              const SizedBox(height: 8),
+            ],
             if (_visibleOnly) ...[
               _VisibleModeInfo(
                 count: _visibleObjects.length,
@@ -186,7 +190,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                 child: TextButton.icon(
                   onPressed: () => _setQuery(''),
                   icon: const Icon(Icons.close_rounded, size: 16),
-                  label: Text('Busqueda: "$_query"'),
+                  label: Text('Búsqueda: "$_query"'),
                 ),
               ),
             const SizedBox(height: 4),
@@ -282,7 +286,7 @@ class _CatalogModeSelector extends StatelessWidget {
         Expanded(
           child: ChoiceChip(
             selected: !visibleOnly,
-            label: const Center(child: Text('Catalogo completo')),
+            label: const Center(child: Text('Catálogo completo')),
             onSelected: (_) => onChanged(false),
           ),
         ),
@@ -295,6 +299,41 @@ class _CatalogModeSelector extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _CatalogCoverageNote extends StatelessWidget {
+  const _CatalogCoverageNote();
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.info_outline_rounded,
+            size: 18,
+            color: colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Catálogo curado principalmente para objetos observables desde el hemisferio sur.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

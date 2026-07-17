@@ -50,7 +50,9 @@ final class CalibrationStarOption {
 }
 
 class CalibrationController extends ChangeNotifier {
-  static const double fineStepDegrees = 0.25;
+  // Firmware V2.1 considers movements within 15 encoder pulses as complete.
+  static const double pulseMotorToleranceDegrees = 15.0 * 360.0 / 11000.0;
+  static const double fineStepDegrees = 1.0;
   static const double visibleStarAltitudeThresholdDeg = 15.0;
   static const double minimumRecommendedSeparationDeg = 30.0;
   static const List<String> _recommendedStarOrder = [

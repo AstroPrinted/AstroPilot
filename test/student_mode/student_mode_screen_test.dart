@@ -18,12 +18,12 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('bottom navigation exposes student mode tab', (tester) async {
+  testWidgets('bottom navigation exposes educational mode tab', (tester) async {
     await tester.pumpWidget(
       AstroPilotApp(settingsService: SettingsService(), initializeBle: false),
     );
 
-    expect(find.text('Estudiante'), findsOneWidget);
+    expect(find.text('Educativo'), findsOneWidget);
   });
 
   testWidgets('shows daily counter and answer feedback with curiosity', (
@@ -33,6 +33,8 @@ void main() {
     addTearDown(controller.dispose);
 
     await tester.pumpWidget(_app(StudentModeScreen(controller: controller)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Quiz astronómico'));
     await tester.pumpAndSettle();
 
     expect(find.text('Preguntas de hoy'), findsOneWidget);
@@ -60,6 +62,8 @@ void main() {
     }
 
     await tester.pumpWidget(_app(StudentModeScreen(controller: controller)));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Quiz astronómico'));
     await tester.pumpAndSettle();
 
     expect(find.text('Meta diaria completada'), findsOneWidget);

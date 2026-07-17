@@ -1,0 +1,297 @@
+{
+  "objects": [
+    {
+      "id": "iss",
+      "name": "Estación Espacial Internacional",
+      "category": "iss",
+      "type": "space_station",
+      "shortDescription": "Laboratorio orbital habitado que rodea la Tierra en órbita baja.",
+      "longDescription": "La Estación Espacial Internacional es un laboratorio construido por varias agencias espaciales. Orbita por encima de la atmósfera densa y refleja luz solar, por esto a veces se ve como un punto brillante que cruza el cielo de forma constante.",
+      "orbit": "Órbita baja terrestre (aprox. 400-420 km de altura)",
+      "visibilityNote": "Se observa mejor cerca del amanecer o atardecer, cuando el cielo está oscuro y la estación todavía recibe luz del Sol.",
+      "facts": [
+        "Completa una vuelta alrededor de la Tierra aproximadamente cada 90 minutos.",
+        "No parpadea como un avión, su brillo suele cambiar lentamente durante el paso.",
+        "La visibilidad depende de la hora, la ubicación del observador y la iluminación solar."
+      ]
+    },
+    {
+      "id": "hubble_space_telescope",
+      "name": "Hubble Space Telescope",
+      "category": "satellites",
+      "type": "space_telescope",
+      "shortDescription": "Telescopio espacial famoso por sus imágenes del universo profundo.",
+      "longDescription": "Hubble observa desde fuera de la mayor parte de la atmósfera terrestre, lo que le permite obtener imágenes muy nítidas de nebulosas, galaxias y cúmulos estelares.",
+      "agency": "NASA / ESA",
+      "missionStatus": "Operativo",
+      "launchYear": 1990,
+      "orbit": "Órbita baja terrestre (aprox. 525-550 km de altura)",
+      "facts": [
+        "Ha permitido medir con más precisión la expansión del universo.",
+        "Sus imágenes ayudaron a popularizar la astronomía moderna.",
+        "Fue reparado y actualizado por astronautas durante misiones del transbordador espacial."
+      ]
+    },
+    {
+      "id": "starlink_constellation",
+      "name": "Starlink",
+      "category": "satellites",
+      "type": "artificial_satellite",
+      "shortDescription": "Constelación de satélites de comunicaciones en órbita baja.",
+      "longDescription": "Starlink agrupa muchos satélites pequeños que trabajan juntos para ofrecer conectividad. En ciertas noches algunos pueden verse como puntos brillantes moviéndose en fila.",
+      "agency": "SpaceX",
+      "missionStatus": "En despliegue",
+      "orbit": "Órbita baja terrestre (aprox. 340-570 km de altura, según la capa orbital)",
+      "facts": [
+        "Una constelación usa muchos satélites para cubrir grandes zonas del planeta.",
+        "Su brillo visible cambia según la geometría entre el Sol, el satélite y el observador.",
+        "Los satélites de órbita baja se desplazan rápido respecto al cielo local."
+      ]
+    },
+    {
+      "id": "gps_gnss_satellites",
+      "name": "GPS y GNSS",
+      "category": "satellites",
+      "type": "artificial_satellite",
+      "shortDescription": "Satélites que ayudan a calcular posición y tiempo con gran precisión.",
+      "longDescription": "Los sistemas GNSS, como GPS, Galileo, GLONASS y BeiDou, usan relojes muy precisos a bordo de satélites. Un receptor compara señales de varios satélites para estimar su ubicación.",
+      "missionStatus": "Operativo",
+      "orbit": "Órbita media terrestre (aprox. 19000-23200 km de altura, según el sistema)",
+      "facts": [
+        "El GPS no solo sirve para mapas, también sincroniza redes, bancos y sistemas científicos.",
+        "Un receptor necesita señales de varios satélites para estimar una posición confiable.",
+        "La precisión depende de la geometría de los satélites y de las condiciones de recepción."
+      ]
+    },
+    {
+      "id": "noaa_weather_satellites",
+      "name": "Satélites meteorológicos NOAA",
+      "category": "satellites",
+      "type": "artificial_satellite",
+      "shortDescription": "Satélites usados para observar nubes, clima y superficie terrestre.",
+      "longDescription": "Los satélites meteorológicos entregan datos esenciales para pronósticos del tiempo, monitoreo de tormentas y estudio del clima.",
+      "agency": "NOAA",
+      "missionStatus": "Familia de misiones activa",
+      "orbit": "Órbita polar baja o geoestacionaria (aprox. 800-36000 km de altura, según la misión)",
+      "facts": [
+        "Algunos satélites meteorológicos observan siempre una misma región de la Tierra.",
+        "Otros pasan por los polos y cubren todo el planeta con el tiempo.",
+        "Sus instrumentos miden luz visible, infrarroja y otras señales útiles para estudiar la atmósfera."
+      ]
+    },
+    {
+      "id": "voyager_1",
+      "name": "Voyager 1",
+      "category": "space_probes",
+      "type": "space_probe",
+      "shortDescription": "Una de las misiones más lejanas enviadas por la humanidad.",
+      "longDescription": "Voyager 1 visitó Júpiter y Saturno antes de continuar hacia el espacio interestelar. Su misión muestra cómo una nave puede seguir enviando datos décadas después del lanzamiento.",
+      "agency": "NASA",
+      "missionStatus": "Misión extendida",
+      "destination": "Júpiter, Saturno y espacio interestelar",
+      "launchYear": 1977,
+      "facts": [
+        "Lleva un disco dorado con sonidos e imágenes de la Tierra.",
+        "Aprovechó asistencias gravitacionales para ganar velocidad.",
+        "Sus señales tardan muchas horas en llegar a la Tierra."
+      ]
+    },
+    {
+      "id": "voyager_2",
+      "name": "Voyager 2",
+      "category": "space_probes",
+      "type": "space_probe",
+      "shortDescription": "Sonda que visitó los cuatro planetas gigantes exteriores.",
+      "longDescription": "Voyager 2 es la única nave que ha visitado de cerca Urano y Neptuno. Sus datos siguen siendo una referencia para estudiar el Sistema Solar exterior.",
+      "agency": "NASA",
+      "missionStatus": "Misión extendida",
+      "destination": "Júpiter, Saturno, Urano, Neptuno y espacio interestelar",
+      "launchYear": 1977,
+      "facts": [
+        "Reveló detalles de lunas, anillos y atmósferas de los planetas gigantes.",
+        "Su ruta fue posible gracias a una alineación planetaria poco común.",
+        "También lleva un disco dorado como mensaje simbólico de la humanidad."
+      ]
+    },
+    {
+      "id": "new_horizons",
+      "name": "New Horizons",
+      "category": "space_probes",
+      "type": "space_probe",
+      "shortDescription": "Misión que mostró Plutón con detalle por primera vez.",
+      "longDescription": "New Horizons sobrevoló Plutón en 2015 y reveló montañas de hielo, llanuras brillantes y una superficie mucho más activa de lo esperado.",
+      "agency": "NASA",
+      "missionStatus": "Misión extendida",
+      "destination": "Plutón, Caronte y cinturón de Kuiper",
+      "launchYear": 2006,
+      "facts": [
+        "Llegó a Plutón después de casi diez años de viaje.",
+        "También estudió objetos del cinturón de Kuiper.",
+        "Sus imágenes cambiaron la forma en que se entendía a Plutón."
+      ]
+    },
+    {
+      "id": "parker_solar_probe",
+      "name": "Parker Solar Probe",
+      "category": "space_probes",
+      "type": "space_probe",
+      "shortDescription": "Sonda diseñada para estudiar el Sol desde muy cerca.",
+      "longDescription": "Parker Solar Probe se acerca a la corona solar para medir partículas, campos magnéticos y viento solar. Usa un escudo térmico para proteger sus instrumentos.",
+      "agency": "NASA",
+      "missionStatus": "Operativa",
+      "destination": "Corona solar",
+      "launchYear": 2018,
+      "facts": [
+        "Es una de las naves más rápidas construidas por la humanidad.",
+        "Su ruta usa acercamientos a Venus para ajustar la órbita.",
+        "Ayuda a entender fenómenos que afectan el clima espacial."
+      ]
+    },
+    {
+      "id": "juno",
+      "name": "Juno",
+      "category": "space_probes",
+      "type": "space_probe",
+      "shortDescription": "Misión que estudia el interior, atmósfera y magnetosfera de Júpiter.",
+      "longDescription": "Juno orbita Júpiter con una trayectoria muy elíptica. Sus datos ayudan a conocer la estructura interna del planeta gigante y sus intensas auroras.",
+      "agency": "NASA",
+      "missionStatus": "Misión extendida",
+      "destination": "Júpiter",
+      "launchYear": 2011,
+      "facts": [
+        "Usa paneles solares incluso estando lejos del Sol.",
+        "Sus órbitas reducen la exposición a la radiación intensa de Júpiter.",
+        "Ha obtenido imágenes muy detalladas de tormentas y nubes jovianas."
+      ]
+    },
+    {
+      "id": "cassini",
+      "name": "Cassini",
+      "category": "space_probes",
+      "type": "historical_mission",
+      "shortDescription": "Misión histórica que exploró Saturno, sus anillos y sus lunas.",
+      "longDescription": "Cassini orbitó Saturno durante años y envió datos clave sobre Titán, Encélado y el sistema de anillos. Terminó con una entrada planificada en la atmósfera de Saturno.",
+      "agency": "NASA / ESA / ASI",
+      "missionStatus": "Finalizada",
+      "destination": "Saturno",
+      "launchYear": 1997,
+      "facts": [
+        "Transportó la sonda Huygens, que descendió en Titán.",
+        "Detectó chorros de material saliendo de Encélado.",
+        "Su final evitó contaminar lunas con interés astrobiológico."
+      ]
+    },
+    {
+      "id": "james_webb_space_telescope",
+      "name": "James Webb Space Telescope",
+      "category": "space_probes",
+      "type": "space_telescope",
+      "shortDescription": "Observatorio espacial infrarrojo para estudiar galaxias, estrellas y exoplanetas.",
+      "longDescription": "El telescopio James Webb observa principalmente en infrarrojo. Su gran espejo y sus instrumentos permiten estudiar objetos muy lejanos y regiones ocultas por polvo.",
+      "agency": "NASA / ESA / CSA",
+      "missionStatus": "Operativo",
+      "destination": "Punto L2 del sistema Sol-Tierra",
+      "launchYear": 2021,
+      "facts": [
+        "Tiene un escudo solar del tamaño aproximado de una cancha de tenis.",
+        "Trabaja muy frío para poder detectar señales infrarrojas débiles.",
+        "Observa desde una región estable lejos de la Tierra."
+      ]
+    },
+    {
+      "id": "perseverance",
+      "name": "Perseverance",
+      "category": "space_probes",
+      "type": "rover",
+      "shortDescription": "Rover que explora Marte y recolecta muestras de roca.",
+      "longDescription": "Perseverance estudia el cráter Jezero en Marte. Busca pistas sobre ambientes antiguos que pudieron tener agua y guarda muestras para una posible recuperación futura.",
+      "agency": "NASA",
+      "missionStatus": "Operativo",
+      "destination": "Marte",
+      "launchYear": 2020,
+      "facts": [
+        "Llevó el helicóptero Ingenuity como demostración tecnológica.",
+        "Analiza rocas marcianas con cámaras e instrumentos científicos.",
+        "Sus muestras buscan conservar pistas geológicas importantes."
+      ]
+    },
+    {
+      "id": "what_is_artificial_satellite",
+      "name": "¿Qué es un satélite artificial?",
+      "category": "curiosities",
+      "type": "curiosity",
+      "shortDescription": "Un objeto construido por humanos que orbita un cuerpo celeste.",
+      "longDescription": "Un satélite artificial puede servir para comunicación, navegación, ciencia, observación de la Tierra o tecnología. Su movimiento depende de la gravedad y de la velocidad con la que fue colocado en órbita.",
+      "facts": [
+        "La Luna es un satélite natural, mientras que Hubble e ISS son objetos artificiales.",
+        "No todos los satélites tienen el mismo tamaño, brillo ni altura.",
+        "La vida útil de un satélite puede variar desde meses hasta más de 15 años según su objetivo, órbita y combustible, y muchos reentran en la atmósfera al final de su misión."
+      ]
+    },
+    {
+      "id": "low_earth_orbit",
+      "name": "¿Qué es una órbita baja terrestre?",
+      "category": "curiosities",
+      "type": "curiosity",
+      "shortDescription": "Región orbital relativamente cercana a la Tierra, entre unos 160 y 2000 km de altura.",
+      "longDescription": "La órbita baja terrestre está por encima de la atmósfera densa, aproximadamente entre 160 y 2000 km de altura, pero mucho más cerca que la órbita de los satélites geoestacionarios. Allí se encuentran la ISS, muchos satélites de observación y varias constelaciones modernas.",
+      "facts": [
+        "Los objetos en esta región se mueven rápido sobre el cielo local.",
+        "La fricción atmosférica residual puede reducir lentamente su altura.",
+        "Es una zona útil para observación de la Tierra y misiones tripuladas."
+      ]
+    },
+    {
+      "id": "geostationary_orbit",
+      "name": "¿Qué es una órbita geoestacionaria?",
+      "category": "curiosities",
+      "type": "curiosity",
+      "shortDescription": "Órbita donde un satélite parece quedar fijo a unos 35786 km sobre el ecuador.",
+      "longDescription": "Un satélite geoestacionario orbita en el plano ecuatorial, a unos 35786 km de altura, y tarda casi lo mismo que la Tierra en rotar. Por esto parece mantenerse sobre una misma zona del planeta.",
+      "facts": [
+        "Es muy usada para comunicaciones y meteorología.",
+        "Está mucho más lejos que la órbita baja terrestre.",
+        "Desde el suelo parece casi quieta comparada con satélites más cercanos."
+      ]
+    },
+    {
+      "id": "why_iss_visible",
+      "name": "¿Por qué se puede ver la ISS?",
+      "category": "curiosities",
+      "type": "curiosity",
+      "shortDescription": "Porque refleja luz solar mientras el cielo del observador está oscuro.",
+      "longDescription": "La ISS no brilla por luz propia. Se ve cuando refleja luz del Sol hacia el observador, especialmente cerca del amanecer o atardecer.",
+      "facts": [
+        "Si entra en la sombra de la Tierra, puede desaparecer gradualmente.",
+        "Su brillo puede superar al de muchas estrellas durante buenos pasos.",
+        "La hora y dirección del paso cambian día a día."
+      ]
+    },
+    {
+      "id": "what_is_tle",
+      "name": "¿Qué es un TLE?",
+      "category": "curiosities",
+      "type": "curiosity",
+      "shortDescription": "Un formato compacto para describir la órbita de un satélite.",
+      "longDescription": "Un TLE contiene números que permiten estimar la posición de un satélite con modelos orbitales. Debe actualizarse con frecuencia porque las órbitas cambian con el tiempo.",
+      "facts": [
+        "Los datos antiguos pueden producir predicciones poco confiables.",
+        "El cálculo orbital requiere fecha, hora y ubicación del observador.",
+        "En esta versión el contenido básico funciona sin datos orbitales externos."
+      ]
+    },
+    {
+      "id": "visible_satellites",
+      "name": "¿Por qué no todos los satélites son visibles?",
+      "category": "curiosities",
+      "type": "curiosity",
+      "shortDescription": "El brillo visible depende de tamaño, altura, orientación e iluminación.",
+      "longDescription": "Aunque hay muchos satélites en órbita, solo algunos son visibles a simple vista en condiciones favorables. La contaminación lumínica, las nubes y la geometría con el Sol influyen mucho.",
+      "facts": [
+        "Un satélite puede estar sobre el horizonte y aun así ser demasiado débil.",
+        "Los pasos más brillantes suelen ocurrir cuando el cielo está oscuro y el satélite recibe luz solar.",
+        "La visibilidad real siempre depende de las condiciones locales."
+      ]
+    }
+  ]
+}

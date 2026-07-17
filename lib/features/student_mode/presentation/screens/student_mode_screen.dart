@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../catalog/data/repository/celestial_catalog_repository.dart';
+import '../../../space_education/presentation/screens/space_education_screen.dart';
 import '../../data/student_quiz_repository.dart';
 import '../../data/student_quiz_storage.dart';
 import '../../domain/models/student_quiz_question.dart';
@@ -45,26 +46,75 @@ class _StudentModeScreenState extends State<StudentModeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Modo estudiante')),
+      appBar: AppBar(title: const Text('Modo educativo')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        children: [
+          const _HubInfoCard(),
+          const SizedBox(height: 14),
+          _EducationHubCard(
+            icon: Icons.quiz_rounded,
+            title: 'Quiz astronómico',
+            description:
+                'Responde una tanda diaria de preguntas fáciles y medias con explicaciones breves.',
+            onTap: _openQuiz,
+          ),
+          const SizedBox(height: 10),
+          _EducationHubCard(
+            icon: Icons.satellite_alt_rounded,
+            title: 'Satélites y exploración espacial',
+            description:
+                'Lee fichas sobre la ISS, satélites artificiales, sondas y curiosidades. Funciona sin internet.',
+            onTap: _openSpaceEducation,
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openQuiz() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => _StudentQuizScreen(controller: _controller),
+      ),
+    );
+  }
+
+  void _openSpaceEducation() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const SpaceEducationScreen()));
+  }
+}
+
+class _StudentQuizScreen extends StatelessWidget {
+  final StudentQuizController controller;
+
+  const _StudentQuizScreen({required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Quiz astronómico')),
       body: AnimatedBuilder(
-        animation: _controller,
+        animation: controller,
         builder: (context, _) {
-          if (_controller.isLoading) {
+          if (controller.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final error = _controller.errorMessage;
+          final error = controller.errorMessage;
           if (error != null) {
             return _CenteredMessage(
               icon: Icons.error_outline_rounded,
               title: 'No se pudo cargar el quiz',
               message: error,
               actionLabel: 'Reintentar',
-              onAction: _controller.load,
+              onAction: controller.load,
             );
           }
 
-          if (!_controller.hasQuestions) {
+          if (!controller.hasQuestions) {
             return const _CenteredMessage(
               icon: Icons.school_outlined,
               title: 'Sin preguntas',
@@ -75,15 +125,91 @@ class _StudentModeScreenState extends State<StudentModeScreen> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
             children: [
-              _DailySummaryCard(controller: _controller),
+              _DailySummaryCard(controller: controller),
               const SizedBox(height: 14),
-              if (_controller.currentQuestion == null)
-                _DailyLimitCard(controller: _controller)
+              if (controller.currentQuestion == null)
+                _DailyLimitCard(controller: controller)
               else
-                _QuestionCard(controller: _controller),
+                _QuestionCard(controller: controller),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _HubInfoCard extends StatelessWidget {
+  const _HubInfoCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(
+              Icons.school_rounded,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text(
+                'Aprende astronomía y exploración espacial desde secciones educativas. Estas tarjetas no controlan el telescopio ni envían comandos.',
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EducationHubCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String description;
+  final VoidCallback onTap;
+
+  const _EducationHubCard({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: colorScheme.primary.withValues(alpha: 0.14),
+                child: Icon(icon, color: colorScheme.primary),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 6),
+                    Text(description),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded),
+            ],
+          ),
+        ),
       ),
     );
   }
