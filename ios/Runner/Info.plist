@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Astroprintedlogicincludedgeoengine</string>
+	<string>AstroPilot</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -24,6 +24,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>AstroPilot usa Bluetooth para conectar con la montura del telescopio y enviar comandos de movimiento.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>AstroPilot usa tu ubicación mientras utilizas la app para calcular la posición de los astros y orientar el telescopio.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

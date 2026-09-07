@@ -217,9 +217,9 @@ class SettingsService extends ChangeNotifier implements ObserverDataProvider {
   }
 
   Future<bool> _ensureLocationPermission() async {
-    var status = await Permission.location.status;
+    var status = await Permission.locationWhenInUse.status;
     if (status.isDenied) {
-      status = await Permission.location.request();
+      status = await Permission.locationWhenInUse.request();
     }
 
     if (status.isGranted || status.isLimited) return true;

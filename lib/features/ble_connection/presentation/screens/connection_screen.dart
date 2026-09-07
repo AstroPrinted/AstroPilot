@@ -16,19 +16,12 @@ class ConnectionScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('AstroPilot'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {},
-          ),
+          IconButton(icon: const Icon(Icons.settings), onPressed: () {}),
         ],
       ),
       body: Consumer<BleConnectionController>(
         builder: (context, controller, _) {
           final state = controller.state;
-
-          if (!state.isBluetoothEnabled) {
-            return const _BluetoothOffView();
-          }
 
           if (!state.arePermissionsGranted) {
             return _PermissionDeniedView(
@@ -37,16 +30,23 @@ class ConnectionScreen extends StatelessWidget {
             );
           }
 
+          if (!state.isBluetoothEnabled) {
+            return const _BluetoothOffView();
+          }
+
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
                 ConnectionStatusCard(
-                  isConnected: state.connectionStatus == BleConnectionStatus.connected,
-                  isConnecting: state.connectionStatus == BleConnectionStatus.connecting,
+                  isConnected:
+                      state.connectionStatus == BleConnectionStatus.connected,
+                  isConnecting:
+                      state.connectionStatus == BleConnectionStatus.connecting,
                 ),
                 const SizedBox(height: 16),
-                if (state.connectionStatus != BleConnectionStatus.connected) ...[
+                if (state.connectionStatus !=
+                    BleConnectionStatus.connected) ...[
                   ScanButton(
                     isScanning: state.scanStatus == BleScanStatus.scanning,
                     onToggle: controller.toggleScan,
@@ -66,12 +66,14 @@ class ConnectionScreen extends StatelessWidget {
                           )
                         : ListView.separated(
                             itemCount: state.discoveredDevices.length,
-                            separatorBuilder: (_, __) => const SizedBox(height: 8),
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 8),
                             itemBuilder: (context, index) {
                               final device = state.discoveredDevices[index];
                               return DeviceListTile(
                                 device: device,
-                                onConnect: () => controller.connectToDevice(device),
+                                onConnect: () =>
+                                    controller.connectToDevice(device),
                                 isConnecting: false,
                               );
                             },
@@ -117,7 +119,11 @@ class _BluetoothOffView extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.bluetooth_disabled, size: 64, color: Color(0xFF94A3B8)),
+          const Icon(
+            Icons.bluetooth_disabled,
+            size: 64,
+            color: Color(0xFF94A3B8),
+          ),
           const SizedBox(height: 16),
           const Text(
             'Bluetooth está desactivado.\nHabilítalo para continuar.',
@@ -149,7 +155,7 @@ class _PermissionDeniedView extends StatelessWidget {
           const Icon(Icons.lock_outline, size: 64, color: Color(0xFFF59E0B)),
           const SizedBox(height: 16),
           const Text(
-            'Permisos de Bluetooth y ubicación\nrequeridos para escanear dispositivos.',
+            'Autoriza los permisos solicitados por la app\npara buscar dispositivos Bluetooth.',
             textAlign: TextAlign.center,
             style: TextStyle(color: Color(0xFF94A3B8), fontSize: 16),
           ),

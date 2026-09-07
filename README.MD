@@ -1,5 +1,8 @@
 # AstroPilot — Sistema de Navegación Híbrida para Telescopios
 
+Para preparar la app en iPhone, consultar la [guía de iOS](docs/IOS.md):
+configuración incluida, compilación en Mac, firma y pruebas físicas pendientes.
+
 ## Descripción General
 
 AstroPilot es un sistema de	control GoTo para telescopios astronómicos implementado en Flutter/Dart. Conecta un dispositivo móvil mediante Bluetooth Low Energy (BLE) a un microcontrolador ESP32 que controla una	montura ecuatorial o altazimutal. La aplicación calcula coordenadas horizontales (Altitud/Azimut) en tiempo real a partir de coordenadas ecuatoriales J2000, aplica correcciones de precesión, nutación y refracción atmosférica, y	envía comandos de movimiento al hardware.

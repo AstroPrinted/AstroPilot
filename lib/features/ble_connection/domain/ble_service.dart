@@ -5,11 +5,19 @@ import '../data/models/ble_device_state.dart';
 class BleService {
   final Duration _connectionTimeout = const Duration(seconds: 15);
 
-  Stream<bool> get bluetoothStateStream =>
-      FlutterBluePlus.adapterState.map((state) => state == BluetoothAdapterState.on);
+  Stream<bool> get bluetoothStateStream => FlutterBluePlus.adapterState
+      .where((state) => state != BluetoothAdapterState.unknown)
+      .map((state) => state == BluetoothAdapterState.on);
 
   Future<bool> isBluetoothEnabled() async {
-    final state = await FlutterBluePlus.adapterState.first;
+    // CoreBluetooth initially reports unknown while its manager initializes.
+    final state = await FlutterBluePlus.adapterState
+        .where((state) => state != BluetoothAdapterState.unknown)
+        .first
+        .timeout(
+          const Duration(seconds: 10),
+          onTimeout: () => BluetoothAdapterState.unknown,
+        );
     return state == BluetoothAdapterState.on;
   }
 
@@ -18,12 +26,17 @@ class BleService {
 
     await for (final event in FlutterBluePlus.scanResults) {
       final devices = event
-          .where((r) => r.device.platformName.isNotEmpty)
-          .map((r) => BleDevice(
-                id: r.device.remoteId.str,
-                name: r.device.platformName,
-                rssi: r.rssi,
-              ))
+          .map(
+            (r) => BleDevice(
+              id: r.device.remoteId.str,
+              name: r.advertisementData.advName.isNotEmpty
+                  ? r.advertisementData.advName
+                  : r.device.platformName.isNotEmpty
+                  ? r.device.platformName
+                  : 'Dispositivo BLE sin nombre',
+              rssi: r.rssi,
+            ),
+          )
           .toList();
       yield devices;
     }

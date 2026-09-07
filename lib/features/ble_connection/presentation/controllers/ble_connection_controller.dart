@@ -17,8 +17,8 @@ class BleConnectionController extends ChangeNotifier {
   BleConnectionController(this._bleService);
 
   Future<void> init() async {
-    final btEnabled = await _bleService.isBluetoothEnabled();
     final perms = await _requestPermissions();
+    final btEnabled = perms && await _bleService.isBluetoothEnabled();
 
     _state = _state.copyWith(
       isBluetoothEnabled: btEnabled,
@@ -33,6 +33,11 @@ class BleConnectionController extends ChangeNotifier {
   }
 
   Future<bool> _requestPermissions() async {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      // iOS has one Bluetooth permission; GPS is requested in Settings.
+      return (await Permission.bluetooth.request()).isGranted;
+    }
+
     final status = await [
       Permission.bluetoothScan,
       Permission.bluetoothConnect,
@@ -44,7 +49,7 @@ class BleConnectionController extends ChangeNotifier {
 
   Future<void> requestPermissions() async {
     final perms = await _requestPermissions();
-    final btEnabled = await _bleService.isBluetoothEnabled();
+    final btEnabled = perms && await _bleService.isBluetoothEnabled();
 
     _state = _state.copyWith(
       isBluetoothEnabled: btEnabled,
@@ -89,10 +94,21 @@ class BleConnectionController extends ChangeNotifier {
     );
     notifyListeners();
 
-    _scanSubscription = _bleService.scanDevices().listen((devices) {
-      _state = _state.copyWith(discoveredDevices: devices);
-      notifyListeners();
-    });
+    _scanSubscription = _bleService.scanDevices().listen(
+      (devices) {
+        _state = _state.copyWith(discoveredDevices: devices);
+        notifyListeners();
+      },
+      onError: (Object error) {
+        _state = _state.copyWith(
+          scanStatus: BleScanStatus.stopped,
+          errorMessage:
+              'No se pudo buscar dispositivos. Revisa Bluetooth y los permisos e intenta de nuevo.',
+        );
+        notifyListeners();
+      },
+      cancelOnError: true,
+    );
   }
 
   Future<void> connectToDevice(BleDevice device) async {
