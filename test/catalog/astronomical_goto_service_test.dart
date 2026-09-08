@@ -127,6 +127,35 @@ void main() {
     expect(sent, isFalse);
   });
 
+  test(
+    'planning time permits preview but never sends a physical GoTo',
+    () async {
+      final service = AstronomicalGotoService(
+        observerDataProvider: const _FakeObserverDataProvider(isLive: false),
+        calibrationRepository: repository,
+        positionResolver: (_, __) => _position(30, 30),
+      );
+      expect(service.calculateCurrentPosition(_object()).altitudeDeg, 30);
+      var sent = false;
+      await expectLater(
+        service.sendGoto(
+          object: _object(),
+          send: (_, __) async {
+            sent = true;
+          },
+        ),
+        throwsA(
+          isA<StateError>().having(
+            (e) => e.message,
+            'message',
+            contains('hora actual'),
+          ),
+        ),
+      );
+      expect(sent, isFalse);
+    },
+  );
+
   test('blocks solar GoTo', () async {
     final service = _service(repository, _position(30, 30));
     var sent = false;
@@ -180,7 +209,8 @@ AltAzResult _position(double altitude, double azimuth) {
 }
 
 class _FakeObserverDataProvider implements ObserverDataProvider {
-  const _FakeObserverDataProvider();
+  final bool isLive;
+  const _FakeObserverDataProvider({this.isLive = true});
 
   @override
   ObserverData current() {
@@ -189,6 +219,7 @@ class _FakeObserverDataProvider implements ObserverDataProvider {
       lonDeg: -70.0,
       heightMeters: 0,
       utc: DateTime.utc(2026),
+      isLive: isLive,
     );
   }
 }

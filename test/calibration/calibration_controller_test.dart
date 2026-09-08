@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/services/alignment_session.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/data/calibration_repository.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/data/calibration_storage.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_flow_step.dart';
@@ -24,10 +27,10 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  test('manual nudge step exceeds pulse motor tolerance', () {
+  test('manual nudge step exceeds nominal motor half-step', () {
     expect(
       CalibrationController.fineStepDegrees,
-      greaterThan(CalibrationController.pulseMotorToleranceDegrees),
+      greaterThan(CalibrationController.nominalMotorStepDegrees),
     );
   });
 
@@ -204,9 +207,149 @@ void main() {
       );
     },
   );
+  test('failed SET_POSITION never saves an alignment', () async {
+    final controller = _controller(_position(45, 120));
+    addTearDown(controller.dispose);
+    await _selectInitialStar(controller);
+    await controller.confirmCenteredReference(
+      setInitialPosition: (_, __) async =>
+          throw StateError('ERROR: motores activos'),
+    );
+    expect(controller.isInitialAligned, isFalse);
+    expect(controller.flowStep, CalibrationFlowStep.failed);
+    expect(await CalibrationStorage().loadInitialAlignmentResult(), isNull);
+  });
+
+  test(
+    'disconnect while SET_POSITION is pending invalidates its late reply',
+    () async {
+      final controller = _controller(_position(45, 120));
+      addTearDown(controller.dispose);
+      await _selectInitialStar(controller);
+      final acknowledgement = Completer<void>();
+      final confirming = controller.confirmCenteredReference(
+        setInitialPosition: (_, __) => acknowledgement.future,
+      );
+      AlignmentSession.invalidate();
+      acknowledgement.complete();
+      await confirming;
+      expect(controller.isInitialAligned, isFalse);
+      expect(await CalibrationStorage().loadInitialAlignmentResult(), isNull);
+    },
+  );
+
+  test('reconnection clears an already loaded alignment', () async {
+    final controller = _controller(_position(45, 120));
+    addTearDown(controller.dispose);
+    await _selectInitialStar(controller);
+    await controller.confirmCenteredReference(
+      setInitialPosition: (_, __) async {},
+    );
+    expect(controller.isInitialAligned, isTrue);
+    AlignmentSession.invalidate();
+    expect(controller.isInitialAligned, isFalse);
+    expect(await CalibrationStorage().loadInitialAlignmentResult(), isNull);
+  });
+
+  test('partial failed nudge cannot be confirmed as a correction', () async {
+    final controller = _controller(_position(45, 120));
+    addTearDown(controller.dispose);
+    await _selectInitialStar(controller);
+    await controller.confirmCenteredReference(
+      setInitialPosition: (_, __) async {},
+    );
+    controller.startCorrectionMethod(CalibrationMethod.oneStar);
+    await controller.selectStar(controller.calibrationStarOptions.first);
+    await controller.sendGotoToReference((_, __) async {});
+    await controller.nudge(
+      CalibrationNudgeDirection.right,
+      (_, __) async => throw StateError('movimiento cancelado por STOP'),
+    );
+    await controller.confirmCenteredReference();
+    expect(controller.hasCorrectionCalibration, isFalse);
+    expect(controller.flowStep, CalibrationFlowStep.failed);
+  });
+
+  test(
+    'correction uses reported motor steps and waits for movement completion',
+    () async {
+      var position = (altitude: 45.0, azimuth: 120.0);
+      final controller = _controller(
+        _position(45, 120),
+        motorPosition: () => position,
+      );
+      addTearDown(controller.dispose);
+      await _selectInitialStar(controller);
+      await controller.confirmCenteredReference(
+        setInitialPosition: (_, __) async {},
+      );
+      controller.startCorrectionMethod(CalibrationMethod.oneStar);
+      await controller.selectStar(controller.calibrationStarOptions.first);
+      final moving = Completer<void>();
+      final goto = controller.sendGotoToReference((_, __) => moving.future);
+      await controller.confirmCenteredReference();
+      expect(controller.hasCorrectionCalibration, isFalse);
+      moving.complete();
+      await goto;
+      position = (altitude: 45.0, azimuth: 120.966797);
+      await controller.nudge(CalibrationNudgeDirection.right, (_, __) async {});
+      await controller.confirmCenteredReference();
+      expect(
+        controller.correctionCalibrationResult!.azimuthOffset,
+        closeTo(0.966797, 0.000001),
+      );
+    },
+  );
+
+  test(
+    'absolute manual adjustment crosses north by the shortest path',
+    () async {
+      final controller = _controller(
+        _position(45, 120),
+        motorPosition: () => (altitude: 0.0, azimuth: 359.0),
+      );
+      addTearDown(controller.dispose);
+      await _selectInitialStar(controller);
+      await controller.nudge(CalibrationNudgeDirection.left, (_, __) async {});
+      double? sentAzimuth;
+      await controller.moveToAdjustedPosition(
+        altitude: 0,
+        azimuth: 1,
+        sendManualMove: (_, az) async {
+          sentAzimuth = az;
+        },
+      );
+      expect(sentAzimuth, 2.0);
+    },
+  );
+
+  test('planning time cannot establish a physical alignment', () async {
+    final controller = _controller(_position(45, 120), isLive: false);
+    addTearDown(controller.dispose);
+    await _selectInitialStar(controller);
+    var sent = false;
+    await controller.confirmCenteredReference(
+      setInitialPosition: (_, __) async {
+        sent = true;
+      },
+    );
+    expect(sent, isFalse);
+    expect(controller.isInitialAligned, isFalse);
+    expect(controller.errorMessage, contains('hora actual'));
+  });
 }
 
-CalibrationController _controller(AltAzResult position) {
+Future<void> _selectInitialStar(CalibrationController controller) async {
+  await controller.loadSavedCalibration();
+  controller.startInitialAlignment();
+  await controller.selectStar(controller.calibrationStarOptions.first);
+}
+
+CalibrationController _controller(
+  AltAzResult position, {
+  bool isLive = true,
+  ({double altitude, double azimuth})? Function()? motorPosition,
+}) {
   return CalibrationController(
     catalogRepository: CelestialCatalogRepository(),
     calibrationRepository: CalibrationRepository(storage: CalibrationStorage()),
@@ -214,7 +357,8 @@ CalibrationController _controller(AltAzResult position) {
     calibrationService: const CalibrationService(
       correctionService: PointingCorrectionService(),
     ),
-    observerDataProvider: const _FakeObserverDataProvider(),
+    observerDataProvider: _FakeObserverDataProvider(isLive: isLive),
+    motorPositionProvider: motorPosition,
   );
 }
 
@@ -243,7 +387,8 @@ class _FixedAstronomyPositionService extends AstronomyPositionService {
 }
 
 class _FakeObserverDataProvider implements ObserverDataProvider {
-  const _FakeObserverDataProvider();
+  final bool isLive;
+  const _FakeObserverDataProvider({this.isLive = true});
 
   @override
   ObserverData current() {
@@ -252,6 +397,7 @@ class _FakeObserverDataProvider implements ObserverDataProvider {
       lonDeg: -70,
       heightMeters: 0,
       utc: DateTime.utc(2026),
+      isLive: isLive,
     );
   }
 }

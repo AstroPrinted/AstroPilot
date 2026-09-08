@@ -31,6 +31,7 @@ class SettingsService extends ChangeNotifier implements ObserverDataProvider {
       lonDeg: _state.lonDeg,
       heightMeters: _state.heightMeters,
       utc: _state.effectiveUtc,
+      isLive: !_state.isCustomTime,
     );
   }
 

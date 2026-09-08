@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../domain/models/calibration_result.dart';
+import '../domain/services/alignment_session.dart';
 
 class CalibrationStorage {
   static const _currentCalibrationKey = 'astropilot.calibration.current';
@@ -34,8 +35,9 @@ class CalibrationStorage {
   }
 
   Future<void> saveInitialAlignmentResult(CalibrationResult result) async {
-    await _saveResult(_initialAlignmentKey, result);
-    await _saveResult(_currentCalibrationKey, result);
+    final session = AlignmentSession.token;
+    await _saveResult(_initialAlignmentKey, result, session: session);
+    await _saveResult(_currentCalibrationKey, result, session: session);
   }
 
   Future<void> saveCorrectionCalibrationResult(CalibrationResult result) async {
@@ -64,6 +66,7 @@ class CalibrationStorage {
     try {
       final decoded = jsonDecode(raw);
       if (decoded is! Map<String, dynamic>) return null;
+      if (decoded['connectionSession'] != AlignmentSession.token) return null;
       return CalibrationResult.fromJson(decoded);
     } catch (error) {
       debugPrint('[Calibration] Stored estimated correction ignored: $error');
@@ -79,9 +82,20 @@ class CalibrationStorage {
     await saveCorrectionCalibrationResult(result);
   }
 
-  Future<void> _saveResult(String key, CalibrationResult result) async {
+  Future<void> _saveResult(
+    String key,
+    CalibrationResult result, {
+    String? session,
+  }) async {
+    session ??= AlignmentSession.token;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(key, jsonEncode(result.toJson()));
+    if (session != AlignmentSession.token) {
+      throw StateError('La conexión cambió antes de guardar.');
+    }
+    await prefs.setString(
+      key,
+      jsonEncode({...result.toJson(), 'connectionSession': session}),
+    );
   }
 
   Future<void> clearCurrentResult() async {

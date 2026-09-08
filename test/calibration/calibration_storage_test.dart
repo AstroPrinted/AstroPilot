@@ -9,6 +9,7 @@ import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/m
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/correction_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/services/alignment_session.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -50,40 +51,53 @@ void main() {
     expect(loaded.azimuthOffset, -3.25);
   });
 
-  test('loads old saved result without status warnings or objectId', () async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      'astropilot.calibration.current',
-      jsonEncode({
-        'altitudeOffset': 2.0,
-        'azimuthOffset': -4.0,
-        'method': 'twoStars',
-        'points': [
-          {
-            'objectName': 'Legacy Star',
-            'calculatedAltitude': 30.0,
-            'calculatedAzimuth': 40.0,
-            'adjustedAltitude': 29.0,
-            'adjustedAzimuth': 41.0,
-            'altitudeError': 1.0,
-            'azimuthError': -1.0,
-            'timestamp': DateTime.utc(2026).toIso8601String(),
-          },
-        ],
-        'createdAt': DateTime.utc(2026, 1, 2).toIso8601String(),
-      }),
+  test(
+    'old saved references without a connection session are invalid',
+    () async {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'astropilot.calibration.current',
+        jsonEncode({
+          'altitudeOffset': 2.0,
+          'azimuthOffset': -4.0,
+          'method': 'twoStars',
+          'points': [
+            {
+              'objectName': 'Legacy Star',
+              'calculatedAltitude': 30.0,
+              'calculatedAzimuth': 40.0,
+              'adjustedAltitude': 29.0,
+              'adjustedAzimuth': 41.0,
+              'altitudeError': 1.0,
+              'azimuthError': -1.0,
+              'timestamp': DateTime.utc(2026).toIso8601String(),
+            },
+          ],
+          'createdAt': DateTime.utc(2026, 1, 2).toIso8601String(),
+        }),
+      );
+
+      final loaded = await storage.loadCorrectionCalibrationResult();
+
+      expect(loaded, isNull);
+    },
+  );
+
+  test('a new connection invalidates saved alignment and correction', () async {
+    final result = CalibrationResult(
+      altitudeOffset: 0,
+      azimuthOffset: 0,
+      stage: CalibrationStage.initialAlignment,
+      correctionModel: CorrectionModel.none,
+      method: CalibrationMethod.oneStar,
+      status: CalibrationStatus.calibrated,
+      points: [_point('star', 'Star')],
+      createdAt: DateTime.now(),
     );
-
-    final loaded = await storage.loadCorrectionCalibrationResult();
-
-    expect(loaded, isNotNull);
-    expect(loaded!.method, CalibrationMethod.twoStars);
-    expect(loaded.stage, CalibrationStage.correctionCalibration);
-    expect(loaded.correctionModel, CorrectionModel.twoStarCorrection);
-    expect(loaded.status, CalibrationStatus.calibratedTwoStars);
-    expect(loaded.warnings, isEmpty);
-    expect(loaded.points.single.objectId, 'Legacy Star');
-    expect(loaded.points.single.objectName, 'Legacy Star');
+    await storage.saveInitialAlignmentResult(result);
+    expect(await storage.loadInitialAlignmentResult(), isNotNull);
+    AlignmentSession.invalidate();
+    expect(await storage.loadInitialAlignmentResult(), isNull);
   });
 }
 

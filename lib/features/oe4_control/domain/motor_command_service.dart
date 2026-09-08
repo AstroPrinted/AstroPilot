@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:convert';
 
-import 'package:flutter/services.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import '../../calibration/domain/services/alignment_session.dart';
+import 'motor_reply_protocol.dart';
 
 class MotorCommandService {
   static final Guid serviceUuid = Guid('6e400001-b5a3-f393-e0a9-e50e24dcca9e');
@@ -14,6 +14,39 @@ class MotorCommandService {
   BluetoothCharacteristic? _rxCharacteristic;
   StreamSubscription<List<int>>? _notifySubscription;
   String? _cachedDeviceId;
+  Future<void>? _discovery;
+  late final MotorReplyProtocol _replies;
+  ({double altitude, double azimuth})? motorPosition;
+
+  MotorCommandService() {
+    _replies = MotorReplyProtocol(onMessage: _onResponse);
+    AlignmentSession.changes.addListener(_onSessionChanged);
+  }
+
+  void _onSessionChanged() {
+    motorPosition = null;
+    _replies.disconnect();
+    _rxCharacteristic = null;
+    _cachedDeviceId = null;
+    _discovery = null;
+    unawaited(_notifySubscription?.cancel());
+    _notifySubscription = null;
+  }
+
+  void _onResponse(String message) {
+    if (message.startsWith('STATUS ->')) {
+      final match = RegExp(
+        r'alt=-?\d+ pasos \(([-\d.]+) deg\), az=-?\d+ pasos \(([-\d.]+) deg\)',
+      ).firstMatch(message);
+      if (match != null) {
+        motorPosition = (
+          altitude: double.parse(match.group(1)!),
+          azimuth: double.parse(match.group(2)!),
+        );
+      }
+    }
+    _responseController.add(message);
+  }
 
   Stream<String> get responseStream => _responseController.stream;
 
@@ -38,6 +71,19 @@ class MotorCommandService {
       'cmd': 'NUDGE',
       'dAlt': _jsonNumber(deltaAlt),
       'dAz': _jsonNumber(deltaAz),
+    });
+  }
+
+  /// Bench movement in motor coordinates; it does not establish star alignment.
+  Future<String> sendBenchMoveCommand(
+    String deviceId, {
+    required double alt,
+    required double az,
+  }) {
+    return _sendCommand(deviceId, {
+      'cmd': 'MOVE',
+      'alt': _jsonNumber(alt),
+      'az': _jsonNumber(az),
     });
   }
 
@@ -88,28 +134,33 @@ class MotorCommandService {
     String deviceId,
     Map<String, Object> command,
   ) async {
-    await _ensureCharacteristics(deviceId);
-    final json = jsonEncode(command);
-    final data = utf8.encode(json);
+    final session = AlignmentSession.token;
+    final discovery = _discovery ??= _ensureCharacteristics(deviceId);
     try {
-      await _rxCharacteristic!.write(data, withoutResponse: false);
-    } on PlatformException catch (e) {
-      if (!_isStaleGattWriteError(e)) rethrow;
-
-      await _resetCharacteristics(BluetoothDevice.fromId(deviceId));
-      await _ensureCharacteristics(deviceId);
-      await _rxCharacteristic!.write(data, withoutResponse: false);
+      await discovery;
+    } finally {
+      if (identical(_discovery, discovery)) _discovery = null;
     }
-    return json;
+    if (session != AlignmentSession.token) {
+      throw StateError('La conexión cambió. Repite el comando.');
+    }
+    return _replies.send(command, (data) async {
+      // Retrying a movement after an uncertain write can duplicate that movement.
+      await _rxCharacteristic!.write(data, withoutResponse: false);
+    });
   }
 
   Future<void> _ensureCharacteristics(String deviceId) async {
     if (_cachedDeviceId == deviceId && _rxCharacteristic != null) return;
+    final session = AlignmentSession.token;
 
     final device = BluetoothDevice.fromId(deviceId);
     await _resetCharacteristics(device);
 
     final services = await _discoverServicesWithRetry(device);
+    if (session != AlignmentSession.token) {
+      throw StateError('La conexión cambió durante la búsqueda de servicios.');
+    }
     final service = _findService(services, serviceUuid);
     if (service == null) {
       throw StateError(
@@ -135,16 +186,22 @@ class MotorCommandService {
       );
     }
 
-    _rxCharacteristic = rx;
-    _cachedDeviceId = deviceId;
-
     if (tx.properties.notify || tx.properties.indicate) {
       await tx.setNotifyValue(true);
+      if (session != AlignmentSession.token) {
+        throw StateError('La conexión cambió al activar notificaciones.');
+      }
       _notifySubscription = tx.onValueReceived.listen((value) {
-        if (value.isEmpty) return;
-        _responseController.add(utf8.decode(value, allowMalformed: true));
+        if (value.isEmpty || session != AlignmentSession.token) return;
+        _replies.addBytes(value);
       });
+    } else {
+      throw StateError(
+        'El firmware debe permitir notificaciones para confirmar los comandos.',
+      );
     }
+    _rxCharacteristic = rx;
+    _cachedDeviceId = deviceId;
   }
 
   Future<List<BluetoothService>> _discoverServicesWithRetry(
@@ -178,12 +235,6 @@ class MotorCommandService {
     _rxCharacteristic = null;
     _cachedDeviceId = null;
     await _tryClearGattCache(device);
-  }
-
-  bool _isStaleGattWriteError(PlatformException e) {
-    final details = '${e.message ?? ''} ${e.details ?? ''}'.toLowerCase();
-    return e.code == 'writeCharacteristic' &&
-        details.contains('primary service not found');
   }
 
   num _jsonNumber(double value) {
@@ -233,6 +284,8 @@ class MotorCommandService {
   }
 
   Future<void> dispose() async {
+    AlignmentSession.changes.removeListener(_onSessionChanged);
+    _replies.disconnect();
     await _notifySubscription?.cancel();
     await _responseController.close();
   }

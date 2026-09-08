@@ -52,7 +52,10 @@ class AstroPilotApp extends StatelessWidget {
           },
         ),
         ChangeNotifierProvider(
-          create: (_) => Oe4ControlController(MotorCommandService()),
+          create: (context) => Oe4ControlController(
+            MotorCommandService(),
+            connection: context.read<BleConnectionController>(),
+          ),
         ),
         ChangeNotifierProvider(
           create: (context) => CalibrationController(
@@ -65,6 +68,8 @@ class AstroPilotApp extends StatelessWidget {
               correctionService: PointingCorrectionService(),
             ),
             observerDataProvider: context.read<SettingsService>(),
+            motorPositionProvider: () =>
+                context.read<Oe4ControlController>().motorPosition,
           ),
         ),
       ],

@@ -4,6 +4,7 @@ import '../../calibration/data/calibration_repository.dart';
 import '../../calibration/domain/models/calibration_result.dart';
 import '../../calibration/domain/services/astronomy_position_service.dart';
 import '../../calibration/domain/services/pointing_correction_service.dart';
+import '../../calibration/domain/services/alignment_session.dart';
 import '../../observation/domain/models/alt_az_result.dart';
 import '../../observation/domain/models/observer_data.dart';
 import '../../observation/domain/services/observer_data_provider.dart';
@@ -108,6 +109,12 @@ class AstronomicalGotoService {
   }
 
   Future<AstronomicalGotoCommand> prepareCommand(CelestialObject object) async {
+    final connectionSession = AlignmentSession.token;
+    if (!observerDataProvider.current().isLive) {
+      throw StateError(
+        'Activa Usar hora actual en Configuración antes de apuntar.',
+      );
+    }
     if (_isSun(object)) {
       throw StateError('GoTo solar bloqueado por seguridad ocular.');
     }
@@ -122,6 +129,9 @@ class AstronomicalGotoService {
 
     final initialAlignment = await loadInitialAlignment();
     final correctionCalibration = await loadCorrectionCalibration();
+    if (connectionSession != AlignmentSession.token) {
+      throw StateError('La conexión cambió. Repite la alineación.');
+    }
     debugPrint(
       '[AstronomicalGoTo] Initial alignment found: ${initialAlignment != null}',
     );

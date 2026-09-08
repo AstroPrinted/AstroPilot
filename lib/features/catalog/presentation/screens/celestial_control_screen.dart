@@ -192,7 +192,12 @@ class _CelestialControlScreenState extends State<CelestialControlScreen> {
     required double altitude,
     required double azimuth,
   }) async {
-    await controller.sendGoto(deviceId, alt: altitude, az: azimuth);
+    await controller.sendGoto(
+      deviceId,
+      alt: altitude,
+      az: azimuth,
+      throwOnError: true,
+    );
     final error = controller.errorMessage;
     if (error != null) throw StateError(error);
   }
@@ -599,7 +604,7 @@ class _ActionsCard extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         OutlinedButton.icon(
-          onPressed: isConnected && !primaryBusy ? onStop : null,
+          onPressed: isConnected ? onStop : null,
           icon: const Icon(Icons.stop_circle_outlined),
           label: const Text('STOP'),
         ),

@@ -45,6 +45,7 @@ class CelestialControlController extends ChangeNotifier {
   bool _fineTuneInFlight = false;
   bool _isTracking = false;
   bool _trackingTickInFlight = false;
+  int _stopGeneration = 0;
   String? _errorMessage;
   String? _statusMessage;
   AltAzResult? _currentPosition;
@@ -116,7 +117,9 @@ class CelestialControlController extends ChangeNotifier {
   Future<void> startTracking(CelestialGotoSender send) async {
     if (_isTracking || _isSending) return;
 
+    final generation = _stopGeneration;
     await refreshPreview();
+    if (_disposed || generation != _stopGeneration) return;
     if (_currentPosition == null || !isVisible || _previewCommand == null) {
       _errorMessage ??= 'No se puede iniciar tracking: objeto no disponible.';
       _statusMessage = _errorMessage;
@@ -153,10 +156,12 @@ class CelestialControlController extends ChangeNotifier {
     if (_isSending || _fineTuneInFlight || !canFineTune) return;
 
     final next = _nextFinePosition(direction);
+    final generation = _stopGeneration;
     _fineTuneInFlight = true;
 
     try {
       await send(next.altitude, next.azimuth);
+      if (_disposed || generation != _stopGeneration) return;
       final sentAt = DateTime.now().toUtc();
       _localAltitude = next.altitude;
       _localAzimuth = next.azimuth;
@@ -169,6 +174,7 @@ class CelestialControlController extends ChangeNotifier {
       );
       _errorMessage = null;
     } catch (e) {
+      if (_disposed || generation != _stopGeneration) return;
       _errorMessage = _errorText(e);
       _statusMessage = _errorMessage;
     } finally {
@@ -178,8 +184,10 @@ class CelestialControlController extends ChangeNotifier {
   }
 
   Future<void> sendStop(CelestialStopSender send) async {
+    _stopGeneration++;
+    _localAltitude = null;
+    _localAzimuth = null;
     stopTracking('Tracking detenido por STOP.');
-    if (_isSending) return;
 
     _isSending = true;
     _errorMessage = null;
@@ -226,13 +234,23 @@ class CelestialControlController extends ChangeNotifier {
   ) async {
     if (_isSending) return;
 
+    final generation = _stopGeneration;
     _isSending = true;
     _errorMessage = null;
     _statusMessage = 'Enviando $label...';
     _safeNotify();
 
     try {
-      final command = await gotoService.sendGoto(object: object, send: send);
+      final command = await gotoService.sendGoto(
+        object: object,
+        send: (alt, az) async {
+          if (_disposed || generation != _stopGeneration) {
+            throw StateError('GoTo cancelado por STOP.');
+          }
+          await send(alt, az);
+        },
+      );
+      if (_disposed || generation != _stopGeneration) return;
       final sentAt = DateTime.now().toUtc();
       _currentPosition = command.rawPosition;
       _savedCalibration = command.initialAlignment;
@@ -251,13 +269,14 @@ class CelestialControlController extends ChangeNotifier {
           ? '$label enviado con corrección de precisión.'
           : '$label enviado con alineación inicial.';
     } catch (e) {
+      if (_disposed || generation != _stopGeneration) return;
       _errorMessage = _errorText(e);
       _statusMessage = _errorMessage;
       if (_isTracking) {
         stopTracking('Tracking detenido: $_errorMessage');
       }
     } finally {
-      _isSending = false;
+      if (generation == _stopGeneration) _isSending = false;
       _safeNotify();
     }
   }

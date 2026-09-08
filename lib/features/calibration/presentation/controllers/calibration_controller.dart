@@ -17,6 +17,7 @@ import '../../domain/models/correction_calibration_status.dart';
 import '../../domain/models/initial_alignment_status.dart';
 import '../../domain/services/astronomy_position_service.dart';
 import '../../domain/services/calibration_service.dart';
+import '../../domain/services/alignment_session.dart';
 
 typedef CalibrationCommandSender = Future<void> Function();
 typedef CalibrationGotoSender =
@@ -50,8 +51,8 @@ final class CalibrationStarOption {
 }
 
 class CalibrationController extends ChangeNotifier {
-  // Firmware V2.1 considers movements within 15 encoder pulses as complete.
-  static const double pulseMotorToleranceDegrees = 15.0 * 360.0 / 11000.0;
+  // Nominal half-step at the 28BYJ-48 output, before external gearing.
+  static const double nominalMotorStepDegrees = 360.0 / 4096.0;
   static const double fineStepDegrees = 1.0;
   static const double visibleStarAltitudeThresholdDeg = 15.0;
   static const double minimumRecommendedSeparationDeg = 30.0;
@@ -71,6 +72,7 @@ class CalibrationController extends ChangeNotifier {
   final AstronomyPositionService astronomyPositionService;
   final CalibrationService calibrationService;
   final ObserverDataProvider observerDataProvider;
+  final ({double altitude, double azimuth})? Function()? motorPositionProvider;
 
   bool _initialized = false;
   bool _isLoading = false;
@@ -97,7 +99,44 @@ class CalibrationController extends ChangeNotifier {
     required this.astronomyPositionService,
     required this.calibrationService,
     required this.observerDataProvider,
-  });
+    this.motorPositionProvider,
+  }) {
+    AlignmentSession.changes.addListener(_onSessionChanged);
+  }
+
+  void _onSessionChanged() {
+    _initialAlignmentResult = null;
+    _correctionCalibrationResult = null;
+    cancelFlow();
+  }
+
+  @override
+  void dispose() {
+    AlignmentSession.changes.removeListener(_onSessionChanged);
+    super.dispose();
+  }
+
+  void _ensureLiveTime() {
+    if (!observerDataProvider.current().isLive) {
+      throw StateError(
+        'Activa Usar hora actual en Configuración antes de alinear o apuntar.',
+      );
+    }
+  }
+
+  void _recordMotorPosition({
+    required double fallbackAltitude,
+    required double fallbackAzimuth,
+  }) {
+    final position = motorPositionProvider?.call();
+    if (motorPositionProvider != null && position == null) {
+      throw StateError(
+        'El ESP32 no confirmó su posición. Solicita STATUS antes de continuar.',
+      );
+    }
+    _adjustedAltitude = position?.altitude ?? fallbackAltitude;
+    _adjustedAzimuth = position?.azimuth ?? fallbackAzimuth;
+  }
 
   bool get isLoading => _isLoading;
   bool get isBusy => _isBusy;
@@ -420,6 +459,7 @@ class CalibrationController extends ChangeNotifier {
     notifyListeners();
 
     try {
+      _ensureLiveTime();
       final observer = observerDataProvider.current();
       final target = astronomyPositionService.calculateForStar(
         star: star,
@@ -492,6 +532,8 @@ class CalibrationController extends ChangeNotifier {
     notifyListeners();
 
     try {
+      _ensureLiveTime();
+      final connectionSession = AlignmentSession.token;
       final observer = observerDataProvider.current();
       final target = astronomyPositionService.calculateForStar(
         star: star,
@@ -509,10 +551,15 @@ class CalibrationController extends ChangeNotifier {
 
       final destination = _correctedGotoTarget(target);
       await sendGoto(destination.altitude, destination.azimuth);
+      if (connectionSession != AlignmentSession.token) {
+        throw StateError('La conexión cambió. Repite la alineación.');
+      }
 
       _targetPosition = target;
-      _adjustedAltitude = destination.altitude;
-      _adjustedAzimuth = destination.azimuth;
+      _recordMotorPosition(
+        fallbackAltitude: destination.altitude,
+        fallbackAzimuth: destination.azimuth,
+      );
       _session = session.copyWith(
         status: CalibrationStatus.waitingForManualCentering,
       );
@@ -553,8 +600,10 @@ class CalibrationController extends ChangeNotifier {
           '${delta.azimuth.toStringAsFixed(2)}',
       action: () => sendManualMove(delta.altitude, delta.azimuth),
       onSuccess: () {
-        _adjustedAltitude = (_adjustedAltitude ?? 0.0) + delta.altitude;
-        _adjustedAzimuth = (_adjustedAzimuth ?? 0.0) + delta.azimuth;
+        _recordMotorPosition(
+          fallbackAltitude: (_adjustedAltitude ?? 0.0) + delta.altitude,
+          fallbackAzimuth: (_adjustedAzimuth ?? 0.0) + delta.azimuth,
+        );
       },
     );
   }
@@ -578,7 +627,8 @@ class CalibrationController extends ChangeNotifier {
     final currentAltitude = _adjustedAltitude ?? 0.0;
     final currentAzimuth = _adjustedAzimuth ?? 0.0;
     final deltaAltitude = altitude - currentAltitude;
-    final deltaAzimuth = azimuth - currentAzimuth;
+    final deltaAzimuth =
+        normalizeDegrees360(azimuth - currentAzimuth + 180.0) - 180.0;
 
     if (deltaAltitude.abs() < 0.0001 && deltaAzimuth.abs() < 0.0001) {
       return;
@@ -591,8 +641,10 @@ class CalibrationController extends ChangeNotifier {
           '${deltaAzimuth.toStringAsFixed(2)}',
       action: () => sendManualMove(deltaAltitude, deltaAzimuth),
       onSuccess: () {
-        _adjustedAltitude = altitude;
-        _adjustedAzimuth = azimuth;
+        _recordMotorPosition(
+          fallbackAltitude: altitude,
+          fallbackAzimuth: azimuth,
+        );
       },
     );
   }
@@ -602,7 +654,9 @@ class CalibrationController extends ChangeNotifier {
   }) async {
     final session = _session;
     final star = _selectedStar;
-    if (session == null || star == null) {
+    if (session == null ||
+        star == null ||
+        _flowStep != CalibrationFlowStep.waitingUserCentering) {
       return;
     }
 
@@ -614,6 +668,8 @@ class CalibrationController extends ChangeNotifier {
     notifyListeners();
 
     try {
+      _ensureLiveTime();
+      final connectionSession = AlignmentSession.token;
       final observer = observerDataProvider.current();
       final target = astronomyPositionService.calculateForStar(
         star: star,
@@ -643,6 +699,9 @@ class CalibrationController extends ChangeNotifier {
               setInitialPosition: setInitialPosition,
             )
           : _createCorrectionPoint(star: star, target: target);
+      if (connectionSession != AlignmentSession.token) {
+        throw StateError('La conexión cambió. Repite la alineación.');
+      }
 
       updatedSession = calibrationService.addPoint(updatedSession, point);
 
@@ -738,15 +797,22 @@ class CalibrationController extends ChangeNotifier {
   }
 
   Future<void> _saveCompletedResult(CalibrationResult result) async {
+    final connectionSession = AlignmentSession.token;
     if (result.isInitialAlignment) {
       await calibrationRepository.saveInitialAlignmentResult(result);
       await calibrationRepository.clearCorrectionCalibrationResult();
+      if (connectionSession != AlignmentSession.token) {
+        throw StateError('La conexión cambió al guardar.');
+      }
       _initialAlignmentResult = result;
       _correctionCalibrationResult = null;
       return;
     }
 
     await calibrationRepository.saveCorrectionCalibrationResult(result);
+    if (connectionSession != AlignmentSession.token) {
+      throw StateError('La conexión cambió al guardar.');
+    }
     _correctionCalibrationResult = result;
   }
 
@@ -1004,10 +1070,20 @@ class CalibrationController extends ChangeNotifier {
 
     try {
       debugPrint(logLabel);
+      final connectionSession = AlignmentSession.token;
       await action();
+      if (connectionSession != AlignmentSession.token) {
+        throw StateError('La conexión cambió. Repite la alineación.');
+      }
       onSuccess?.call();
     } catch (error) {
       _errorMessage = 'No se pudo enviar comando: $error';
+      // An interrupted movement may have advanced only part of the requested
+      // distance. Do not let that stale position become a correction reference.
+      _flowStep = CalibrationFlowStep.failed;
+      _session = _session?.copyWith(
+        status: CalibrationStatus.calibrationFailed,
+      );
       debugPrint('[Calibration] Command failed: $error');
     } finally {
       _isBusy = false;

@@ -2,16 +2,14 @@ enum BleConnectionStatus { disconnected, connecting, connected, error }
 
 enum BleScanStatus { idle, scanning, stopped }
 
+const _unchangedDevice = Object();
+
 class BleDevice {
   final String id;
   final String name;
   final int rssi;
 
-  const BleDevice({
-    required this.id,
-    required this.name,
-    required this.rssi,
-  });
+  const BleDevice({required this.id, required this.name, required this.rssi});
 }
 
 class BleConnectionState {
@@ -37,7 +35,7 @@ class BleConnectionState {
     BleConnectionStatus? connectionStatus,
     BleScanStatus? scanStatus,
     List<BleDevice>? discoveredDevices,
-    BleDevice? connectedDevice,
+    Object? connectedDevice = _unchangedDevice,
     String? errorMessage,
     bool? isBluetoothEnabled,
     bool? arePermissionsGranted,
@@ -46,10 +44,13 @@ class BleConnectionState {
       connectionStatus: connectionStatus ?? this.connectionStatus,
       scanStatus: scanStatus ?? this.scanStatus,
       discoveredDevices: discoveredDevices ?? this.discoveredDevices,
-      connectedDevice: connectedDevice,
+      connectedDevice: identical(connectedDevice, _unchangedDevice)
+          ? this.connectedDevice
+          : connectedDevice as BleDevice?,
       errorMessage: errorMessage,
       isBluetoothEnabled: isBluetoothEnabled ?? this.isBluetoothEnabled,
-      arePermissionsGranted: arePermissionsGranted ?? this.arePermissionsGranted,
+      arePermissionsGranted:
+          arePermissionsGranted ?? this.arePermissionsGranted,
     );
   }
 }

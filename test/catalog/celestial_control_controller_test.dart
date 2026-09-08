@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/data/calibration_repository.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/data/calibration_storage.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_method.dart';
@@ -70,6 +72,46 @@ void main() {
     expect(sent, isFalse);
     expect(controller.errorMessage, contains('horizonte'));
   });
+
+  for (final stopBeforeWrite in [true, false]) {
+    test(
+      'STOP cancels GoTo ${stopBeforeWrite ? "before write" : "during movement"}',
+      () async {
+        await repository.saveInitialAlignmentResult(
+          CalibrationResult(
+            altitudeOffset: 0,
+            azimuthOffset: 0,
+            stage: CalibrationStage.initialAlignment,
+            correctionModel: CorrectionModel.none,
+            method: CalibrationMethod.oneStar,
+            status: CalibrationStatus.calibrated,
+            points: const [],
+            createdAt: DateTime.utc(2026),
+          ),
+        );
+        final controller = _controller(repository, _position(30, 45));
+        addTearDown(controller.dispose);
+        final sent = Completer<void>();
+        final completed = Completer<void>();
+        final moving = controller.sendInitialGoto((_, __) async {
+          sent.complete();
+          await completed.future;
+        });
+        if (!stopBeforeWrite) await sent.future;
+        var stopped = false;
+        await controller.sendStop(() async {
+          stopped = true;
+        });
+        completed.complete();
+        await moving;
+        expect(stopped, isTrue);
+        expect(sent.isCompleted, !stopBeforeWrite);
+        expect(controller.lastSentCommand?.label, 'STOP');
+        expect(controller.canFineTune, isFalse);
+        expect(controller.isSending, isFalse);
+      },
+    );
+  }
 
   test('STOP stops active tracking and sends stop command', () async {
     await repository.saveInitialAlignmentResult(

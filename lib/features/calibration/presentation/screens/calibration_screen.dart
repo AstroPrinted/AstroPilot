@@ -44,7 +44,25 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Alineación y corrección')),
+      appBar: AppBar(
+        title: const Text('Alineación y corrección'),
+        actions: [
+          Consumer<BleConnectionController>(
+            builder: (context, ble, _) {
+              final device = ble.state.connectedDevice;
+              return IconButton(
+                tooltip: 'Detener motores',
+                icon: const Icon(Icons.stop_circle_outlined),
+                onPressed: device == null
+                    ? null
+                    : () => context.read<Oe4ControlController>().sendStop(
+                        device.id,
+                      ),
+              );
+            },
+          ),
+        ],
+      ),
       body:
           Consumer3<
             CalibrationController,
@@ -235,10 +253,14 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
     if (!_ensureConnected(deviceId)) return;
     await calibration.confirmCenteredReference(
       setInitialPosition: calibration.isInitialAlignmentFlow
-          ? (altitude, azimuth) => oe4Controller.sendSetPosition(
-              deviceId!,
-              alt: altitude,
-              az: azimuth,
+          ? (altitude, azimuth) => _checked(
+              oe4Controller,
+              () => oe4Controller.sendSetPosition(
+                deviceId!,
+                alt: altitude,
+                az: azimuth,
+                throwOnError: true,
+              ),
             )
           : null,
     );
@@ -251,8 +273,15 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
   ) async {
     if (!_ensureConnected(deviceId)) return;
     await calibration.sendGotoToReference(
-      (altitude, azimuth) =>
-          oe4Controller.sendGoto(deviceId!, alt: altitude, az: azimuth),
+      (altitude, azimuth) => _checked(
+        oe4Controller,
+        () => oe4Controller.sendGoto(
+          deviceId!,
+          alt: altitude,
+          az: azimuth,
+          throwOnError: true,
+        ),
+      ),
     );
   }
 
@@ -265,10 +294,14 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
     if (!_ensureConnected(deviceId)) return;
     await calibration.nudge(
       direction,
-      (deltaAltitude, deltaAzimuth) => oe4Controller.sendNudge(
-        deviceId!,
-        deltaAlt: deltaAltitude,
-        deltaAz: deltaAzimuth,
+      (deltaAltitude, deltaAzimuth) => _checked(
+        oe4Controller,
+        () => oe4Controller.sendNudge(
+          deviceId!,
+          deltaAlt: deltaAltitude,
+          deltaAz: deltaAzimuth,
+          throwOnError: true,
+        ),
       ),
     );
   }
@@ -284,10 +317,14 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
     await calibration.moveToAdjustedPosition(
       altitude: altitude,
       azimuth: azimuth,
-      sendManualMove: (deltaAltitude, deltaAzimuth) => oe4Controller.sendNudge(
-        deviceId!,
-        deltaAlt: deltaAltitude,
-        deltaAz: deltaAzimuth,
+      sendManualMove: (deltaAltitude, deltaAzimuth) => _checked(
+        oe4Controller,
+        () => oe4Controller.sendNudge(
+          deviceId!,
+          deltaAlt: deltaAltitude,
+          deltaAz: deltaAzimuth,
+          throwOnError: true,
+        ),
       ),
     );
   }
@@ -298,6 +335,15 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
       const SnackBar(content: Text('Conecta el ESP32 por BLE primero.')),
     );
     return false;
+  }
+
+  Future<void> _checked(
+    Oe4ControlController controller,
+    Future<void> Function() send,
+  ) async {
+    await send();
+    final error = controller.errorMessage;
+    if (error != null) throw StateError(error);
   }
 
   Future<void> _confirmClearCalibration(

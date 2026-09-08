@@ -170,7 +170,7 @@ class _Oe4ControlScreenState extends State<Oe4ControlScreen> {
   }) {
     return _sendIfReady(
       deviceId,
-      () => controller.sendGoto(deviceId!, alt: alt, az: az),
+      () => controller.sendBenchMove(deviceId!, alt: alt, az: az),
     );
   }
 

@@ -1,5 +1,8 @@
 #include <Arduino.h>
 #include <AccelStepper.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/queue.h>
+#include "motion_math.h"
 
 // Set to 0 if BLE libraries cause a compile issue. Serial will keep working.
 #define ENABLE_BLE 1
@@ -81,6 +84,18 @@ const int OE4_ROUTINE_COUNT = sizeof(OE4_ROUTINE) / sizeof(OE4_ROUTINE[0]);
 
 String serialBuffer;
 bool movementActive = false;
+bool initialAligned = false;
+long responseRequestId = 0;
+long activeMoveRequestId = 0;
+volatile bool connectionLost = false;
+struct CommandPacket { char text[257]; };
+QueueHandle_t commandQueue = nullptr;
+
+struct ResponseScope {
+  long previous;
+  explicit ResponseScope(long id) : previous(responseRequestId) { responseRequestId = id; }
+  ~ResponseScope() { responseRequestId = previous; }
+};
 MoveKind activeMoveKind = MOVE_NONE;
 
 bool routineActive = false;
@@ -104,6 +119,7 @@ class ServerCallbacks : public BLEServerCallbacks {
 
   void onDisconnect(BLEServer* server) override {
     bleClientConnected = false;
+    connectionLost = true;
     Serial.println("BLE desconectado. Advertising reiniciado.");
     BLEDevice::startAdvertising();
   }
@@ -115,13 +131,24 @@ class RxCallbacks : public BLECharacteristicCallbacks {
     value.trim();
     if (value.length() == 0) return;
     if (value.length() > COMMAND_MAX_LENGTH) {
-      sendResponse("ERROR: comando demasiado largo");
+      Serial.println("ERROR: comando demasiado largo (BLE descartado)");
       return;
     }
 
     Serial.print("BLE RX: ");
     Serial.println(value);
-    handleJsonCommand(value);
+    // Execute commands on the motor loop, not the BLE callback task.
+    if (value.length() <= COMMAND_MAX_LENGTH && commandQueue != nullptr) {
+      CommandPacket packet;
+      value.toCharArray(packet.text, sizeof(packet.text));
+      if (value.indexOf("\"cmd\":\"STOP\"") >= 0) {
+        // STOP must not be lost in a full queue or followed by an older move.
+        xQueueReset(commandQueue);
+        xQueueSendToFront(commandQueue, &packet, 0);
+      } else {
+        xQueueSend(commandQueue, &packet, 0);
+      }
+    }
   }
 };
 #endif
@@ -145,8 +172,17 @@ void sendResponse(const String& message) {
 
 #if ENABLE_BLE
   if (bleClientConnected && txCharacteristic != nullptr) {
-    txCharacteristic->setValue((uint8_t*)message.c_str(), message.length());
-    txCharacteristic->notify();
+    const String framed = String("@") + String(responseRequestId) + " " + message + "\n";
+    // 20 bytes also works before the phone negotiates a larger ATT MTU.
+    for (size_t offset = 0; offset < framed.length(); offset += 20) {
+      size_t count = framed.length() - offset;
+      if (count > 20) count = 20;
+      txCharacteristic->setValue((uint8_t*)framed.c_str() + offset, count);
+      txCharacteristic->notify();
+      motorAlt.run();
+      motorAz.run();
+      delay(2);
+    }
   }
 #endif
 }
@@ -253,15 +289,17 @@ void sendStatus() {
   String status = String("STATUS -> posicion interna actual: alt=") +
                   String(motorAlt.currentPosition()) +
                   String(" pasos (") +
-                  String(stepsToDegrees(motorAlt.currentPosition()), 2) +
+                  String(stepsToDegrees(motorAlt.currentPosition()), 6) +
                   String(" deg), az=") +
                   String(motorAz.currentPosition()) +
                   String(" pasos (") +
-                  String(stepsToDegrees(motorAz.currentPosition()), 2) +
+                  String(stepsToDegrees(motorAz.currentPosition()), 6) +
                   String(" deg), moving=") +
                   String(movementActive ? "true" : "false") +
                   String(", watchdog=") +
-                  String(watchdogEnabled ? "true" : "false");
+                   String(watchdogEnabled ? "true" : "false") +
+                   String(", aligned=") + String(initialAligned ? "true" : "false") +
+                   String(", protocol=3");
   sendResponse(status);
 }
 
@@ -273,6 +311,7 @@ void cancelRoutine(const String& reason) {
 }
 
 void startMove(long altSteps, long azSteps, MoveKind kind) {
+  activeMoveRequestId = responseRequestId;
   motorAlt.moveTo(altSteps);
   motorAz.moveTo(azSteps);
   activeMoveKind = kind;
@@ -281,7 +320,7 @@ void startMove(long altSteps, long azSteps, MoveKind kind) {
 
 void startGoto(float altDeg, float azDeg) {
   long altSteps = degreesToSteps(altDeg);
-  long azSteps = degreesToSteps(azDeg);
+  long azSteps = nearestAzimuthSteps(motorAz.currentPosition(), azDeg, STEPS_PER_REV);
 
   sendResponse(
     String("Comando: GOTO alt=") + String(altDeg, 2) +
@@ -297,10 +336,12 @@ void startNudge(float deltaAltDeg, float deltaAzDeg) {
   float currentAltDeg = stepsToDegrees(motorAlt.currentPosition());
   float currentAzDeg = stepsToDegrees(motorAz.currentPosition());
   float nextAltDeg = currentAltDeg + deltaAltDeg;
-  float nextAzDeg = normalizeAzimuth(currentAzDeg + deltaAzDeg);
+  float nextAzDeg = currentAzDeg + deltaAzDeg;
 
-  if (nextAltDeg < ALT_MIN_DEG) nextAltDeg = ALT_MIN_DEG;
-  if (nextAltDeg > ALT_MAX_DEG) nextAltDeg = ALT_MAX_DEG;
+  if (nextAltDeg < ALT_MIN_DEG || nextAltDeg > ALT_MAX_DEG) {
+    sendResponse("ERROR: ajuste fuera del limite de altitud");
+    return;
+  }
 
   sendResponse(
     String("Comando: NUDGE dAlt=") + String(deltaAltDeg, 2) +
@@ -309,7 +350,7 @@ void startNudge(float deltaAltDeg, float deltaAzDeg) {
     String(" deg, az=") + String(nextAzDeg, 2) + String(" deg")
   );
 
-  startMove(degreesToSteps(nextAltDeg), degreesToSteps(nextAzDeg), MOVE_NUDGE);
+  startMove(degreesToSteps(nextAltDeg), relativeAzimuthSteps(motorAz.currentPosition(), deltaAzDeg, STEPS_PER_REV), MOVE_NUDGE);
 }
 
 void setCurrentLogicalPosition(float altDeg, float azDeg) {
@@ -323,6 +364,7 @@ void setCurrentLogicalPosition(float altDeg, float azDeg) {
 
   motorAlt.setCurrentPosition(altSteps);
   motorAz.setCurrentPosition(azSteps);
+  initialAligned = true;
   movementActive = false;
   activeMoveKind = MOVE_NONE;
 
@@ -336,10 +378,14 @@ void setCurrentLogicalPosition(float altDeg, float azDeg) {
 
 void startHome() {
   sendResponse("Comando: HOME -> Volver a Cero");
-  startMove(0, 0, MOVE_HOME);
+  startMove(0, nearestAzimuthSteps(motorAz.currentPosition(), 0, STEPS_PER_REV), MOVE_HOME);
 }
 
 void stopMotors() {
+  if (movementActive) {
+    ResponseScope scope(activeMoveRequestId);
+    sendResponse("ERROR: movimiento cancelado por STOP");
+  }
   motorAlt.stop();
   motorAz.stop();
   motorAlt.moveTo(motorAlt.currentPosition());
@@ -368,6 +414,7 @@ void setWatchdogEnabled(bool enabled) {
 }
 
 void stopMotorsForWatchdog(unsigned long elapsedMs) {
+  ResponseScope scope(activeMoveRequestId);
   motorAlt.stop();
   motorAz.stop();
   motorAlt.moveTo(motorAlt.currentPosition());
@@ -443,7 +490,7 @@ void runRoutineStep() {
 
 void startTestRoutine() {
   if (movementActive) {
-    sendResponse("TEST_ROUTINE no iniciado: movimiento activo. Envie STOP o espere a que termine.");
+    sendResponse("ERROR: TEST_ROUTINE no iniciado: movimiento activo. Envie STOP o espere a que termine.");
     return;
   }
 
@@ -468,9 +515,11 @@ void updateMovementCompletion() {
   if (motorAlt.distanceToGo() != 0 || motorAz.distanceToGo() != 0) return;
 
   MoveKind completedKind = activeMoveKind;
+  ResponseScope responseScope(activeMoveRequestId);
   movementActive = false;
   activeMoveKind = MOVE_NONE;
 
+  sendStatus();
   if (completedKind == MOVE_GOTO) {
     sendResponse("GOTO Completado");
   } else if (completedKind == MOVE_NUDGE) {
@@ -494,6 +543,9 @@ void updateMovementCompletion() {
 
 void handleJsonCommand(String json) {
   json.trim();
+  float incomingId = 0;
+  extractJsonFloat(json, "id", incomingId);
+  ResponseScope responseScope((long)incomingId);
 
   if (json.length() > COMMAND_MAX_LENGTH) {
     sendResponse("ERROR: comando demasiado largo");
@@ -548,6 +600,11 @@ void handleJsonCommand(String json) {
     return;
   }
 
+  if (movementActive) {
+    sendResponse("ERROR: espera a que termine el movimiento o envia STOP");
+    return;
+  }
+
   if (routineActive) {
     cancelRoutine("Rutina OE4 cancelada por comando manual");
   }
@@ -557,7 +614,11 @@ void handleJsonCommand(String json) {
     return;
   }
 
-  if (cmd == "GOTO") {
+  if (cmd == "GOTO" || cmd == "MOVE") {
+    if (cmd == "GOTO" && !initialAligned) {
+      sendResponse("ERROR: requiere alineacion inicial con SET_POSITION");
+      return;
+    }
     float altDeg = 0.0f;
     float azDeg = 0.0f;
 
@@ -826,11 +887,12 @@ void setupBle() {}
 void setup() {
   Serial.begin(115200);
   delay(500);
+  commandQueue = xQueueCreate(8, sizeof(CommandPacket));
 
   configureMotors();
   setupBle();
 
-  sendResponse("AstroPilot OE4 - Firmware listo");
+  sendResponse("AstroPilot OE4 - Firmware v3 listo (confirmaciones por comando)");
   sendResponse("Motores: AccelStepper HALF4WIRE, STEPS_PER_REV=4096");
   sendResponse("Serial JSON ejemplo: {\"cmd\":\"GOTO\",\"alt\":90,\"az\":180}");
   sendResponse("Comandos: HOME, STATUS, STOP, TEST_ROUTINE, PING, ENABLE_WATCHDOG, GOTO:alt,az, NUDGE:dAlt,dAz, SET_POSITION:alt,az");
@@ -838,6 +900,16 @@ void setup() {
 }
 
 void loop() {
+  if (connectionLost) {
+    connectionLost = false;
+    initialAligned = false;
+    if (commandQueue != nullptr) xQueueReset(commandQueue);
+    stopMotors();
+  }
+  CommandPacket packet;
+  if (commandQueue != nullptr && xQueueReceive(commandQueue, &packet, 0) == pdTRUE) {
+    handleJsonCommand(String(packet.text));
+  }
   readSerialCommands();
 
   motorAlt.run();

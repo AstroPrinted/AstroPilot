@@ -4,6 +4,11 @@ El proyecto tiene configurado un mínimo de iOS 13.0. La configuración nativa y
 el flujo de permisos están preparados para iOS; la compilación con Xcode y la
 validación de Bluetooth/GPS en un iPhone físico siguen pendientes.
 
+Esta versión debe usarse con el firmware v3 incluido en la rama. Ver
+[la secuencia de prueba](PRUEBA_MANANA.md) para cargarlo y verificar la montura.
+En una Mac con las herramientas ya instaladas, `bash scripts/preparar_ios_macos.sh`
+realiza la preparación y compilación sin firma descritas más abajo.
+
 ## Configuración incluida
 
 - Nombre visible: AstroPilot.
@@ -34,6 +39,25 @@ La versión del SDK usada para la verificación local de este cambio es
 Flutter 3.35.7 / Dart 3.9.2. Usar inicialmente esa misma versión para reproducir
 el entorno; al actualizar Flutter, revisar de nuevo el mínimo de iOS admitido.
 
+Si la Mac aún no está preparada, seguir la [instalación oficial de Flutter para
+iOS](https://docs.flutter.dev/platform-integration/ios/setup). Xcode debe soportar
+la versión de iOS del teléfono. Abrir Xcode una vez, instalar sus componentes y
+añadir la cuenta Apple en Xcode → Settings → Accounts. Si `flutter doctor` indica
+que está seleccionada solamente Command Line Tools, ejecutar en la Mac:
+
+```sh
+sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+sudo xcodebuild -runFirstLaunch
+xcodebuild -downloadPlatform iOS
+```
+
+Revisar y aceptar la licencia de Xcode cuando se solicite. Para una prueba local
+puede usarse un Personal Team gratuito; no hace falta publicar en TestFlight.
+Al terminar la instalación, si el iPhone indica “desarrollador no confiable”,
+ir a Ajustes → General → VPN y gestión de dispositivos y confiar en la cuenta.
+La guía oficial enlazada detalla estos pasos. Si Xcode no puede soportar el iOS
+del teléfono en esa Mac, hará falta un teléfono compatible o actualizar la Mac.
+
 Desde la raíz del proyecto:
 
 ```sh
@@ -61,7 +85,7 @@ su versión de iOS lo solicita y ejecutar Run, o usar:
 
 ```sh
 flutter devices
-flutter run -d <identificador-del-iphone>
+flutter run --release -d IDENTIFICADOR_DEL_IPHONE
 ```
 
 Para distribuir mediante TestFlight/App Store se requiere la membresía del

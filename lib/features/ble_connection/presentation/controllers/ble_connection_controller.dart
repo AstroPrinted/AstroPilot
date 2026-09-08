@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../data/models/ble_device_state.dart';
 import '../../domain/ble_service.dart';
+import '../../../calibration/domain/services/alignment_session.dart';
 
 class BleConnectionController extends ChangeNotifier {
   final BleService _bleService;
@@ -112,6 +113,7 @@ class BleConnectionController extends ChangeNotifier {
   }
 
   Future<void> connectToDevice(BleDevice device) async {
+    AlignmentSession.invalidate();
     await _connectionSubscription?.cancel();
     _state = _state.copyWith(
       connectionStatus: BleConnectionStatus.connecting,
@@ -142,6 +144,9 @@ class BleConnectionController extends ChangeNotifier {
       _connectionSubscription = _bleService
           .connectionStatusStream(device.id)
           .listen((status) {
+            if (status == BleConnectionStatus.disconnected) {
+              AlignmentSession.invalidate();
+            }
             if (_state.connectedDevice?.id != device.id &&
                 status != BleConnectionStatus.disconnected) {
               return;
@@ -167,6 +172,7 @@ class BleConnectionController extends ChangeNotifier {
   }
 
   Future<void> disconnect() async {
+    AlignmentSession.invalidate();
     await _connectionSubscription?.cancel();
     _connectionSubscription = null;
     if (_state.connectedDevice != null) {

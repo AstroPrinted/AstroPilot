@@ -1,70 +1,60 @@
 # Calibración del telescopio en AstroPilot
 
-## 1. Objetivo
+La rama `codex/ios-prototype` usa el protocolo v3 del firmware incluido. La guía
+operativa está en [PRUEBA_MANANA.md](PRUEBA_MANANA.md).
 
-La calibración relaciona la orientacion física real del telescopio con la posición lógica interna de los motores. Antes de usar GoTo automático, el usuario debe centrar manualmente una estrella conocida y la app debe fijar la posición actual del sistema con la Alt/Az real de esa estrella.
+## Alineación inicial
 
-## 2. Flujo implementado
+1. Usar ubicación real y “Usar hora actual” en Configuración.
+2. Conectar el ESP32 y seleccionar una estrella reconocible sobre 15° de altitud.
+3. Centrarla físicamente con el buscador/ocular y ajustes relativos NUDGE.
+4. Confirmar la estrella centrada. La app recalcula su Alt/Az y envía SET_POSITION.
+5. Solo guardar la alineación después de recibir la confirmación del ESP32.
 
-La version actual trabaja solo con calibración de una estrella:
+SET_POSITION asigna coordenadas lógicas a la orientación física existente; no
+mueve el telescopio. Luego, GoTo calcula el destino y el firmware mueve los ejes
+hacia esa posición. La base debe estar nivelada y la escala y sentidos de los
+motores deben coincidir con el montaje. La alineación no mide esas propiedades.
 
-1. El usuario entra a Calibración.
-2. La UI muestra 1 estrella como método disponible.
-3. Los modos 2 estrellas, 3 estrellas y objeto fijo quedan deshabilitados como Proximamente.
-4. La app lista estrellas visibles sobre el horizonte usando fecha, hora y ubicación actuales.
-5. El usuario selecciona una estrella de referencia.
-6. La app muestra nombre, constelación, magnitud, Alt/Az actual y una guía breve para reconocerla.
-7. El usuario mueve manualmente el telescopio con controles `NUDGE`.
-8. Cuando la estrella está centrada, presiona Confirmar estrella centrada.
-9. La app recalcula la Alt/Az de la estrella en ese instante.
-10. La app envía `SET_POSITION(alt,az)` al ESP32.
-11. La calibración queda guardada como referencia válida.
+## Correcciones
 
-## 3. Comandos de firmware
+Después de alinear, están disponibles correcciones con una, dos o tres estrellas.
+Para cada referencia: GoTo, esperar finalización, centrar y confirmar. La posición
+usada para la corrección procede del STATUS de pasos ejecutados por el ESP32.
+Esto es posición lógica de un motor abierto, sin medición de encoder: no detecta
+pasos perdidos, holgura ni deslizamiento físico.
 
-El firmware mantiene `GOTO` para apuntamientos automáticos, pero la calibración usa comandos específicos:
+Los modos de dos/tres estrellas promedian offsets de altitud/azimut. No constituyen
+un modelo geométrico que corrija automáticamente desnivel o errores mecánicos.
 
-```txt
-NUDGE:dAlt,dAz
-SET_POSITION:alt,az
-```
+## Confirmaciones y vigencia
 
-`NUDGE` mueve los motores de forma relativa desde la posición interna actual. `SET_POSITION` no mueve el telescopio; solo fija la posición lógica interna del firmware para que la posición física centrada corresponda a la Alt/Az real de la estrella.
+- Cada comando JSON lleva un `id`; cada respuesta BLE es `@id mensaje\n`.
+- Un GATT write exitoso o un PONG no confirma una alineación ni un movimiento.
+- GOTO/MOVE, NUDGE y HOME esperan su respuesta de finalización; el firmware envía
+  STATUS antes de esa respuesta. ERROR, ALERTA, timeout o desconexión son fallos.
+- STOP puede interrumpir un movimiento. No se permite guardar como corrección una
+  referencia cuyo último ajuste fue interrumpido o falló.
+- SharedPreferences conserva los datos, pero solo se aceptan dentro de la sesión
+  actual de app/conexión. Reiniciar o reconectar exige alinear de nuevo.
+- Si la base se mueve o la mecánica pierde posición sin una desconexión, el usuario
+  debe rehacer la alineación: el sistema no puede detectarlo automáticamente.
+- La hora de planificación sirve para consultar el cielo; bloquea alineación y
+  GoTo físicos. El apuntado solar permanece bloqueado.
 
-## 4. Lógica correcta
+## Movimientos de banco
 
-No se usa regla de 3 ni un offset de una estrella para estimar otros objetos.
+Control permite MOVE sin alineación para comprobar motores en coordenadas lógicas.
+Esto no habilita GoTo astronómico. NUDGE conserva el signo al cruzar azimut 0°;
+los destinos absolutos de azimut usan el trayecto más corto. HOME vuelve al cero
+lógico, no busca un interruptor de origen.
 
-La app calcula la Alt/Az real de cada objetivo con fecha, hora y ubicación. Luego envía esa Alt/Az como destino. Como el firmware ya conoce su posición lógica actual gracias a `SET_POSITION`, el movimiento físico sale de la diferencia entre posición actual y objetivo.
+El firmware tiene 4096 medios pasos nominales por revolución. Ignacio debe
+comprobar la relación de transmisión externa, pinout, escala física y sentidos
+antes de evaluar precisión de apuntado.
 
-## 5. Datos guardados
+## Validación pendiente
 
-La app guarda:
-
-- Método usado: `oneStar`.
-- Estado de calibración.
-- Estrella de referencia.
-- RA/Dec J2000 de la estrella.
-- Alt/Az real de la estrella al confirmar.
-- Posición lógica de motores fijada con `SET_POSITION`.
-- Fecha y hora de calibración.
-- Advertencias del flujo si existen.
-
-La persistencia usa `SharedPreferences` mediante la feature `calibration`.
-
-## 6. Reglas de seguridad y uso
-
-- GoTo y tracking quedan bloqueados antes de calibrar.
-- El movimiento manual sí está permitido antes de calibrar.
-- Si la estrella cae bajo el horizonte, no se puede confirmar.
-- La Alt/Az se recalcula al momento exacto de confirmar.
-- Si no hay ubicación válida, el flujo debe fallar o pedir ubicación manual desde ajustes.
-- La calibración de una estrella es una referencia inicial; no corrige errores mecánicos, desnivel del trípode ni desalineación avanzada.
-
-## 7. Pendiente
-
-- Calibración con 2 estrellas.
-- Calibración con 3 estrellas.
-- Sync local por objeto fijo.
-- Estado estructurado JSON desde firmware.
-- Modelo multipunto para correcciones mecanicas avanzadas.
+La compilación y las pruebas automatizadas verifican código y manejo de errores.
+Siguen pendientes la compilación/firma iOS en Mac, Bluetooth/GPS en iPhone y las
+mediciones de apuntado con la montura real. Ver el registro de PRUEBA_MANANA.md.

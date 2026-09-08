@@ -3,17 +3,22 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../domain/motor_command_service.dart';
+import '../../../ble_connection/presentation/controllers/ble_connection_controller.dart';
+import '../../../ble_connection/data/models/ble_device_state.dart';
 
 class Oe4ControlController extends ChangeNotifier {
   static const Duration _heartbeatInterval = Duration(milliseconds: 300);
   static const Duration _rssiInterval = Duration(seconds: 1);
 
   final MotorCommandService _motorCommandService;
+  final BleConnectionController? connection;
   late final StreamSubscription<String> _responseSubscription;
   Timer? _heartbeatTimer;
   Timer? _rssiTimer;
 
   bool _isSending = false;
+  int _activeSends = 0;
+  int _latestSend = 0;
   bool _isTogglingWatchdog = false;
   bool _heartbeatActive = false;
   bool _pingInFlight = false;
@@ -41,8 +46,11 @@ class Oe4ControlController extends ChangeNotifier {
   String? get lastEsp32Alert => _lastEsp32Alert;
   DateTime? get lastPongReceivedAt => _lastPongReceivedAt;
   int? get currentRssi => _currentRssi;
+  ({double altitude, double azimuth})? get motorPosition =>
+      _motorCommandService.motorPosition;
 
-  Oe4ControlController(this._motorCommandService) {
+  Oe4ControlController(this._motorCommandService, {this.connection}) {
+    connection?.addListener(_connectionChanged);
     _responseSubscription = _motorCommandService.responseStream.listen((value) {
       if (_isPongResponse(value)) {
         _lastPongReceivedAt = DateTime.now();
@@ -51,7 +59,6 @@ class Oe4ControlController extends ChangeNotifier {
       }
 
       _lastResponse = value;
-      _errorMessage = null;
       if (value.startsWith('ALERTA:')) {
         _lastEsp32Alert = value;
       }
@@ -62,6 +69,16 @@ class Oe4ControlController extends ChangeNotifier {
       }
       _safeNotify();
     });
+    _connectionChanged();
+  }
+
+  void _connectionChanged() {
+    final state = connection?.state;
+    syncConnectionDevice(
+      state?.connectionStatus == BleConnectionStatus.connected
+          ? state?.connectedDevice?.id
+          : null,
+    );
   }
 
   void syncConnectionDevice(String? deviceId) {
@@ -88,9 +105,22 @@ class Oe4ControlController extends ChangeNotifier {
     String deviceId, {
     required double alt,
     required double az,
+    bool throwOnError = false,
   }) {
     return _send(
       () => _motorCommandService.sendGotoCommand(deviceId, alt: alt, az: az),
+      throwOnError: throwOnError,
+    );
+  }
+
+  Future<void> sendBenchMove(
+    String deviceId, {
+    required double alt,
+    required double az,
+  }) {
+    return _send(
+      () =>
+          _motorCommandService.sendBenchMoveCommand(deviceId, alt: alt, az: az),
     );
   }
 
@@ -98,6 +128,7 @@ class Oe4ControlController extends ChangeNotifier {
     String deviceId, {
     required double deltaAlt,
     required double deltaAz,
+    bool throwOnError = false,
   }) {
     return _send(
       () => _motorCommandService.sendNudgeCommand(
@@ -105,6 +136,7 @@ class Oe4ControlController extends ChangeNotifier {
         deltaAlt: deltaAlt,
         deltaAz: deltaAz,
       ),
+      throwOnError: throwOnError,
     );
   }
 
@@ -112,6 +144,7 @@ class Oe4ControlController extends ChangeNotifier {
     String deviceId, {
     required double alt,
     required double az,
+    bool throwOnError = false,
   }) {
     return _send(
       () => _motorCommandService.sendSetPositionCommand(
@@ -119,6 +152,7 @@ class Oe4ControlController extends ChangeNotifier {
         alt: alt,
         az: az,
       ),
+      throwOnError: throwOnError,
     );
   }
 
@@ -229,17 +263,26 @@ class Oe4ControlController extends ChangeNotifier {
     }
   }
 
-  Future<void> _send(Future<String> Function() command) async {
+  Future<void> _send(
+    Future<String> Function() command, {
+    bool throwOnError = false,
+  }) async {
+    final sequence = ++_latestSend;
+    _activeSends++;
     _isSending = true;
     _errorMessage = null;
     _safeNotify();
 
     try {
-      _lastSentCommand = await command();
+      final sent = await command();
+      if (sequence == _latestSend) _lastSentCommand = sent;
     } catch (e) {
-      _errorMessage = 'No se pudo enviar comando OE4: ${_errorText(e)}';
+      if (sequence == _latestSend) {
+        _errorMessage = 'No se pudo enviar comando OE4: ${_errorText(e)}';
+      }
+      if (throwOnError) rethrow;
     } finally {
-      _isSending = false;
+      _isSending = --_activeSends > 0;
       _safeNotify();
     }
   }
@@ -258,6 +301,7 @@ class Oe4ControlController extends ChangeNotifier {
 
   @override
   void dispose() {
+    connection?.removeListener(_connectionChanged);
     _disposed = true;
     _heartbeatTimer?.cancel();
     _rssiTimer?.cancel();
