@@ -7,6 +7,7 @@ import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/m
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_stage.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/calibration_status.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/models/correction_model.dart';
+import 'package:astroprintedlogicincludedgeoengine/features/calibration/domain/services/alignment_session.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/catalog/application/astronomical_goto_service.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/catalog/domain/models/celestial_object.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/catalog/presentation/controllers/celestial_control_controller.dart';
@@ -25,6 +26,83 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     repository = CalibrationRepository(storage: CalibrationStorage());
   });
+
+  testWidgets('live preview advances without tracking and stops on dispose', (
+    tester,
+  ) async {
+    var position = _position(20, 30);
+    var calculations = 0;
+    final controller = CelestialControlController(
+      object: _object(),
+      gotoService: AstronomicalGotoService(
+        observerDataProvider: const _FakeObserverDataProvider(),
+        calibrationRepository: repository,
+        positionResolver: (_, __) {
+          calculations++;
+          return position;
+        },
+      ),
+    );
+    controller.startLivePreview();
+    controller.startLivePreview(); // Starting twice must not create two timers.
+    await tester.pump();
+    expect(controller.currentPosition?.altitudeDeg, 20);
+    position = _position(21, 31);
+    await tester.pump(const Duration(seconds: 1));
+    expect(controller.currentPosition?.altitudeDeg, 21);
+    expect(controller.currentPosition?.azimuthDeg, 31);
+    expect(calculations, 2);
+    expect(controller.isTracking, isFalse);
+    expect(controller.lastSentCommand, isNull);
+    controller.dispose();
+    await tester.pump(const Duration(seconds: 20));
+    expect(calculations, 2);
+  });
+
+  testWidgets('background preview preserves command errors and STOP history', (
+    tester,
+  ) async {
+    final controller = _controller(repository, _position(20, 30));
+    controller.startLivePreview();
+    await tester.pump();
+    await controller.sendStop(() async => throw StateError('STOP rechazado'));
+    await tester.pump(const Duration(seconds: 1));
+    expect(controller.errorMessage, 'STOP rechazado');
+    expect(controller.statusMessage, 'STOP rechazado');
+    await controller.sendStop(() async {});
+    final sent = controller.lastSentCommand;
+    await tester.pump(const Duration(seconds: 1));
+    expect(controller.lastSentCommand, same(sent));
+    expect(controller.statusMessage, 'STOP enviado. Tracking detenido.');
+    controller.dispose();
+  });
+
+  test(
+    'reference change invalidates local pointing and stops tracking',
+    () async {
+      await repository.saveInitialAlignmentResult(
+        CalibrationResult(
+          altitudeOffset: 0,
+          azimuthOffset: 0,
+          stage: CalibrationStage.initialAlignment,
+          correctionModel: CorrectionModel.none,
+          method: CalibrationMethod.oneStar,
+          status: CalibrationStatus.calibrated,
+          points: const [],
+          createdAt: DateTime.utc(2026),
+        ),
+      );
+      final controller = _controller(repository, _position(20, 30));
+      addTearDown(controller.dispose);
+      await controller.sendInitialGoto((_, __) async {});
+      await controller.startTracking((_, __) async {});
+      AlignmentSession.invalidate();
+      expect(controller.isTracking, isFalse);
+      expect(controller.canFineTune, isFalse);
+      expect(controller.savedCalibration, isNull);
+      expect(controller.previewCommand, isNull);
+    },
+  );
 
   test(
     'fine tune moves from one-star calibrated target without applying offset',
@@ -58,6 +136,60 @@ void main() {
       expect(sent[1][0], 20);
       expect(sent[1][1], 30.25);
       expect(controller.lastSentCommand?.usedCorrection, isFalse);
+    },
+  );
+
+  testWidgets(
+    'live target changes without changing sent coordinates or fine tune origin',
+    (tester) async {
+      await tester.runAsync(
+        () => repository.saveInitialAlignmentResult(
+          CalibrationResult(
+            altitudeOffset: 0,
+            azimuthOffset: 0,
+            stage: CalibrationStage.initialAlignment,
+            correctionModel: CorrectionModel.none,
+            method: CalibrationMethod.oneStar,
+            status: CalibrationStatus.calibrated,
+            points: const [],
+            createdAt: DateTime.utc(2026),
+          ),
+        ),
+      );
+      var position = _position(20, 30);
+      final controller = CelestialControlController(
+        object: _object(),
+        gotoService: AstronomicalGotoService(
+          observerDataProvider: const _FakeObserverDataProvider(),
+          calibrationRepository: repository,
+          positionResolver: (_, __) => position,
+        ),
+      );
+      final sent = <List<double>>[];
+      await tester.runAsync(
+        () =>
+            controller.sendInitialGoto((alt, az) async => sent.add([alt, az])),
+      );
+      final lastCommand = controller.lastSentCommand;
+      controller.startLivePreview();
+      await tester.pump();
+      position = _position(25, 35);
+      await tester.pump(const Duration(seconds: 1));
+      expect(controller.currentPosition?.altitudeDeg, 25);
+      expect(controller.previewCommand?.finalAltitude, 25);
+      expect(controller.previewCommand?.finalAzimuth, 35);
+      expect(controller.lastSentCommand, same(lastCommand));
+      expect(controller.localAltitude, 20);
+      expect(controller.localAzimuth, 30);
+      expect(sent, [
+        [20, 30],
+      ]);
+      await controller.fineTune(
+        CelestialFineDirection.right,
+        (alt, az) async => sent.add([alt, az]),
+      );
+      expect(sent.last, [20, 30.25]);
+      controller.dispose();
     },
   );
 

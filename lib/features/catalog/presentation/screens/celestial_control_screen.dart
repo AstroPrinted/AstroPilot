@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -49,7 +47,7 @@ class _CelestialControlScreenState extends State<CelestialControlScreen> {
         correctionService: const PointingCorrectionService(),
       ),
     );
-    unawaited(_controller.refreshPreview());
+    _controller.startLivePreview();
   }
 
   @override
@@ -292,12 +290,17 @@ class _PositionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final position = controller.currentPosition;
     final preview = controller.previewCommand;
-    final error = controller.errorMessage;
+    final error = controller.previewError;
 
     return _ControlCard(
       title: 'Alt/Az del objeto',
       icon: Icons.explore_rounded,
       children: [
+        const Text(
+          'Las coordenadas se recalculan cada segundo con la hora de Configuración. '
+          'El tracking controla los envíos al telescopio.',
+        ),
+        const SizedBox(height: 10),
         if (position == null)
           _StatusMessage(
             icon: Icons.sync_rounded,
@@ -336,14 +339,14 @@ class _PositionCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: _MetricTile(
-                    label: 'Altitud final',
+                    label: 'Altitud a enviar',
                     value: _formatSigned(preview.finalAltitude),
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: _MetricTile(
-                    label: 'Azimut final',
+                    label: 'Azimut a enviar',
                     value: _formatUnsigned(preview.finalAzimuth),
                   ),
                 ),

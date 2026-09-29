@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../domain/motor_command_service.dart';
+import '../../../calibration/domain/services/alignment_session.dart';
 import '../../../ble_connection/presentation/controllers/ble_connection_controller.dart';
 import '../../../ble_connection/data/models/ble_device_state.dart';
 
@@ -158,6 +159,36 @@ class Oe4ControlController extends ChangeNotifier {
 
   Future<void> sendHome(String deviceId) {
     return _send(() => _motorCommandService.sendHomeCommand(deviceId));
+  }
+
+  /// Rebase the motor coordinates without reusing the old star calibration.
+  Future<void> setManualReference(
+    String deviceId, {
+    required double alt,
+    required double az,
+  }) async {
+    if (_isSending) throw StateError('Espera a que termine el comando actual.');
+    if (!alt.isFinite ||
+        alt < -90 ||
+        alt > 90 ||
+        !az.isFinite ||
+        az < 0 ||
+        az > 360) {
+      throw ArgumentError('Altitud: -90 a 90°. Azimut: 0 a 360°.');
+    }
+    final session = AlignmentSession.token;
+    await _send(() async {
+      final command = await _motorCommandService.sendSetPositionCommand(
+        deviceId,
+        alt: alt,
+        az: az == 360 ? 0 : az,
+      );
+      if (session != AlignmentSession.token) {
+        throw StateError('La conexión cambió. Repite la referencia.');
+      }
+      AlignmentSession.invalidate();
+      return command;
+    }, throwOnError: true);
   }
 
   Future<void> sendStatus(String deviceId) {

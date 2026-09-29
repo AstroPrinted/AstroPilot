@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../ble_connection/data/models/ble_device_state.dart';
 import '../../../ble_connection/presentation/controllers/ble_connection_controller.dart';
 import '../controllers/oe4_control_controller.dart';
+import '../widgets/manual_reference_card.dart';
 
 class Oe4ControlScreen extends StatefulWidget {
   const Oe4ControlScreen({super.key});
@@ -97,6 +98,20 @@ class _Oe4ControlScreenState extends State<Oe4ControlScreen> {
                     isSending: oe4Controller.isSending,
                     canSend: _canSendGoto(isConnected),
                     onSend: () => _sendManualGoto(deviceId, oe4Controller),
+                  ),
+                  const SizedBox(height: 14),
+                  ManualReferenceCard(
+                    enabled: isConnected && !oe4Controller.isSending,
+                    onSetReference: (alt, az) async {
+                      if (deviceId == null) {
+                        throw StateError('Conecta el ESP32 por BLE primero.');
+                      }
+                      await oe4Controller.setManualReference(
+                        deviceId,
+                        alt: alt,
+                        az: az,
+                      );
+                    },
                   ),
                   const SizedBox(height: 14),
                   _ExpectedCaseCard(

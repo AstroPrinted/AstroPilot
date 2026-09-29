@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../../calibration/domain/models/calibration_result.dart';
+import '../../../calibration/domain/services/alignment_session.dart';
 import '../../../observation/domain/models/alt_az_result.dart';
 import '../../../observation/domain/utils/angle_math.dart';
 import '../../application/astronomical_goto_service.dart';
@@ -33,6 +34,7 @@ class CelestialSentCommand {
 }
 
 class CelestialControlController extends ChangeNotifier {
+  static const Duration previewInterval = Duration(seconds: 1);
   static const Duration trackingInterval = Duration(seconds: 15);
   static const double fineStepDegrees = 0.25;
 
@@ -40,6 +42,8 @@ class CelestialControlController extends ChangeNotifier {
   final AstronomicalGotoService gotoService;
 
   Timer? _trackingTimer;
+  Timer? _previewTimer;
+  Future<void>? _previewRefresh;
   bool _disposed = false;
   bool _isSending = false;
   bool _fineTuneInFlight = false;
@@ -47,6 +51,7 @@ class CelestialControlController extends ChangeNotifier {
   bool _trackingTickInFlight = false;
   int _stopGeneration = 0;
   String? _errorMessage;
+  String? _previewError;
   String? _statusMessage;
   AltAzResult? _currentPosition;
   CalibrationResult? _savedCalibration;
@@ -57,12 +62,30 @@ class CelestialControlController extends ChangeNotifier {
   double? _localAltitude;
   double? _localAzimuth;
 
-  CelestialControlController({required this.object, required this.gotoService});
+  CelestialControlController({
+    required this.object,
+    required this.gotoService,
+  }) {
+    AlignmentSession.changes.addListener(_onReferenceChanged);
+  }
+
+  void _onReferenceChanged() {
+    _stopGeneration++;
+    _isSending = false;
+    _localAltitude = null;
+    _localAzimuth = null;
+    _savedCalibration = null;
+    _previewCommand = null;
+    _previewError =
+        'La referencia cambió. Repite la alineación con una estrella.';
+    stopTracking('Tracking detenido: cambió la referencia o la conexión.');
+  }
 
   bool get isSending => _isSending;
   bool get isFineTuneInFlight => _fineTuneInFlight;
   bool get isTracking => _isTracking;
-  String? get errorMessage => _errorMessage;
+  String? get errorMessage => _errorMessage ?? _previewError;
+  String? get previewError => _previewError;
   String? get statusMessage => _statusMessage;
   AltAzResult? get currentPosition => _currentPosition;
   CalibrationResult? get savedCalibration => _savedCalibration;
@@ -75,12 +98,29 @@ class CelestialControlController extends ChangeNotifier {
   bool get canFineTune => _localAltitude != null && _localAzimuth != null;
   bool get isVisible => (_currentPosition?.altitudeDeg ?? -90.0) >= 0.0;
 
-  Future<void> refreshPreview() async {
+  void startLivePreview() {
+    if (_disposed || _previewTimer != null) return;
+    unawaited(refreshPreview(updateStatus: false));
+    _previewTimer = Timer.periodic(previewInterval, (_) {
+      unawaited(refreshPreview(updateStatus: false));
+    });
+  }
+
+  Future<void> refreshPreview({bool updateStatus = true}) {
+    if (_disposed) return Future<void>.value();
+    return _previewRefresh ??= _refreshPreview(
+      updateStatus: updateStatus,
+    ).whenComplete(() => _previewRefresh = null);
+  }
+
+  Future<void> _refreshPreview({required bool updateStatus}) async {
+    final session = AlignmentSession.token;
     try {
-      final rawPosition = gotoService.calculateCurrentPosition(object);
       final initialAlignment = await gotoService.loadInitialAlignment();
       final correctionCalibration = await gotoService
           .loadCorrectionCalibration();
+      if (_disposed || session != AlignmentSession.token) return;
+      final rawPosition = gotoService.calculateCurrentPosition(object);
       AstronomicalGotoCommand? preview;
       String? error;
 
@@ -99,13 +139,22 @@ class CelestialControlController extends ChangeNotifier {
       _savedCalibration = initialAlignment;
       _previewCommand = preview;
       _lastUpdatedAt = rawPosition.computedAt;
-      _errorMessage = error;
-      _statusMessage = error ?? 'Alt/Az actualizado.';
+      _previewError = error;
+      if (updateStatus && !_isSending) {
+        _errorMessage = null;
+        _statusMessage = error ?? 'Alt/Az actualizado.';
+      }
     } catch (e) {
+      if (_disposed || session != AlignmentSession.token) return;
       _currentPosition = null;
+      _savedCalibration = null;
       _previewCommand = null;
-      _errorMessage = _errorText(e);
-      _statusMessage = _errorMessage;
+      _lastUpdatedAt = null;
+      _previewError = _errorText(e);
+      if (updateStatus && !_isSending) {
+        _errorMessage = null;
+        _statusMessage = _previewError;
+      }
     }
     _safeNotify();
   }
@@ -121,7 +170,9 @@ class CelestialControlController extends ChangeNotifier {
     await refreshPreview();
     if (_disposed || generation != _stopGeneration) return;
     if (_currentPosition == null || !isVisible || _previewCommand == null) {
-      _errorMessage ??= 'No se puede iniciar tracking: objeto no disponible.';
+      _errorMessage ??=
+          _previewError ??
+          'No se puede iniciar tracking: objeto no disponible.';
       _statusMessage = _errorMessage;
       _safeNotify();
       return;
@@ -165,7 +216,6 @@ class CelestialControlController extends ChangeNotifier {
       final sentAt = DateTime.now().toUtc();
       _localAltitude = next.altitude;
       _localAzimuth = next.azimuth;
-      _lastUpdatedAt = sentAt;
       _lastSentCommand = CelestialSentCommand(
         label: 'Ajuste fino ${_directionLabel(direction)}',
         altitude: next.altitude,
@@ -252,10 +302,14 @@ class CelestialControlController extends ChangeNotifier {
       );
       if (_disposed || generation != _stopGeneration) return;
       final sentAt = DateTime.now().toUtc();
-      _currentPosition = command.rawPosition;
-      _savedCalibration = command.initialAlignment;
-      _previewCommand = command;
-      _lastUpdatedAt = command.rawPosition.computedAt;
+      if (_lastUpdatedAt == null ||
+          !command.rawPosition.computedAt.isBefore(_lastUpdatedAt!)) {
+        _currentPosition = command.rawPosition;
+        _savedCalibration = command.initialAlignment;
+        _previewCommand = command;
+        _previewError = null;
+        _lastUpdatedAt = command.rawPosition.computedAt;
+      }
       _localAltitude = command.finalAltitude;
       _localAzimuth = command.finalAzimuth;
       _lastSentCommand = CelestialSentCommand(
@@ -323,6 +377,8 @@ class CelestialControlController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    AlignmentSession.changes.removeListener(_onReferenceChanged);
+    _previewTimer?.cancel();
     _trackingTimer?.cancel();
     super.dispose();
   }

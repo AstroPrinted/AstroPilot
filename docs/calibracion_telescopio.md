@@ -44,6 +44,19 @@ un modelo geométrico que corrija automáticamente desnivel o errores mecánicos
 
 ## Movimientos de banco
 
+En **Control OE4 → Calibrar posición actual** se pueden asignar las coordenadas
+reales de una orientación conocida sin mover los motores. Primero colocar el
+telescopio usando el control manual y esperar a que termine. Por ejemplo, si
+queda horizontal cuando el control indica −3° de altitud, dejarlo ahí y fijar
+altitud real 0° junto con su azimut real. Altitud 0° significa horizontal y 90°
+hacia arriba; azimut 0° significa norte (−3° equivale a 357°).
+
+El botón **Fijar coordenadas actuales** envía SET_POSITION y espera la respuesta
+del firmware. Una confirmación válida invalida la alineación y las correcciones
+anteriores de la app; para GoTo astronómico hay que alinear nuevamente con una
+estrella. Un comando rechazado no muestra éxito. Esta referencia es lógica y no
+se restaura automáticamente tras reiniciar el ESP32.
+
 Control permite MOVE sin alineación para comprobar motores en coordenadas lógicas.
 Esto no habilita GoTo astronómico. NUDGE conserva el signo al cruzar azimut 0°;
 los destinos absolutos de azimut usan el trayecto más corto. HOME vuelve al cero
@@ -54,6 +67,12 @@ comprobar la relación de transmisión externa, pinout, escala física y sentido
 antes de evaluar precisión de apuntado.
 
 ## Validación pendiente
+
+El control de objetos recalcula la posición y el destino corregido cada segundo,
+incluso con tracking apagado o sin BLE. Usa la hora de Configuración: con una hora
+de planificación fija es normal que las coordenadas no avancen. Esta actualización
+no envía comandos; el tracking mantiene su intervalo de envío de 15 segundos.
+El último comando enviado conserva las coordenadas efectivamente enviadas.
 
 La compilación y las pruebas automatizadas verifican código y manejo de errores.
 Siguen pendientes la compilación/firma iOS en Mac, Bluetooth/GPS en iPhone y las
