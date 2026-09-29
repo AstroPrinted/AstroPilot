@@ -16,6 +16,7 @@ class ConnectionStatusCard extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (isConnecting)
               const SizedBox(

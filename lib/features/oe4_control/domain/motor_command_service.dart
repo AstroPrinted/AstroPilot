@@ -36,7 +36,8 @@ class MotorCommandService {
   void _onResponse(String message) {
     if (message.startsWith('STATUS ->')) {
       final match = RegExp(
-        r'alt=-?\d+ pasos \(([-\d.]+) deg\), az=-?\d+ pasos \(([-\d.]+) deg\)',
+        r'alt=-?[\d.]+ (?:pulsos|pasos) \(([-\d.]+) deg\), '
+        r'az=-?[\d.]+ (?:pulsos|pasos) \(([-\d.]+) deg\)',
       ).firstMatch(message);
       if (match != null) {
         motorPosition = (
@@ -75,13 +76,14 @@ class MotorCommandService {
   }
 
   /// Bench movement in motor coordinates; it does not establish star alignment.
+  /// The OE4 firmware has no MOVE command, so this is a plain GOTO.
   Future<String> sendBenchMoveCommand(
     String deviceId, {
     required double alt,
     required double az,
   }) {
     return _sendCommand(deviceId, {
-      'cmd': 'MOVE',
+      'cmd': 'GOTO',
       'alt': _jsonNumber(alt),
       'az': _jsonNumber(az),
     });
@@ -144,6 +146,18 @@ class MotorCommandService {
     if (session != AlignmentSession.token) {
       throw StateError('La conexión cambió. Repite el comando.');
     }
+    final isMovement = const {'GOTO', 'NUDGE', 'HOME'}.contains(command['cmd']);
+    if (isMovement) motorPosition = null;
+    final sent = await _writeCommand(command);
+    if (isMovement && session == AlignmentSession.token) {
+      // The OE4 firmware does not report STATUS after a move; calibration
+      // needs the final motor position.
+      await _writeCommand({'cmd': 'STATUS'});
+    }
+    return sent;
+  }
+
+  Future<String> _writeCommand(Map<String, Object> command) {
     return _replies.send(command, (data) async {
       // Retrying a movement after an uncertain write can duplicate that movement.
       await _rxCharacteristic!.write(data, withoutResponse: false);

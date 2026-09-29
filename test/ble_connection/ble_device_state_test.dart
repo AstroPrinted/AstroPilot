@@ -28,4 +28,14 @@ void main() {
     );
     expect(updated.connectedDevice, isNull);
   });
+
+  test('scan list puts the telescope first even among stronger devices', () {
+    final sorted = sortDevicesForTelescope(const [
+      BleDevice(id: 'a', name: unnamedBleDeviceName, rssi: -30),
+      BleDevice(id: 'b', name: 'JBL Flip', rssi: -40),
+      BleDevice(id: 'c', name: 'AstroPilot-OE4', rssi: -80, isTelescope: true),
+      BleDevice(id: 'd', name: 'Mi Band', rssi: -60),
+    ]);
+    expect(sorted.map((d) => d.id), ['c', 'b', 'd', 'a']);
+  });
 }

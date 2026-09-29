@@ -16,46 +16,57 @@ void main() {
     );
   });
   tearDown(() => protocol.disconnect());
-  int idOf(List<int> data) =>
-      (jsonDecode(utf8.decode(data)) as Map)['id'] as int;
-  void reply(int id, String text) =>
-      protocol.addBytes(utf8.encode('@$id $text\n'));
+  // The OE4 firmware notifies each sendResponse() as one plain message.
+  void notify(String text) => protocol.addBytes(utf8.encode(text));
+
+  test('commands are sent as the plain JSON the firmware parses', () async {
+    late String written;
+    await protocol.send({'cmd': 'GOTO', 'alt': 10, 'az': 20}, (data) async {
+      written = utf8.decode(data);
+      notify('Comando: GOTO alt=10.00 deg, az=20.00 deg -> alt=1239 pulsos');
+      notify('GOTO Completado');
+    });
+    expect(written, '{"cmd":"GOTO","alt":10,"az":20}');
+  });
 
   test(
-    'SET_POSITION needs matching firmware acknowledgement, not just a successful write',
+    'SET_POSITION needs the firmware acknowledgement, not just a successful write',
     () async {
       var completed = false;
-      late int id;
-      final pending = protocol.send({'cmd': 'SET_POSITION'}, (data) async {
-        id = idOf(data);
-      });
+      final pending = protocol.send({'cmd': 'SET_POSITION'}, (_) async {});
       unawaited(pending.then((_) => completed = true));
       await Future<void>.delayed(Duration.zero);
-      expect(completed, isFalse);
-      reply(id + 1, 'SET_POSITION OK -> alt=45 az=120');
-      reply(id, '{"msg":"PONG"}');
+      notify('{"status":"OK","msg":"PONG"}');
       await Future<void>.delayed(Duration.zero);
       expect(completed, isFalse);
-      reply(id, 'SET_POSITION OK -> alt=45 az=120');
+      notify('SET_POSITION OK -> alt=45.0000 deg, az=120.0000 deg');
       await pending;
       expect(completed, isTrue);
     },
   );
 
-  test(
-    'fragmented responses reconstruct UTF8 without losing accented error text',
-    () async {
-      final pending = protocol.send({'cmd': 'SET_POSITION'}, (data) async {
-        for (final byte in utf8.encode(
-          '@${idOf(data)} ERROR: posición no aceptada\n',
-        )) {
-          protocol.addBytes([byte]);
-        }
-      });
-      await expectLater(pending, throwsA(isA<StateError>()));
-      expect(messages.single, 'ERROR: posición no aceptada');
-    },
-  );
+  test('firmware errors reject the command that was just written', () async {
+    await expectLater(
+      protocol.send({'cmd': 'GOTO'}, (_) async {
+        notify('ERROR: altitud fuera de rango');
+      }),
+      throwsA(isA<StateError>()),
+    );
+    expect(messages.single, 'ERROR: altitud fuera de rango');
+  });
+
+  test('errors are not attributed to a concurrent heartbeat', () async {
+    final ping = protocol.send({'cmd': 'PING'}, (_) async {});
+    final failed = expectLater(
+      protocol.send({'cmd': 'SET_POSITION'}, (_) async {
+        notify('ERROR: SET_POSITION requiere motores detenidos');
+      }),
+      throwsA(isA<StateError>()),
+    );
+    notify('{"status":"OK","msg":"PONG"}');
+    await ping;
+    await failed;
+  });
 
   test('no acknowledgement times out instead of reporting success', () async {
     await expectLater(
@@ -76,75 +87,63 @@ void main() {
   test(
     'motion waits for completion while heartbeat remains independent',
     () async {
-      late int movementId;
       var done = false;
-      final movement = protocol.send({'cmd': 'NUDGE'}, (data) async {
-        movementId = idOf(data);
-      });
+      final movement = protocol.send({'cmd': 'NUDGE'}, (_) async {});
       unawaited(movement.then((_) => done = true));
-      reply(movementId, 'Comando: NUDGE dAlt=1 dAz=0');
-      await protocol.send({'cmd': 'PING'}, (data) async {
-        reply(idOf(data), '{"msg":"PONG"}');
+      notify('Comando: NUDGE dAlt=1.00 deg, dAz=0.00 deg -> alt=1.00 deg');
+      await protocol.send({'cmd': 'PING'}, (_) async {
+        notify('{"status":"OK","msg":"PONG"}');
       });
+      await Future<void>.delayed(Duration.zero);
       expect(done, isFalse);
-      reply(
-        movementId,
-        'STATUS -> posicion interna actual: alt=11 pasos (0.97 deg), az=0 pasos (0.00 deg)',
-      );
-      reply(movementId, 'NUDGE Completado');
+      notify('NUDGE Completado');
       await movement;
     },
   );
 
-  test(
-    'STOP can cancel a pending move and still completes successfully',
-    () async {
-      late int movementId;
-      final movement = protocol.send({'cmd': 'GOTO'}, (data) async {
-        movementId = idOf(data);
-      });
-      final failed = expectLater(movement, throwsA(isA<StateError>()));
-      await protocol.send({'cmd': 'STOP'}, (data) async {
-        reply(movementId, 'ERROR: movimiento cancelado por STOP');
-        reply(idOf(data), 'STOP Completado -> movimiento detenido');
-      });
-      await failed;
-    },
-  );
+  test('a retargeted move completes when the final move finishes', () async {
+    final first = protocol.send({'cmd': 'GOTO'}, (_) async {});
+    final second = protocol.send({'cmd': 'NUDGE'}, (_) async {});
+    notify('NUDGE Completado');
+    await Future.wait([first, second]);
+  });
 
-  test(
-    'disconnect rejects pending commands and old replies cannot complete a new command',
-    () async {
-      late int previousId;
-      final old = protocol.send({'cmd': 'SET_POSITION'}, (data) async {
-        previousId = idOf(data);
-      });
-      final failed = expectLater(old, throwsA(isA<StateError>()));
-      protocol.disconnect();
-      await failed;
-      var completed = false;
-      late int newId;
-      final next = protocol.send({'cmd': 'SET_POSITION'}, (data) async {
-        newId = idOf(data);
-      });
-      unawaited(next.then((_) => completed = true));
-      reply(previousId, 'SET_POSITION OK');
-      await Future<void>.delayed(Duration.zero);
-      expect(completed, isFalse);
-      reply(newId, 'SET_POSITION OK');
-      await next;
-    },
-  );
+  test('STOP cancels a pending move and still completes', () async {
+    final movement = protocol.send({'cmd': 'GOTO'}, (_) async {});
+    final failed = expectLater(movement, throwsA(isA<StateError>()));
+    await protocol.send({'cmd': 'STOP'}, (_) async {
+      notify('STOP Completado -> movimiento detenido');
+    });
+    await failed;
+  });
 
-  test(
-    'legacy unframed firmware cannot accidentally confirm calibration',
-    () async {
-      await expectLater(
-        protocol.send({'cmd': 'SET_POSITION'}, (_) async {
-          protocol.addBytes(utf8.encode('SET_POSITION OK\n'));
-        }),
-        throwsA(isA<TimeoutException>()),
+  test('watchdog alert fails the pending move', () async {
+    await expectLater(
+      protocol.send({'cmd': 'GOTO'}, (_) async {
+        notify('ALERTA: conexión perdida. Motores detenidos en 1200 ms');
+      }),
+      throwsA(isA<StateError>()),
+    );
+  });
+
+  test('STATUS and watchdog replies complete their commands', () async {
+    await protocol.send({'cmd': 'STATUS'}, (_) async {
+      notify(
+        'STATUS -> posicion interna actual: alt=0 pulsos (0.00 deg), '
+        'az=0.00 pulsos (0.00 deg), moving=false, watchdog=false',
       );
-    },
-  );
+    });
+    await protocol.send({'cmd': 'ENABLE_WATCHDOG', 'enabled': true}, (
+      _,
+    ) async {
+      notify('{"status":"OK","watchdog":true}');
+    });
+  });
+
+  test('disconnect rejects pending commands', () async {
+    final old = protocol.send({'cmd': 'SET_POSITION'}, (_) async {});
+    final failed = expectLater(old, throwsA(isA<StateError>()));
+    protocol.disconnect();
+    await failed;
+  });
 }

@@ -20,7 +20,12 @@ class DeviceListTile extends StatelessWidget {
         padding: const EdgeInsets.all(12.0),
         child: Row(
           children: [
-            const Icon(Icons.signal_cellular_alt, color: Color(0xFF94A3B8)),
+            device.isTelescope
+                ? const Icon(Icons.stars, color: Color(0xFFF59E0B))
+                : const Icon(
+                    Icons.signal_cellular_alt,
+                    color: Color(0xFF94A3B8),
+                  ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(

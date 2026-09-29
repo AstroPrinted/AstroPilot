@@ -61,6 +61,7 @@ class ConnectionScreen extends StatelessWidget {
                         ? const Center(
                             child: Text(
                               'Presiona "Buscar dispositivos" para escanear',
+                              textAlign: TextAlign.center,
                               style: TextStyle(color: Color(0xFF94A3B8)),
                             ),
                           )
@@ -114,23 +115,27 @@ class _BluetoothOffView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.bluetooth_disabled,
-            size: 64,
-            color: Color(0xFF94A3B8),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Bluetooth está desactivado.\nHabilítalo para continuar.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Color(0xFF94A3B8), fontSize: 16),
-          ),
-        ],
+    // The Scaffold body is loosely constrained; without Center this column
+    // shrinks to the text width and sticks to the left edge.
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.bluetooth_disabled,
+              size: 64,
+              color: Color(0xFF94A3B8),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Bluetooth está desactivado.\nHabilítalo para continuar.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Color(0xFF94A3B8), fontSize: 16),
+            ),
+          ],
+        ),
       ),
     );
   }

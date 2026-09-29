@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import '../../oe4_control/domain/motor_command_service.dart';
 import '../data/models/ble_device_state.dart';
 
 class BleService {
@@ -25,21 +26,26 @@ class BleService {
     await FlutterBluePlus.startScan(timeout: const Duration(seconds: 30));
 
     await for (final event in FlutterBluePlus.scanResults) {
-      final devices = event
-          .map(
-            (r) => BleDevice(
-              id: r.device.remoteId.str,
-              name: r.advertisementData.advName.isNotEmpty
-                  ? r.advertisementData.advName
-                  : r.device.platformName.isNotEmpty
-                  ? r.device.platformName
-                  : 'Dispositivo BLE sin nombre',
-              rssi: r.rssi,
-            ),
-          )
-          .toList();
-      yield devices;
+      yield sortDevicesForTelescope(event.map(_toDevice));
     }
+  }
+
+  BleDevice _toDevice(ScanResult r) {
+    final name = r.advertisementData.advName.isNotEmpty
+        ? r.advertisementData.advName
+        : r.device.platformName.isNotEmpty
+        ? r.device.platformName
+        : unnamedBleDeviceName;
+    return BleDevice(
+      id: r.device.remoteId.str,
+      name: name,
+      rssi: r.rssi,
+      isTelescope:
+          r.advertisementData.serviceUuids.contains(
+            MotorCommandService.serviceUuid,
+          ) ||
+          name.toLowerCase().contains('astropilot'),
+    );
   }
 
   Future<void> stopScan() async {

@@ -9,8 +9,31 @@ class BleDevice {
   final String name;
   final int rssi;
 
-  const BleDevice({required this.id, required this.name, required this.rssi});
+  /// Advertises the OE4 service UUID or the AstroPilot name.
+  final bool isTelescope;
+
+  const BleDevice({
+    required this.id,
+    required this.name,
+    required this.rssi,
+    this.isTelescope = false,
+  });
 }
+
+/// Telescope first, then named devices, then unnamed; strongest signal first.
+List<BleDevice> sortDevicesForTelescope(Iterable<BleDevice> devices) {
+  int rank(BleDevice d) => d.isTelescope
+      ? 0
+      : d.name == unnamedBleDeviceName
+      ? 2
+      : 1;
+  return devices.toList()..sort((a, b) {
+    final byRank = rank(a).compareTo(rank(b));
+    return byRank != 0 ? byRank : b.rssi.compareTo(a.rssi);
+  });
+}
+
+const unnamedBleDeviceName = 'Dispositivo BLE sin nombre';
 
 class BleConnectionState {
   final BleConnectionStatus connectionStatus;
