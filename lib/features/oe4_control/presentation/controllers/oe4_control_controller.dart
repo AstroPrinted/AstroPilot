@@ -3,12 +3,16 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../../domain/motor_command_service.dart';
+import '../../domain/telescope_position.dart';
 import '../../../calibration/domain/services/alignment_session.dart';
 import '../../../ble_connection/presentation/controllers/ble_connection_controller.dart';
 import '../../../ble_connection/data/models/ble_device_state.dart';
 
 class Oe4ControlController extends ChangeNotifier {
   static const Duration _heartbeatInterval = Duration(milliseconds: 300);
+  // A PING without PONG after this long no longer blocks the next one: the
+  // ESP32 watchdog stops the motors after 1000 ms without receiving a PING.
+  static const Duration _stalePingAfter = Duration(milliseconds: 600);
   static const Duration _rssiInterval = Duration(seconds: 1);
 
   final MotorCommandService _motorCommandService;
@@ -22,7 +26,7 @@ class Oe4ControlController extends ChangeNotifier {
   int _latestSend = 0;
   bool _isTogglingWatchdog = false;
   bool _heartbeatActive = false;
-  bool _pingInFlight = false;
+  DateTime? _pingSentAt;
   bool _rssiReadInFlight = false;
   bool _rssiUnavailable = false;
   bool _watchdogEnabled = false;
@@ -47,8 +51,33 @@ class Oe4ControlController extends ChangeNotifier {
   String? get lastEsp32Alert => _lastEsp32Alert;
   DateTime? get lastPongReceivedAt => _lastPongReceivedAt;
   int? get currentRssi => _currentRssi;
-  ({double altitude, double azimuth})? get motorPosition =>
-      _motorCommandService.motorPosition;
+
+  /// Última posición del encoder (STATUS).
+  MotorAngles? get motorPosition => _motorCommandService.motorPosition;
+
+  /// Último objetivo enviado al firmware.
+  MotorAngles? get targetPosition => _motorCommandService.targetPosition;
+
+  /// Posición actual del telescopio compartida por todas las pantallas.
+  MotorAngles? get telescopePosition => _motorCommandService.telescopePosition;
+
+  /// Origen de los movimientos relativos (ver `MotorCommandService.motionBase`).
+  MotorAngles? get motionBase => _motorCommandService.motionBase;
+
+  MoveOutcome? get lastMoveOutcome => _motorCommandService.lastMoveOutcome;
+  bool get isMoving => _motorCommandService.movementInFlight;
+  List<MoveRecord> get movementLog => _motorCommandService.movementLog;
+
+  /// Aviso visible cuando el último movimiento no llegó al objetivo.
+  String? get movementWarning {
+    final outcome = lastMoveOutcome;
+    if (outcome == null || !outcome.isStalled) return null;
+    final error = outcome.errorDeg;
+    final distance = error == null ? '' : ' a ${error.toStringAsFixed(2)}°';
+    return 'El telescopio se detuvo$distance del objetivo sin completar el '
+        'movimiento (posible falta de torque por el peso). La app usa la '
+        'posición real del encoder para el siguiente movimiento.';
+  }
 
   Oe4ControlController(this._motorCommandService, {this.connection}) {
     connection?.addListener(_connectionChanged);
@@ -99,7 +128,73 @@ class Oe4ControlController extends ChangeNotifier {
     _lastPongReceivedAt = null;
     _startHeartbeat(deviceId);
     _startRssiPolling(deviceId);
+    // Every screen moves from the telescope position; read it right away.
+    unawaited(_refreshPositionQuietly(deviceId));
     _safeNotify();
+  }
+
+  Future<void> _refreshPositionQuietly(String deviceId) async {
+    try {
+      await _motorCommandService.sendStatusCommand(deviceId);
+    } catch (_) {
+      // The position stays unknown until the next STATUS.
+    }
+    _safeNotify();
+  }
+
+  /// Mueve el telescopio a una posición absoluta (coordenadas del motor).
+  /// Todas las pantallas mueven el telescopio a través de este método o de
+  /// [moveBy], así la posición compartida siempre coincide con el firmware.
+  Future<void> moveTo(
+    String deviceId, {
+    required double alt,
+    required double az,
+    bool throwOnError = false,
+  }) {
+    final target = normalizeMotorAngles(alt, az);
+    return _send(
+      () => _motorCommandService.sendGotoCommand(
+        deviceId,
+        alt: target.altitude,
+        az: target.azimuth,
+      ),
+      throwOnError: throwOnError,
+    );
+  }
+
+  /// Mueve el telescopio relativo a su posición actual.
+  ///
+  /// Se envía como GOTO absoluto calculado desde la posición compartida, no
+  /// como NUDGE, porque NUDGE suma sobre el último objetivo del firmware y
+  /// ese objetivo puede venir de otra pantalla.
+  Future<void> moveBy(
+    String deviceId, {
+    required double deltaAlt,
+    required double deltaAz,
+    bool throwOnError = false,
+  }) async {
+    var base = _motorCommandService.motionBase;
+    if (base == null) {
+      try {
+        await _motorCommandService.sendStatusCommand(deviceId);
+      } catch (_) {
+        // Reported below as an unknown position.
+      }
+      base = _motorCommandService.motionBase;
+    }
+    if (base == null) {
+      _errorMessage =
+          'Posición del telescopio desconocida. Pide STATUS antes de moverlo.';
+      _safeNotify();
+      if (throwOnError) throw StateError(_errorMessage!);
+      return;
+    }
+    return moveTo(
+      deviceId,
+      alt: base.altitude + deltaAlt,
+      az: base.azimuth + deltaAz,
+      throwOnError: throwOnError,
+    );
   }
 
   Future<void> sendGoto(
@@ -107,39 +202,14 @@ class Oe4ControlController extends ChangeNotifier {
     required double alt,
     required double az,
     bool throwOnError = false,
-  }) {
-    return _send(
-      () => _motorCommandService.sendGotoCommand(deviceId, alt: alt, az: az),
-      throwOnError: throwOnError,
-    );
-  }
+  }) => moveTo(deviceId, alt: alt, az: az, throwOnError: throwOnError);
 
+  /// Movimiento de banco desde la pantalla de control, en coordenadas del motor.
   Future<void> sendBenchMove(
     String deviceId, {
     required double alt,
     required double az,
-  }) {
-    return _send(
-      () =>
-          _motorCommandService.sendBenchMoveCommand(deviceId, alt: alt, az: az),
-    );
-  }
-
-  Future<void> sendNudge(
-    String deviceId, {
-    required double deltaAlt,
-    required double deltaAz,
-    bool throwOnError = false,
-  }) {
-    return _send(
-      () => _motorCommandService.sendNudgeCommand(
-        deviceId,
-        deltaAlt: deltaAlt,
-        deltaAz: deltaAz,
-      ),
-      throwOnError: throwOnError,
-    );
-  }
+  }) => moveTo(deviceId, alt: alt, az: az);
 
   Future<void> sendSetPosition(
     String deviceId, {
@@ -187,12 +257,18 @@ class Oe4ControlController extends ChangeNotifier {
         throw StateError('La conexión cambió. Repite la referencia.');
       }
       AlignmentSession.invalidate();
+      // The invalidation resets the shared position; the firmware already
+      // confirmed the new one.
+      _motorCommandService.adoptConfirmedPosition(alt, az == 360 ? 0 : az);
       return command;
     }, throwOnError: true);
   }
 
-  Future<void> sendStatus(String deviceId) {
-    return _send(() => _motorCommandService.sendStatusCommand(deviceId));
+  Future<void> sendStatus(String deviceId, {bool throwOnError = false}) {
+    return _send(
+      () => _motorCommandService.sendStatusCommand(deviceId),
+      throwOnError: throwOnError,
+    );
   }
 
   Future<void> sendStop(String deviceId) {
@@ -240,19 +316,24 @@ class Oe4ControlController extends ChangeNotifier {
     _heartbeatTimer?.cancel();
     _heartbeatTimer = null;
     _heartbeatActive = false;
-    _pingInFlight = false;
+    _pingSentAt = null;
   }
 
   Future<void> _sendHeartbeatPing(String deviceId) async {
-    if (_pingInFlight || _connectedDeviceId != deviceId) return;
+    if (_connectedDeviceId != deviceId) return;
+    final previous = _pingSentAt;
+    if (previous != null &&
+        DateTime.now().difference(previous) < _stalePingAfter) {
+      return;
+    }
 
-    _pingInFlight = true;
+    final sentAt = _pingSentAt = DateTime.now();
     try {
       await _motorCommandService.sendPingCommand(deviceId);
     } catch (_) {
       // The BLE connection controller owns disconnect/error state; avoid noisy UI errors every 300 ms.
     } finally {
-      _pingInFlight = false;
+      if (identical(_pingSentAt, sentAt)) _pingSentAt = null;
     }
   }
 

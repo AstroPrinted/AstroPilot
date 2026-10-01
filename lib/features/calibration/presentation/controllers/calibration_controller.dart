@@ -22,6 +22,7 @@ import '../../domain/services/alignment_session.dart';
 typedef CalibrationCommandSender = Future<void> Function();
 typedef CalibrationGotoSender =
     Future<void> Function(double altitude, double azimuth);
+/// Relative move from the shared telescope position.
 typedef CalibrationManualMoveSender =
     Future<void> Function(double deltaAltitude, double deltaAzimuth);
 typedef CalibrationSetPositionSender =
@@ -53,7 +54,7 @@ final class CalibrationStarOption {
 class CalibrationController extends ChangeNotifier {
   // Nominal half-step at the 28BYJ-48 output, before external gearing.
   static const double nominalMotorStepDegrees = 360.0 / 4096.0;
-  static const double fineStepDegrees = 1.0;
+  static const double fineStepDegrees = 0.25;
   static const double visibleStarAltitudeThresholdDeg = 15.0;
   static const double minimumRecommendedSeparationDeg = 30.0;
   static const List<String> _recommendedStarOrder = [
@@ -77,6 +78,7 @@ class CalibrationController extends ChangeNotifier {
   bool _initialized = false;
   bool _isLoading = false;
   bool _isBusy = false;
+  bool _abortRequested = false;
   String? _errorMessage;
   CalibrationFlowStep _flowStep = CalibrationFlowStep.idle;
   CalibrationStage _activeStage = CalibrationStage.initialAlignment;
@@ -122,6 +124,13 @@ class CalibrationController extends ChangeNotifier {
         'Activa Usar hora actual en Configuración antes de alinear o apuntar.',
       );
     }
+  }
+
+  void _recordMotorPositionIfKnown() {
+    final position = motorPositionProvider?.call();
+    if (position == null) return;
+    _adjustedAltitude = position.altitude;
+    _adjustedAzimuth = position.azimuth;
   }
 
   void _recordMotorPosition({
@@ -441,16 +450,11 @@ class CalibrationController extends ChangeNotifier {
     }
 
     final star = option.star;
-    final session = _session!;
 
     _selectedStar = star;
     _targetPosition = null;
-    _adjustedAltitude = session.stage == CalibrationStage.initialAlignment
-        ? 0.0
-        : null;
-    _adjustedAzimuth = session.stage == CalibrationStage.initialAlignment
-        ? 0.0
-        : null;
+    _adjustedAltitude = null;
+    _adjustedAzimuth = null;
     _flowWarningMessage = null;
     _pendingSeparationWarning = null;
     _flowStep = CalibrationFlowStep.calculatingTarget;
@@ -475,12 +479,8 @@ class CalibrationController extends ChangeNotifier {
       }
 
       _targetPosition = target;
-      _adjustedAltitude = session.stage == CalibrationStage.initialAlignment
-          ? 0.0
-          : target.altitudeDeg;
-      _adjustedAzimuth = session.stage == CalibrationStage.initialAlignment
-          ? 0.0
-          : target.azimuthDeg;
+      _adjustedAltitude = target.altitudeDeg;
+      _adjustedAzimuth = target.azimuthDeg;
       final closestDistance = _closestReferenceDistance(target);
       if (closestDistance != null &&
           closestDistance < minimumRecommendedSeparationDeg) {
@@ -490,14 +490,10 @@ class CalibrationController extends ChangeNotifier {
         );
         _flowWarningMessage = _pendingSeparationWarning;
       }
-      _session = _session?.copyWith(
-        status: session.stage == CalibrationStage.initialAlignment
-            ? CalibrationStatus.waitingForManualCentering
-            : CalibrationStatus.inProgress,
-      );
-      _flowStep = session.stage == CalibrationStage.initialAlignment
-          ? CalibrationFlowStep.waitingUserCentering
-          : CalibrationFlowStep.movingToTarget;
+      _session = _session?.copyWith(status: CalibrationStatus.inProgress);
+      // Both stages first send an approximate GOTO (from the 0/0 reference
+      // during the initial alignment) and then wait for manual centering.
+      _flowStep = CalibrationFlowStep.movingToTarget;
       debugPrint(
         '[Calibration] Calculated Alt/Az: '
         '${target.altitudeDeg.toStringAsFixed(2)} / '
@@ -520,7 +516,6 @@ class CalibrationController extends ChangeNotifier {
     final star = _selectedStar;
     if (session == null ||
         star == null ||
-        session.stage != CalibrationStage.correctionCalibration ||
         _flowStep != CalibrationFlowStep.movingToTarget) {
       return;
     }
@@ -549,7 +544,11 @@ class CalibrationController extends ChangeNotifier {
         return;
       }
 
-      final destination = _correctedGotoTarget(target);
+      // The initial alignment replaces the reference, so the previous
+      // correction must not bend its approximate GOTO.
+      final destination = session.stage == CalibrationStage.initialAlignment
+          ? _rawGotoTarget(target)
+          : _correctedGotoTarget(target);
       await sendGoto(destination.altitude, destination.azimuth);
       if (connectionSession != AlignmentSession.token) {
         throw StateError('La conexión cambió. Repite la alineación.');
@@ -570,12 +569,22 @@ class CalibrationController extends ChangeNotifier {
         '${destination.azimuth.toStringAsFixed(4)}',
       );
     } catch (error) {
-      _flowStep = CalibrationFlowStep.failed;
+      // A reconnection already reset the flow in _onSessionChanged.
+      if (_session == null) return;
+      if (_abortRequested) {
+        _abortRequested = false;
+        _resetToStarSelection();
+        return;
+      }
+      // The user can still center the star by hand from wherever the
+      // telescope stopped (for example after a stall far from the target).
+      _flowStep = CalibrationFlowStep.waitingUserCentering;
       _session = _session?.copyWith(
-        status: CalibrationStatus.calibrationFailed,
+        status: CalibrationStatus.waitingForManualCentering,
       );
-      _errorMessage = 'No se pudo enviar GOTO de corrección: $error';
-      debugPrint('[Calibration] Correction GOTO failed: $error');
+      _recordMotorPositionIfKnown();
+      _errorMessage = 'No se pudo completar el GOTO a la estrella: $error';
+      debugPrint('[Calibration] Reference GOTO failed: $error');
     } finally {
       _isBusy = false;
       notifyListeners();
@@ -608,10 +617,13 @@ class CalibrationController extends ChangeNotifier {
     );
   }
 
+  /// Moves to an absolute motor position. It is sent as an absolute GOTO so
+  /// the result never depends on where a previous screen left the firmware
+  /// target.
   Future<void> moveToAdjustedPosition({
     required double altitude,
     required double azimuth,
-    required CalibrationManualMoveSender sendManualMove,
+    required CalibrationGotoSender sendAbsoluteMove,
   }) async {
     if (_selectedStar == null ||
         _flowStep != CalibrationFlowStep.waitingUserCentering) {
@@ -624,33 +636,33 @@ class CalibrationController extends ChangeNotifier {
       return;
     }
 
-    final currentAltitude = _adjustedAltitude ?? 0.0;
-    final currentAzimuth = _adjustedAzimuth ?? 0.0;
-    final deltaAltitude = altitude - currentAltitude;
-    final deltaAzimuth =
-        normalizeDegrees360(azimuth - currentAzimuth + 180.0) - 180.0;
-
-    if (deltaAltitude.abs() < 0.0001 && deltaAzimuth.abs() < 0.0001) {
+    if (altitude < -90 || altitude > 90) {
+      _errorMessage = 'La altitud debe estar entre -90 y 90 grados.';
+      notifyListeners();
       return;
     }
+    final destinationAzimuth = normalizeDegrees360(azimuth);
 
     await _runCommand(
       logLabel:
-          '[Calibration] Manual direct move: '
-          '${deltaAltitude.toStringAsFixed(2)} / '
-          '${deltaAzimuth.toStringAsFixed(2)}',
-      action: () => sendManualMove(deltaAltitude, deltaAzimuth),
+          '[Calibration] Manual direct move to: '
+          '${altitude.toStringAsFixed(2)} / '
+          '${destinationAzimuth.toStringAsFixed(2)}',
+      action: () => sendAbsoluteMove(altitude, destinationAzimuth),
       onSuccess: () {
         _recordMotorPosition(
           fallbackAltitude: altitude,
-          fallbackAzimuth: azimuth,
+          fallbackAzimuth: destinationAzimuth,
         );
       },
     );
   }
 
+  /// [refreshPosition] asks the ESP32 for STATUS so the correction point uses
+  /// the encoder position at the moment the user confirms.
   Future<void> confirmCenteredReference({
     CalibrationSetPositionSender? setInitialPosition,
+    CalibrationCommandSender? refreshPosition,
   }) async {
     final session = _session;
     final star = _selectedStar;
@@ -689,6 +701,18 @@ class CalibrationController extends ChangeNotifier {
         updatedSession = calibrationService.addWarning(
           updatedSession,
           separationWarning,
+        );
+      }
+
+      if (session.stage == CalibrationStage.correctionCalibration &&
+          refreshPosition != null) {
+        await refreshPosition();
+        if (connectionSession != AlignmentSession.token) {
+          throw StateError('La conexión cambió. Repite la alineación.');
+        }
+        _recordMotorPosition(
+          fallbackAltitude: _adjustedAltitude ?? target.altitudeDeg,
+          fallbackAzimuth: _adjustedAzimuth ?? target.azimuthDeg,
         );
       }
 
@@ -816,6 +840,41 @@ class CalibrationController extends ChangeNotifier {
     _correctionCalibrationResult = result;
   }
 
+  /// Guarda el centrado manual de un objeto del catálogo como corrección de
+  /// una referencia ("Guardar esta corrección" en Observar). Reemplaza la
+  /// corrección anterior.
+  Future<void> saveObjectCorrection({
+    required String objectId,
+    required String objectName,
+    required double calculatedAltitude,
+    required double calculatedAzimuth,
+    required double motorAltitude,
+    required double motorAzimuth,
+  }) async {
+    if (!isInitialAligned) {
+      throw StateError('Alinea el telescopio antes de guardar correcciones.');
+    }
+    final point = calibrationService.createPoint(
+      objectId: objectId,
+      objectName: objectName,
+      calculatedAltitude: calculatedAltitude,
+      calculatedAzimuth: calculatedAzimuth,
+      adjustedAltitude: motorAltitude,
+      adjustedAzimuth: motorAzimuth,
+      motorAltitudeAtCalibration: motorAltitude,
+      motorAzimuthAtCalibration: motorAzimuth,
+    );
+    final session = calibrationService.addPoint(
+      calibrationService.startSession(
+        stage: CalibrationStage.correctionCalibration,
+        method: CalibrationMethod.oneStar,
+      ),
+      point,
+    );
+    await _saveCompletedResult(calibrationService.completeSession(session));
+    notifyListeners();
+  }
+
   Future<void> savePendingResult() async {
     final result = _pendingResult;
     if (result == null) return;
@@ -886,6 +945,41 @@ class CalibrationController extends ChangeNotifier {
       _isBusy = false;
       notifyListeners();
     }
+  }
+
+  /// Detiene el GOTO a la referencia y vuelve a la elección de estrella.
+  Future<void> abortReferenceGoto(CalibrationCommandSender sendStop) async {
+    if (_session == null) return;
+    _abortRequested = _isBusy;
+    try {
+      await sendStop();
+    } finally {
+      // If the GOTO is still unwinding, its catch block finishes the reset.
+      if (!_isBusy) {
+        _abortRequested = false;
+        returnToStarSelection();
+      }
+    }
+  }
+
+  /// Vuelve a la elección de estrella sin perder las referencias ya
+  /// confirmadas en esta sesión.
+  void returnToStarSelection() {
+    if (_session == null) return;
+    _resetToStarSelection();
+    notifyListeners();
+  }
+
+  void _resetToStarSelection() {
+    _selectedStar = null;
+    _targetPosition = null;
+    _adjustedAltitude = null;
+    _adjustedAzimuth = null;
+    _flowWarningMessage = null;
+    _pendingSeparationWarning = null;
+    _calibrationStarOptions = _buildCalibrationStarOptions();
+    _flowStep = CalibrationFlowStep.selectingObject;
+    _errorMessage = _visibilityRequirementError(_calibrationStarOptions);
   }
 
   void cancelFlow() {
@@ -1041,13 +1135,15 @@ class CalibrationController extends ChangeNotifier {
     return position.altitudeDeg > visibleStarAltitudeThresholdDeg;
   }
 
+  ({double altitude, double azimuth}) _rawGotoTarget(AltAzResult target) => (
+    altitude: target.altitudeDeg.clamp(-90.0, 90.0).toDouble(),
+    azimuth: normalizeDegrees360(target.azimuthDeg),
+  );
+
   ({double altitude, double azimuth}) _correctedGotoTarget(AltAzResult target) {
     final correction = _correctionCalibrationResult;
     if (correction == null || !correction.hasCorrectionCalibration) {
-      return (
-        altitude: target.altitudeDeg.clamp(-90.0, 90.0).toDouble(),
-        azimuth: normalizeDegrees360(target.azimuthDeg),
-      );
+      return _rawGotoTarget(target);
     }
 
     return calibrationService.applyCorrection(

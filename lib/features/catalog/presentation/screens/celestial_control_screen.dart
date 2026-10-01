@@ -46,6 +46,7 @@ class _CelestialControlScreenState extends State<CelestialControlScreen> {
         astronomyPositionService: const AstronomyPositionService(),
         correctionService: const PointingCorrectionService(),
       ),
+      positionProvider: () => context.read<Oe4ControlController>().motionBase,
     );
     _controller.startLivePreview();
   }

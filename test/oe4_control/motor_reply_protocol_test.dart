@@ -108,6 +108,29 @@ void main() {
     await Future.wait([first, second]);
   });
 
+  test('the app can settle a move the firmware never completes', () async {
+    // A heavy telescope may stay outside the 6-pulse tolerance forever.
+    final movement = protocol.send({'cmd': 'GOTO'}, (_) async {
+      notify('Comando: GOTO alt=21.00 deg, az=243.00 deg -> alt=2600 pulsos');
+    });
+    await Future<void>.delayed(Duration.zero);
+    protocol.settleMovements();
+    await movement;
+  });
+
+  test('a late GOTO error is not taken by a STATUS poll', () async {
+    final movement = protocol.send({'cmd': 'GOTO'}, (_) async {});
+    final failed = expectLater(movement, throwsA(isA<StateError>()));
+    final status = protocol.send({'cmd': 'STATUS'}, (_) async {});
+    notify('ERROR: altitud fuera de rango');
+    await failed;
+    notify(
+      'STATUS -> posicion interna actual: alt=0 pulsos (0.00 deg), '
+      'az=0.00 pulsos (0.00 deg), moving=false, watchdog=false',
+    );
+    await status;
+  });
+
   test('STOP cancels a pending move and still completes', () async {
     final movement = protocol.send({'cmd': 'GOTO'}, (_) async {});
     final failed = expectLater(movement, throwsA(isA<StateError>()));
@@ -133,9 +156,7 @@ void main() {
         'az=0.00 pulsos (0.00 deg), moving=false, watchdog=false',
       );
     });
-    await protocol.send({'cmd': 'ENABLE_WATCHDOG', 'enabled': true}, (
-      _,
-    ) async {
+    await protocol.send({'cmd': 'ENABLE_WATCHDOG', 'enabled': true}, (_) async {
       notify('{"status":"OK","watchdog":true}');
     });
   });

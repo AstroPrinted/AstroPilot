@@ -65,8 +65,10 @@ class MotorReplyProtocol {
 
     if (message.startsWith('ERROR:')) {
       // The firmware answers errors synchronously to the command just written.
+      // PING and the STATUS polls sent while a move is in progress never fail.
       final target =
-          _lastOpen((p) => p.command != 'PING') ?? _lastOpen((_) => true);
+          _lastOpen((p) => p.command != 'PING' && p.command != 'STATUS') ??
+          _lastOpen((_) => true);
       target?.reply.completeError(StateError(message));
       return;
     }
@@ -96,6 +98,18 @@ class MotorReplyProtocol {
 
     _firstOpen((p) => _completes(p.command, message))?.reply.complete();
   }
+
+  /// The app decided that the movement ended (encoder within tolerance or
+  /// stalled) even though the firmware has not reported `Completado`.
+  void settleMovements() {
+    for (final p in _open((p) => _movementCommands.contains(p.command))) {
+      p.reply.complete();
+    }
+  }
+
+  /// Fails every pending movement (for example when STATUS polls stop
+  /// arriving during a move).
+  void failMovements(String reason) => _failMovements(reason);
 
   bool _isMovementCompletion(String message) =>
       message.startsWith('GOTO Completado') ||

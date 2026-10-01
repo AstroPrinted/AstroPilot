@@ -4,11 +4,15 @@ import 'package:provider/provider.dart';
 
 import '../../../ble_connection/data/models/ble_device_state.dart';
 import '../../../ble_connection/presentation/controllers/ble_connection_controller.dart';
+import '../../domain/telescope_position.dart';
 import '../controllers/oe4_control_controller.dart';
 import '../widgets/manual_reference_card.dart';
 
 class Oe4ControlScreen extends StatefulWidget {
-  const Oe4ControlScreen({super.key});
+  /// Barra superior; por defecto "Control OE4".
+  final PreferredSizeWidget? appBar;
+
+  const Oe4ControlScreen({super.key, this.appBar});
 
   @override
   State<Oe4ControlScreen> createState() => _Oe4ControlScreenState();
@@ -40,7 +44,7 @@ class _Oe4ControlScreenState extends State<Oe4ControlScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Control OE4')),
+      appBar: widget.appBar ?? AppBar(title: const Text('Control OE4')),
       body: Consumer2<BleConnectionController, Oe4ControlController>(
         builder: (context, bleController, oe4Controller, _) {
           final bleState = bleController.state;
@@ -69,6 +73,20 @@ class _Oe4ControlScreenState extends State<Oe4ControlScreen> {
                     lastSentCommand: oe4Controller.lastSentCommand,
                     lastResponse: oe4Controller.lastResponse,
                     errorMessage: oe4Controller.errorMessage,
+                  ),
+                  const SizedBox(height: 14),
+                  _TelescopePositionCard(
+                    isConnected: isConnected,
+                    position: oe4Controller.motorPosition,
+                    target: oe4Controller.targetPosition,
+                    isMoving: oe4Controller.isMoving,
+                    outcome: oe4Controller.lastMoveOutcome,
+                    warning: oe4Controller.movementWarning,
+                    log: oe4Controller.movementLog,
+                    onRefresh: () => _sendIfReady(
+                      deviceId,
+                      () => oe4Controller.sendStatus(deviceId!),
+                    ),
                   ),
                   const SizedBox(height: 14),
                   _ReliabilityCard(
@@ -344,6 +362,148 @@ class _ConnectionCard extends StatelessWidget {
               icon: Icons.error_outline_rounded,
               message: errorMessage!,
               color: colorScheme.error,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// La posición compartida que usan Control, Alineación y Catálogo.
+class _TelescopePositionCard extends StatelessWidget {
+  final bool isConnected;
+  final MotorAngles? position;
+  final MotorAngles? target;
+  final bool isMoving;
+  final MoveOutcome? outcome;
+  final String? warning;
+  final List<MoveRecord> log;
+  final VoidCallback onRefresh;
+
+  const _TelescopePositionCard({
+    required this.isConnected,
+    required this.position,
+    required this.target,
+    required this.isMoving,
+    required this.outcome,
+    required this.warning,
+    required this.log,
+    required this.onRefresh,
+  });
+
+  String _deg(double? value) =>
+      value == null ? '—' : '${value.toStringAsFixed(2)}°';
+
+  static String _pair(MotorAngles? p) => p == null
+      ? '—'
+      : '${p.altitude.toStringAsFixed(2)} / ${p.azimuth.toStringAsFixed(2)}';
+
+  static String _describe(MoveRecord r) {
+    String two(int v) => v.toString().padLeft(2, '0');
+    final t = r.startedAt;
+    final time = '${two(t.hour)}:${two(t.minute)}:${two(t.second)}';
+    final result = switch (r.kind) {
+      MoveOutcomeKind.completed => 'Completado (firmware)',
+      MoveOutcomeKind.arrived => 'Llegó',
+      MoveOutcomeKind.stalled => 'Se detuvo',
+      null => 'Error: ${r.error}',
+    };
+    final seconds = (r.duration.inMilliseconds / 1000).toStringAsFixed(1);
+    return '$time ${r.command}\n'
+        '  desde ${_pair(r.from)} -> objetivo ${_pair(r.target)}\n'
+        '  quedó ${_pair(r.reached)} | $result | $seconds s';
+  }
+
+  String get _logText => log.map(_describe).join('\n');
+
+  String get _state {
+    if (!isConnected) return 'Sin conexión';
+    if (isMoving) return 'Moviendo…';
+    return switch (outcome?.kind) {
+      MoveOutcomeKind.completed => 'Completado (firmware)',
+      MoveOutcomeKind.arrived => 'Llegó al objetivo',
+      MoveOutcomeKind.stalled => 'Se detuvo antes de llegar',
+      null => position == null ? 'Posición desconocida' : 'Detenido',
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final stalled = outcome?.isStalled ?? false;
+    final accent = stalled ? colorScheme.tertiary : colorScheme.primary;
+
+    return _Oe4Card(
+      title: 'Posición del telescopio',
+      icon: Icons.my_location_rounded,
+      accent: accent,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _StatusPill(label: _state, color: accent),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _MetricTile(
+                  label: 'Altitud (encoder)',
+                  value: _deg(position?.altitude),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _MetricTile(
+                  label: 'Azimut (encoder)',
+                  value: _deg(position?.azimuth),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _InfoLine(
+            label: 'Objetivo',
+            value: target == null
+                ? '—'
+                : 'alt ${_deg(target!.altitude)}, az ${_deg(target!.azimuth)}',
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Es la misma posición que usan Alineación y Catálogo para mover '
+            'el telescopio.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          if (warning != null) ...[
+            const SizedBox(height: 10),
+            _InlineNotice(
+              icon: Icons.warning_amber_rounded,
+              message: warning!,
+              color: colorScheme.tertiary,
+            ),
+          ],
+          const SizedBox(height: 10),
+          OutlinedButton.icon(
+            onPressed: isConnected && !isMoving ? onRefresh : null,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Leer posición (STATUS)'),
+          ),
+          if (log.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            _MonospaceBlock(
+              label: 'Últimos movimientos (alt / az)',
+              value: _logText,
+            ),
+            const SizedBox(height: 8),
+            TextButton.icon(
+              onPressed: () async {
+                await Clipboard.setData(ClipboardData(text: _logText));
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Historial copiado')),
+                );
+              },
+              icon: const Icon(Icons.copy_rounded),
+              label: const Text('Copiar historial'),
             ),
           ],
         ],

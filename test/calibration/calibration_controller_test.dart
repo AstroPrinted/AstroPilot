@@ -46,28 +46,39 @@ void main() {
     expect(controller.errorMessage, contains('estrella reconocible sobre 15'));
   });
 
-  test('selects a visible star and waits for manual centering', () async {
-    final controller = _controller(_position(45, 120));
-    addTearDown(controller.dispose);
+  test(
+    'selecting a star sends an approximate GOTO, then waits for centering',
+    () async {
+      final controller = _controller(_position(45, 120));
+      addTearDown(controller.dispose);
+      final gotos = <List<double>>[];
 
-    await controller.loadSavedCalibration();
-    controller.startMethod(CalibrationMethod.oneStar);
-    await controller.selectStar(controller.calibrationStarOptions.first);
+      await controller.loadSavedCalibration();
+      controller.startMethod(CalibrationMethod.oneStar);
+      await controller.selectStar(controller.calibrationStarOptions.first);
 
-    expect(controller.flowStep, CalibrationFlowStep.waitingUserCentering);
-    expect(controller.status, CalibrationStatus.waitingForManualCentering);
-    expect(controller.targetPosition?.altitudeDeg, 45);
-    expect(controller.selectedStarGuide, isNotEmpty);
-  });
+      expect(controller.flowStep, CalibrationFlowStep.movingToTarget);
+      expect(controller.targetPosition?.altitudeDeg, 45);
+
+      await controller.sendGotoToReference(
+        (altitude, azimuth) async => gotos.add([altitude, azimuth]),
+      );
+
+      expect(gotos, [
+        [45.0, 120.0],
+      ]);
+      expect(controller.flowStep, CalibrationFlowStep.waitingUserCentering);
+      expect(controller.status, CalibrationStatus.waitingForManualCentering);
+      expect(controller.selectedStarGuide, isNotEmpty);
+    },
+  );
 
   test('manual nudge sends relative movement without GoTo target', () async {
     final controller = _controller(_position(45, 120));
     addTearDown(controller.dispose);
     final sent = <List<double>>[];
 
-    await controller.loadSavedCalibration();
-    controller.startMethod(CalibrationMethod.oneStar);
-    await controller.selectStar(controller.calibrationStarOptions.first);
+    await _selectInitialStar(controller);
     await controller.nudge(CalibrationNudgeDirection.right, (
       deltaAltitude,
       deltaAzimuth,
@@ -78,42 +89,124 @@ void main() {
     expect(sent, [
       [0.0, CalibrationController.fineStepDegrees],
     ]);
-    expect(controller.adjustedAltitude, 0);
-    expect(controller.adjustedAzimuth, CalibrationController.fineStepDegrees);
+    expect(controller.adjustedAltitude, 45);
+    expect(
+      controller.adjustedAzimuth,
+      120 + CalibrationController.fineStepDegrees,
+    );
+  });
+
+  test('manual direct movement sends the absolute position', () async {
+    final controller = _controller(_position(45, 120));
+    addTearDown(controller.dispose);
+    final nudges = <List<double>>[];
+    final gotos = <List<double>>[];
+
+    await _selectInitialStar(controller);
+    await controller.nudge(CalibrationNudgeDirection.right, (
+      deltaAltitude,
+      deltaAzimuth,
+    ) async {
+      nudges.add([deltaAltitude, deltaAzimuth]);
+    });
+    await controller.moveToAdjustedPosition(
+      altitude: 5,
+      azimuth: 120,
+      sendAbsoluteMove: (altitude, azimuth) async {
+        gotos.add([altitude, azimuth]);
+      },
+    );
+
+    expect(nudges, [
+      [0.0, CalibrationController.fineStepDegrees],
+    ]);
+    expect(gotos, [
+      [5.0, 120.0],
+    ]);
+    expect(controller.adjustedAltitude, 5);
+    expect(controller.adjustedAzimuth, 120);
   });
 
   test(
-    'manual direct movement sends only the remaining relative movement',
+    'initial alignment centers from where the approximate GOTO stopped',
     () async {
-      final controller = _controller(_position(45, 120));
-      addTearDown(controller.dispose);
-      final sent = <List<double>>[];
-
-      await controller.loadSavedCalibration();
-      controller.startMethod(CalibrationMethod.oneStar);
-      await controller.selectStar(controller.calibrationStarOptions.first);
-      await controller.nudge(CalibrationNudgeDirection.right, (
-        deltaAltitude,
-        deltaAzimuth,
-      ) async {
-        sent.add([deltaAltitude, deltaAzimuth]);
-      });
-      await controller.moveToAdjustedPosition(
-        altitude: 5,
-        azimuth: 120,
-        sendManualMove: (deltaAltitude, deltaAzimuth) async {
-          sent.add([deltaAltitude, deltaAzimuth]);
-        },
+      // The heavy telescope stalled at 21 / 243 on its way to the star.
+      final controller = _controller(
+        _position(45, 120),
+        motorPosition: () => (altitude: 21.0, azimuth: 243.0),
       );
+      addTearDown(controller.dispose);
+      await _selectInitialStar(controller);
 
-      expect(sent, [
-        [0.0, CalibrationController.fineStepDegrees],
-        [5.0, 120 - CalibrationController.fineStepDegrees],
-      ]);
-      expect(controller.adjustedAltitude, 5);
-      expect(controller.adjustedAzimuth, 120);
+      expect(controller.adjustedAltitude, 21);
+      expect(controller.adjustedAzimuth, 243);
+      expect(controller.flowStep, CalibrationFlowStep.waitingUserCentering);
     },
   );
+
+  test('a failed approximate GOTO still lets the user center by hand', () async {
+    final controller = _controller(_position(45, 120));
+    addTearDown(controller.dispose);
+
+    await controller.loadSavedCalibration();
+    controller.startInitialAlignment();
+    await controller.selectStar(controller.calibrationStarOptions.first);
+    await controller.sendGotoToReference(
+      (_, __) async => throw StateError('El ESP32 dejó de responder'),
+    );
+
+    expect(controller.flowStep, CalibrationFlowStep.waitingUserCentering);
+    expect(controller.errorMessage, contains('GOTO'));
+  });
+
+  test('stopping the approximate GOTO returns to the star list', () async {
+    final controller = _controller(_position(45, 120));
+    addTearDown(controller.dispose);
+
+    await controller.loadSavedCalibration();
+    controller.startInitialAlignment();
+    await controller.selectStar(controller.calibrationStarOptions.first);
+    final moving = Completer<void>();
+    final goto = controller.sendGotoToReference((_, __) => moving.future);
+    await controller.abortReferenceGoto(() async {
+      moving.completeError(StateError('Movimiento cancelado por STOP'));
+    });
+    await goto;
+
+    expect(controller.flowStep, CalibrationFlowStep.selectingObject);
+    expect(controller.selectedStar, isNull);
+    expect(controller.session, isNotNull);
+  });
+
+  test('confirming a correction reads a fresh encoder position', () async {
+    var position = (altitude: 45.0, azimuth: 120.0);
+    final controller = _controller(
+      _position(45, 120),
+      motorPosition: () => position,
+    );
+    addTearDown(controller.dispose);
+    await _selectInitialStar(controller);
+    await controller.confirmCenteredReference(
+      setInitialPosition: (_, __) async {},
+    );
+    controller.startCorrectionMethod(CalibrationMethod.oneStar);
+    await controller.selectStar(controller.calibrationStarOptions.first);
+    await controller.sendGotoToReference((_, __) async {});
+
+    var refreshed = 0;
+    await controller.confirmCenteredReference(
+      refreshPosition: () async {
+        refreshed++;
+        // The heavy telescope settled a bit after the last move.
+        position = (altitude: 45.4, azimuth: 120.0);
+      },
+    );
+    expect(refreshed, 1);
+    expect(
+      controller.correctionCalibrationResult!.altitudeOffset,
+      closeTo(0.4, 0.000001),
+    );
+  });
 
   test(
     'confirming centered star sends SET_POSITION and saves calibration',
@@ -123,9 +216,7 @@ void main() {
       double? sentAltitude;
       double? sentAzimuth;
 
-      await controller.loadSavedCalibration();
-      controller.startMethod(CalibrationMethod.oneStar);
-      await controller.selectStar(controller.calibrationStarOptions.first);
+      await _selectInitialStar(controller);
       await controller.confirmCenteredReference(
         setInitialPosition: (altitude, azimuth) async {
           sentAltitude = altitude;
@@ -172,9 +263,7 @@ void main() {
       addTearDown(controller.dispose);
       final gotos = <List<double>>[];
 
-      await controller.loadSavedCalibration();
-      controller.startInitialAlignment();
-      await controller.selectStar(controller.calibrationStarOptions.first);
+      await _selectInitialStar(controller);
       await controller.confirmCenteredReference(
         setInitialPosition: (_, __) async {},
       );
@@ -301,27 +390,23 @@ void main() {
     },
   );
 
-  test(
-    'absolute manual adjustment crosses north by the shortest path',
-    () async {
-      final controller = _controller(
-        _position(45, 120),
-        motorPosition: () => (altitude: 0.0, azimuth: 359.0),
-      );
-      addTearDown(controller.dispose);
-      await _selectInitialStar(controller);
-      await controller.nudge(CalibrationNudgeDirection.left, (_, __) async {});
-      double? sentAzimuth;
-      await controller.moveToAdjustedPosition(
-        altitude: 0,
-        azimuth: 1,
-        sendManualMove: (_, az) async {
-          sentAzimuth = az;
-        },
-      );
-      expect(sentAzimuth, 2.0);
-    },
-  );
+  test('absolute manual adjustment normalizes the azimuth', () async {
+    final controller = _controller(
+      _position(45, 120),
+      motorPosition: () => (altitude: 0.0, azimuth: 359.0),
+    );
+    addTearDown(controller.dispose);
+    await _selectInitialStar(controller);
+    double? sentAzimuth;
+    await controller.moveToAdjustedPosition(
+      altitude: 0,
+      azimuth: 361,
+      sendAbsoluteMove: (_, az) async {
+        sentAzimuth = az;
+      },
+    );
+    expect(sentAzimuth, 1.0);
+  });
 
   test('planning time cannot establish a physical alignment', () async {
     final controller = _controller(_position(45, 120), isLive: false);
@@ -339,10 +424,12 @@ void main() {
   });
 }
 
+/// Elige la primera estrella y completa el GOTO aproximado.
 Future<void> _selectInitialStar(CalibrationController controller) async {
   await controller.loadSavedCalibration();
   controller.startInitialAlignment();
   await controller.selectStar(controller.calibrationStarOptions.first);
+  await controller.sendGotoToReference((_, __) async {});
 }
 
 CalibrationController _controller(

@@ -190,7 +190,8 @@ class _ManualAdjustmentFormState extends State<_ManualAdjustmentForm> {
     return parsed;
   }
 
-  String _formatInput(double? value) => (value ?? 0.0).toStringAsFixed(2);
+  // An unknown position stays empty so "Mover" never sends an implicit 0/0.
+  String _formatInput(double? value) => value?.toStringAsFixed(2) ?? '';
 
   @override
   Widget build(BuildContext context) {
@@ -205,6 +206,12 @@ class _ManualAdjustmentFormState extends State<_ManualAdjustmentForm> {
         Text(
           'Movimiento directo',
           style: Theme.of(context).textTheme.titleSmall,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Posición absoluta del telescopio. Las flechas mueven '
+          '${CalibrationController.fineStepDegrees.toStringAsFixed(0)}° desde la posición actual.',
+          style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 8),
         Row(

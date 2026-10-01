@@ -41,6 +41,10 @@ class CelestialControlController extends ChangeNotifier {
   final CelestialObject object;
   final AstronomicalGotoService gotoService;
 
+  /// Shared telescope position, so fine tuning starts where the telescope
+  /// really is even if another screen moved it after the GoTo.
+  final ({double altitude, double azimuth})? Function()? positionProvider;
+
   Timer? _trackingTimer;
   Timer? _previewTimer;
   Future<void>? _previewRefresh;
@@ -65,6 +69,7 @@ class CelestialControlController extends ChangeNotifier {
   CelestialControlController({
     required this.object,
     required this.gotoService,
+    this.positionProvider,
   }) {
     AlignmentSession.changes.addListener(_onReferenceChanged);
   }
@@ -338,8 +343,9 @@ class CelestialControlController extends ChangeNotifier {
   ({double altitude, double azimuth}) _nextFinePosition(
     CelestialFineDirection direction,
   ) {
-    final currentAltitude = _localAltitude ?? 0.0;
-    final currentAzimuth = _localAzimuth ?? 0.0;
+    final shared = positionProvider?.call();
+    final currentAltitude = shared?.altitude ?? _localAltitude ?? 0.0;
+    final currentAzimuth = shared?.azimuth ?? _localAzimuth ?? 0.0;
     final nextAltitude = switch (direction) {
       CelestialFineDirection.up => currentAltitude + fineStepDegrees,
       CelestialFineDirection.down => currentAltitude - fineStepDegrees,

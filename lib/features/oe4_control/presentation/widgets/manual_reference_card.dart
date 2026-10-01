@@ -88,8 +88,9 @@ class _ManualReferenceCardState extends State<ManualReferenceCard> {
               const SizedBox(height: 10),
               const Text(
                 'Coloca el telescopio en una orientación conocida usando el control manual. '
-                'Cuando esté detenido, asigna aquí sus coordenadas reales. '
-                'Esto fija la referencia sin mover los motores.',
+                'Luego asigna aquí sus coordenadas reales. Si el firmware todavía '
+                'mantiene un movimiento activo, la app envía STOP antes de fijar '
+                'la referencia.',
               ),
               const SizedBox(height: 8),
               const Text(

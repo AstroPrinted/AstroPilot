@@ -18,9 +18,15 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('bottom navigation exposes educational mode tab', (tester) async {
+  testWidgets('home exposes the educational mode', (tester) async {
+    SharedPreferences.setMockInitialValues({'app_flow.onboarding_done': true});
+    final prefs = await SharedPreferences.getInstance();
     await tester.pumpWidget(
-      AstroPilotApp(settingsService: SettingsService(), initializeBle: false),
+      AstroPilotApp(
+        settingsService: SettingsService(),
+        prefs: prefs,
+        initializeBle: false,
+      ),
     );
 
     expect(find.text('Educativo'), findsOneWidget);

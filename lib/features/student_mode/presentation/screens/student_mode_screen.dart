@@ -87,15 +87,57 @@ class _StudentModeScreenState extends State<StudentModeScreen> {
   }
 }
 
+/// Quiz como pantalla independiente (pestaña Quiz del modo Educativo).
+class StudentQuizPage extends StatefulWidget {
+  final StudentQuizController? controller;
+  final PreferredSizeWidget? appBar;
+
+  const StudentQuizPage({super.key, this.controller, this.appBar});
+
+  @override
+  State<StudentQuizPage> createState() => _StudentQuizPageState();
+}
+
+class _StudentQuizPageState extends State<StudentQuizPage> {
+  late final StudentQuizController _controller;
+  late final bool _ownsController;
+
+  @override
+  void initState() {
+    super.initState();
+    _ownsController = widget.controller == null;
+    _controller =
+        widget.controller ??
+        StudentQuizController(
+          quizRepository: StudentQuizRepository(
+            catalogRepository: CelestialCatalogRepository(),
+          ),
+          storage: const StudentQuizStorage(),
+        );
+    _controller.load();
+  }
+
+  @override
+  void dispose() {
+    if (_ownsController) _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      _StudentQuizScreen(controller: _controller, appBar: widget.appBar);
+}
+
 class _StudentQuizScreen extends StatelessWidget {
   final StudentQuizController controller;
+  final PreferredSizeWidget? appBar;
 
-  const _StudentQuizScreen({required this.controller});
+  const _StudentQuizScreen({required this.controller, this.appBar});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Quiz astronómico')),
+      appBar: appBar ?? AppBar(title: const Text('Quiz astronómico')),
       body: AnimatedBuilder(
         animation: controller,
         builder: (context, _) {

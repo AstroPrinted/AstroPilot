@@ -1,66 +1,112 @@
 import 'package:flutter/material.dart';
 
-class AppTheme {
-  static const _background = Color(0xFF0B0B10);
-  static const _surface = Color(0xFF151520);
-  static const _surfaceAlt = Color(0xFF1D2333);
-  static const _primary = Color(0xFF3B82F6);
-  static const _secondary = Color(0xFF22D3EE);
-  static const _onPrimary = Color(0xFFF8FAFC);
-  static const _error = Color(0xFFEF4444);
-  static const _textPrimary = Color(0xFFF8FAFC);
-  static const _textSecondary = Color(0xFF94A3B8);
+import 'app_colors.dart';
 
+class AppTheme {
   static ThemeData get darkTheme => ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
-    scaffoldBackgroundColor: _background,
-    colorScheme: ColorScheme.dark(
-      surface: _surface,
-      surfaceContainerHighest: _surfaceAlt,
-      primary: _primary,
-      secondary: _secondary,
-      onPrimary: _onPrimary,
-      error: _error,
+    scaffoldBackgroundColor: ApColors.background,
+    colorScheme: const ColorScheme.dark(
+      surface: ApColors.surface,
+      surfaceContainerHighest: ApColors.surface2Solid,
+      primary: ApColors.primary,
+      secondary: ApColors.secondary,
+      onPrimary: ApColors.text,
+      error: ApColors.error,
+      outline: ApColors.outline,
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: _surface,
-      foregroundColor: _textPrimary,
+      backgroundColor: ApColors.surface,
+      surfaceTintColor: Colors.transparent,
+      foregroundColor: ApColors.text,
       elevation: 0,
+      scrolledUnderElevation: 0,
       centerTitle: true,
+      titleTextStyle: TextStyle(
+        fontSize: 20,
+        fontWeight: FontWeight.w400,
+        color: ApColors.text,
+      ),
     ),
     chipTheme: ChipThemeData(
-      selectedColor: _primary.withValues(alpha: 0.25),
-      side: BorderSide(color: _textSecondary.withValues(alpha: 0.2)),
+      selectedColor: ApColors.primary.withValues(alpha: 0.25),
+      side: const BorderSide(color: ApColors.outline),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       labelStyle: const TextStyle(
-        color: _textPrimary,
+        color: ApColors.text,
         fontWeight: FontWeight.w500,
       ),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     ),
     cardTheme: CardThemeData(
-      color: _surface,
+      color: ApColors.surface,
       elevation: 0,
+      margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: _textSecondary.withValues(alpha: 0.1)),
+        side: const BorderSide(color: ApColors.border),
       ),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: ApColors.surface2,
+      labelStyle: const TextStyle(color: ApColors.muted),
+      floatingLabelStyle: const TextStyle(color: ApColors.primary),
+      helperStyle: const TextStyle(color: ApColors.muted, fontSize: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: ApColors.outline),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: ApColors.outline),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: ApColors.primary, width: 2),
+      ),
+    ),
+    switchTheme: SwitchThemeData(
+      thumbColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? Colors.white
+            : ApColors.muted,
+      ),
+      trackColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? ApColors.primary
+            : ApColors.surface2Solid,
+      ),
+      trackOutlineColor: WidgetStateProperty.resolveWith(
+        (states) => states.contains(WidgetState.selected)
+            ? ApColors.primary
+            : ApColors.muted,
+      ),
+    ),
+    dialogTheme: DialogThemeData(
+      backgroundColor: ApColors.surface,
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      titleTextStyle: const TextStyle(fontSize: 22, color: ApColors.text),
     ),
     textTheme: const TextTheme(
       headlineMedium: TextStyle(
-        color: _textPrimary,
+        color: ApColors.text,
         fontWeight: FontWeight.w600,
       ),
-      titleMedium: TextStyle(color: _textPrimary, fontWeight: FontWeight.w600),
-      bodyMedium: TextStyle(color: _textSecondary),
-      bodySmall: TextStyle(color: _textSecondary),
+      titleMedium: TextStyle(color: ApColors.text, fontWeight: FontWeight.w600),
+      bodyMedium: TextStyle(color: ApColors.muted),
+      bodySmall: TextStyle(color: ApColors.muted),
     ),
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-      backgroundColor: _surface,
-      selectedItemColor: _primary,
-      unselectedItemColor: _textSecondary,
+      backgroundColor: ApColors.surface,
+      selectedItemColor: ApColors.primary,
+      unselectedItemColor: ApColors.muted,
+      selectedLabelStyle: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+      unselectedLabelStyle: TextStyle(fontSize: 12),
       type: BottomNavigationBarType.fixed,
+      elevation: 0,
     ),
   );
 }

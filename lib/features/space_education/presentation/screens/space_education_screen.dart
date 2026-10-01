@@ -10,10 +10,14 @@ class SpaceEducationScreen extends StatefulWidget {
   final LocalSpaceEducationRepository repository;
   final IssPassService issPassService;
 
+  /// Barra superior; por defecto "Satélites y exploración espacial".
+  final PreferredSizeWidget? appBar;
+
   const SpaceEducationScreen({
     super.key,
     this.repository = const LocalSpaceEducationRepository(),
     this.issPassService = const LocalIssPassService(),
+    this.appBar,
   });
 
   @override
@@ -32,7 +36,9 @@ class _SpaceEducationScreenState extends State<SpaceEducationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Satélites y exploración espacial')),
+      appBar:
+          widget.appBar ??
+          AppBar(title: const Text('Satélites y exploración espacial')),
       body: FutureBuilder<List<EducationalSpaceObject>>(
         future: _objectsFuture,
         builder: (context, snapshot) {

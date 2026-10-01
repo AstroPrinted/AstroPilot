@@ -17,7 +17,13 @@ class BleConnectionController extends ChangeNotifier {
 
   BleConnectionController(this._bleService);
 
+  bool _initialized = false;
+
+  /// Pide permisos y empieza a escuchar el estado del Bluetooth. Llamarlo de
+  /// nuevo solo vuelve a pedir los permisos.
   Future<void> init() async {
+    if (_initialized) return requestPermissions();
+    _initialized = true;
     final perms = await _requestPermissions();
     final btEnabled = perms && await _bleService.isBluetoothEnabled();
 

@@ -211,6 +211,8 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
         calibration: calibration,
         controlsEnabled: isConnected,
         isBusy: calibration.isBusy,
+        isMoving: oe4Controller.isMoving,
+        movementWarning: oe4Controller.movementWarning,
         onNudge: (direction) =>
             _sendNudge(calibration, oe4Controller, deviceId, direction),
         onMoveToAdjustment: (altitude, azimuth) => _sendManualAdjustment(
@@ -252,6 +254,10 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
   ) async {
     if (!_ensureConnected(deviceId)) return;
     await calibration.confirmCenteredReference(
+      refreshPosition: () => _checked(
+        oe4Controller,
+        () => oe4Controller.sendStatus(deviceId!, throwOnError: true),
+      ),
       setInitialPosition: calibration.isInitialAlignmentFlow
           ? (altitude, azimuth) => _checked(
               oe4Controller,
@@ -296,7 +302,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
       direction,
       (deltaAltitude, deltaAzimuth) => _checked(
         oe4Controller,
-        () => oe4Controller.sendNudge(
+        () => oe4Controller.moveBy(
           deviceId!,
           deltaAlt: deltaAltitude,
           deltaAz: deltaAzimuth,
@@ -317,12 +323,12 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
     await calibration.moveToAdjustedPosition(
       altitude: altitude,
       azimuth: azimuth,
-      sendManualMove: (deltaAltitude, deltaAzimuth) => _checked(
+      sendAbsoluteMove: (altitude, azimuth) => _checked(
         oe4Controller,
-        () => oe4Controller.sendNudge(
+        () => oe4Controller.moveTo(
           deviceId!,
-          deltaAlt: deltaAltitude,
-          deltaAz: deltaAzimuth,
+          alt: altitude,
+          az: azimuth,
           throwOnError: true,
         ),
       ),
@@ -1018,6 +1024,8 @@ class _CenteringStep extends StatelessWidget {
   final CalibrationController calibration;
   final bool controlsEnabled;
   final bool isBusy;
+  final bool isMoving;
+  final String? movementWarning;
   final Future<void> Function(CalibrationNudgeDirection direction) onNudge;
   final Future<void> Function(double altitude, double azimuth)
   onMoveToAdjustment;
@@ -1028,6 +1036,8 @@ class _CenteringStep extends StatelessWidget {
     required this.calibration,
     required this.controlsEnabled,
     required this.isBusy,
+    required this.isMoving,
+    required this.movementWarning,
     required this.onNudge,
     required this.onMoveToAdjustment,
     required this.onConfirm,
@@ -1065,6 +1075,17 @@ class _CenteringStep extends StatelessWidget {
             altitude: calibration.adjustedAltitude,
             azimuth: calibration.adjustedAzimuth,
           ),
+          if (isMoving) ...[
+            const SizedBox(height: 10),
+            const _InlineNotice(
+              icon: Icons.sync_rounded,
+              message: 'Moviendo el telescopio… espera a que llegue.',
+            ),
+          ],
+          if (movementWarning != null) ...[
+            const SizedBox(height: 10),
+            _WarningBanner(message: movementWarning!),
+          ],
           const SizedBox(height: 12),
           CalibrationControls(
             enabled: controlsEnabled,
@@ -1251,7 +1272,7 @@ class _AdjustedPositionPanel extends StatelessWidget {
         Expanded(
           child: _MetricTile(
             label: isInitialAlignment
-                ? 'Movimiento altitud'
+                ? 'Posición altitud'
                 : 'Altitud centrada',
             value: altitude == null ? 'N/A' : _formatDeg(altitude!),
           ),
@@ -1259,7 +1280,7 @@ class _AdjustedPositionPanel extends StatelessWidget {
         const SizedBox(width: 10),
         Expanded(
           child: _MetricTile(
-            label: isInitialAlignment ? 'Movimiento azimut' : 'Azimut centrado',
+            label: isInitialAlignment ? 'Posición azimut' : 'Azimut centrado',
             value: azimuth == null ? 'N/A' : _formatDeg(azimuth!),
           ),
         ),
