@@ -1,4 +1,4 @@
-package com.example.astroprintedlogicincludedgeoengine
+package cl.astropilot.app
 
 import io.flutter.embedding.android.FlutterActivity
 
