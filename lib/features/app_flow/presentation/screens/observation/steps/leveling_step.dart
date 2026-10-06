@@ -69,7 +69,9 @@ class _LevelingStepState extends State<LevelingStep> {
             const NumberedSteps(
               items: [
                 'Pon el telescopio lo más horizontal que puedas.',
-                'Apúntalo hacia el norte. Sugerencia: usa la brújula del celular.',
+                'Apúntalo hacia el norte: el lente del frente es el que debe '
+                    'mirar al norte, y el ocular (por donde miras) queda '
+                    'hacia atrás. Sugerencia: usa la brújula del celular.',
                 'Presiona "Fijar 0 / 0".',
               ],
             ),
@@ -90,7 +92,11 @@ class _LevelingStepState extends State<LevelingStep> {
           ],
         ),
         if (_error != null)
-          ApNotice(icon: Icons.error_outline, tone: ApTone.error, text: _error!),
+          ApNotice(
+            icon: Icons.error_outline,
+            tone: ApTone.error,
+            text: _error!,
+          ),
         if (showFixed) ...[
           const ApNotice(
             icon: Icons.check_circle,
@@ -128,7 +134,8 @@ class _LevelingStepState extends State<LevelingStep> {
   }
 }
 
-/// Telescopio horizontal apuntando al norte (ilustración del diseño).
+/// Telescopio horizontal con el lente del frente apuntando al norte y el
+/// ocular atrás.
 class _LevelingPainter extends CustomPainter {
   const _LevelingPainter();
 
@@ -181,39 +188,46 @@ class _LevelingPainter extends CustomPainter {
     hint.paint(canvas, Offset(16, 96 - hint.height));
 
     final legs = stroke(ApColors.muted);
-    canvas.drawLine(const Offset(104, 68), const Offset(86, 104), legs);
-    canvas.drawLine(const Offset(104, 68), const Offset(122, 104), legs);
-    canvas.drawLine(const Offset(104, 68), const Offset(104, 104), legs);
+    canvas.drawLine(const Offset(124, 68), const Offset(106, 104), legs);
+    canvas.drawLine(const Offset(124, 68), const Offset(142, 104), legs);
+    canvas.drawLine(const Offset(124, 68), const Offset(124, 104), legs);
 
+    RRect box(double left, double top, double width, double height) =>
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(left, top, width, height),
+          const Radius.circular(3),
+        );
+
+    // Back to front: eyepiece, focuser, tube.
     final tube = stroke(ApColors.secondary);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(56, 50, 104, 18),
-        const Radius.circular(4),
-      ),
-      tube,
-    );
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        const Rect.fromLTWH(160, 47, 12, 24),
-        const Radius.circular(3),
-      ),
-      tube,
-    );
+    final eyepiece = stroke(ApColors.muted);
+    canvas.drawRRect(box(46, 55, 12, 8), eyepiece);
+    canvas.drawRRect(box(58, 53, 14, 12), eyepiece);
+    canvas.drawRRect(box(72, 50, 104, 18), tube);
 
-    final arrow = stroke(ApColors.primary);
-    dashed(const Offset(184, 59), const Offset(262, 59), arrow, 5, 5);
+    // The front, drawn like the arrow: this end is the one that faces north.
+    final front = stroke(ApColors.primary);
+    canvas.drawRRect(
+      box(176, 46, 14, 26),
+      Paint()..color = ApColors.primary.withValues(alpha: 0.22),
+    );
+    canvas.drawRRect(box(176, 46, 14, 26), front);
+    canvas.drawOval(const Rect.fromLTWH(186, 48, 7, 22), front);
+
+    dashed(const Offset(200, 59), const Offset(262, 59), front, 5, 5);
     canvas.drawPath(
       Path()
         ..moveTo(256, 53)
         ..lineTo(264, 59)
         ..lineTo(256, 65),
-      arrow,
+      front,
     );
-    canvas.drawCircle(const Offset(288, 59), 14, arrow);
+    canvas.drawCircle(const Offset(288, 59), 14, front);
     label('N', const Offset(288, 66), ApColors.text);
-    label('alt 0°', const Offset(108, 40), ApColors.secondary, mono: true);
-    label('az 0°', const Offset(222, 48), ApColors.primary, mono: true);
+    label('ocular', const Offset(56, 47), ApColors.muted);
+    label('alt 0°', const Offset(124, 42), ApColors.secondary, mono: true);
+    label('lente', const Offset(184, 40), ApColors.primary);
+    label('az 0°', const Offset(232, 50), ApColors.primary, mono: true);
   }
 
   @override
