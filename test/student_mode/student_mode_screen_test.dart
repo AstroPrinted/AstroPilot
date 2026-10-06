@@ -73,7 +73,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Meta diaria completada'), findsOneWidget);
-    expect(find.textContaining('Vuelve manana'), findsOneWidget);
+    expect(find.textContaining('Vuelve mañana'), findsOneWidget);
     expect(find.text('5/5'), findsWidgets);
   });
 }

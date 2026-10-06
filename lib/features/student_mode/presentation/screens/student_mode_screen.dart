@@ -337,7 +337,7 @@ class _DailyLimitCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Respondida la tanda de 5 preguntas. Vuelve manana para una nueva ronda.',
+              'Respondida la tanda de 5 preguntas. Vuelve mañana para una nueva ronda.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 14),
