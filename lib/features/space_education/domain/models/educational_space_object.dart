@@ -103,6 +103,9 @@ class EducationalSpaceObject {
   final String longDescription;
   final List<String> facts;
   final String? imageAssetPath;
+
+  /// Autor y licencia de la imagen, tal como exige su licencia.
+  final String? imageCredit;
   final String? agency;
   final String? missionStatus;
   final String? destination;
@@ -119,6 +122,7 @@ class EducationalSpaceObject {
     required this.longDescription,
     required this.facts,
     this.imageAssetPath,
+    this.imageCredit,
     this.agency,
     this.missionStatus,
     this.destination,

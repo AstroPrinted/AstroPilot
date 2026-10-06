@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/ap_widgets.dart';
 import '../../../catalog/data/repository/celestial_catalog_repository.dart';
 import '../../../catalog/domain/models/celestial_object.dart';
@@ -16,21 +15,10 @@ class ObjectThumbnail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fallback = ApListIcon(ObjectDisplay.icon(object), size: size);
-    final image = CelestialCatalogRepository().imageFor(object);
-    if (image == null) return fallback;
-    final pixels = (size * MediaQuery.devicePixelRatioOf(context)).round();
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: Image.asset(
-        image.asset,
-        width: size,
-        height: size,
-        fit: BoxFit.cover,
-        // The list decodes a thumbnail, not the full picture.
-        cacheWidth: pixels * 4 ~/ 3,
-        errorBuilder: (_, __, ___) => fallback,
-      ),
+    return ApThumbnail(
+      asset: CelestialCatalogRepository().imageFor(object)?.asset,
+      size: size,
+      fallback: ApListIcon(ObjectDisplay.icon(object), size: size),
     );
   }
 }
@@ -47,32 +35,10 @@ class ObjectPhoto extends StatelessWidget {
   Widget build(BuildContext context) {
     final image = CelestialCatalogRepository().imageFor(object);
     if (image == null) return const SizedBox.shrink();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: AspectRatio(
-            aspectRatio: 4 / 3,
-            child: Image.asset(
-              image.asset,
-              fit: BoxFit.cover,
-              semanticLabel: 'Imagen de ${object.name}',
-              errorBuilder: (_, __, ___) => const ColoredBox(
-                color: ApColors.surface2,
-                child: Center(
-                  child: Icon(Icons.image_not_supported, color: ApColors.muted),
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Imagen: ${image.credit}',
-          style: ApText.small.copyWith(fontSize: 11.5),
-        ),
-      ],
+    return ApPhoto(
+      asset: image.asset,
+      credit: image.credit,
+      semanticLabel: 'Imagen de ${object.name}',
     );
   }
 }

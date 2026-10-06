@@ -13,7 +13,9 @@
         "Completa una vuelta alrededor de la Tierra aproximadamente cada 90 minutos.",
         "No parpadea como un avión, su brillo suele cambiar lentamente durante el paso.",
         "La visibilidad depende de la hora, la ubicación del observador y la iluminación solar."
-      ]
+      ],
+      "imageAssetPath": "assets/space_images/iss.jpg",
+      "imageCredit": "NASA · dominio público"
     },
     {
       "id": "hubble_space_telescope",
@@ -30,7 +32,9 @@
         "Ha permitido medir con más precisión la expansión del universo.",
         "Sus imágenes ayudaron a popularizar la astronomía moderna.",
         "Fue reparado y actualizado por astronautas durante misiones del transbordador espacial."
-      ]
+      ],
+      "imageAssetPath": "assets/space_images/hubble_space_telescope.jpg",
+      "imageCredit": "NASA · dominio público"
     },
     {
       "id": "starlink_constellation",
@@ -46,7 +50,9 @@
         "Una constelación usa muchos satélites para cubrir grandes zonas del planeta.",
         "Su brillo visible cambia según la geometría entre el Sol, el satélite y el observador.",
         "Los satélites de órbita baja se desplazan rápido respecto al cielo local."
-      ]
+      ],
+      "imageAssetPath": "assets/space_images/starlink_constellation.jpg",
+      "imageCredit": "SpaceX · CC0"
     },
     {
       "id": "gps_gnss_satellites",
@@ -61,7 +67,9 @@
         "El GPS no solo sirve para mapas, también sincroniza redes, bancos y sistemas científicos.",
         "Un receptor necesita señales de varios satélites para estimar una posición confiable.",
         "La precisión depende de la geometría de los satélites y de las condiciones de recepción."
-      ]
+      ],
+      "imageAssetPath": "assets/space_images/gps_gnss_satellites.jpg",
+      "imageCredit": "U.S. Air Force · dominio público"
     },
     {
       "id": "noaa_weather_satellites",
@@ -77,7 +85,9 @@
         "Algunos satélites meteorológicos observan siempre una misma región de la Tierra.",
         "Otros pasan por los polos y cubren todo el planeta con el tiempo.",
         "Sus instrumentos miden luz visible, infrarroja y otras señales útiles para estudiar la atmósfera."
-      ]
+      ],
+      "imageAssetPath": "assets/space_images/noaa_weather_satellites.jpg",
+      "imageCredit": "NOAA · dominio público"
     },
     {
       "id": "voyager_1",
@@ -94,7 +104,9 @@
         "Lleva un disco dorado con sonidos e imágenes de la Tierra.",
         "Aprovechó asistencias gravitacionales para ganar velocidad.",
         "Sus señales tardan muchas horas en llegar a la Tierra."
-      ]
+      ],
+      "imageAssetPath": "assets/space_images/voyager_1.jpg",
+      "imageCredit": "NASA · dominio público"
     },
     {
       "id": "voyager_2",
@@ -111,7 +123,9 @@
         "Reveló detalles de lunas, anillos y atmósferas de los planetas gigantes.",
         "Su ruta fue posible gracias a una alineación planetaria poco común.",
         "También lleva un disco dorado como mensaje simbólico de la humanidad."
-      ]
+      ],
+      "imageAssetPath": "assets/space_images/voyager_2.jpg",
+      "imageCredit": "NASA/JPL · dominio público"
     },
     {
       "id": "new_horizons",
@@ -128,7 +142,9 @@
         "Llegó a Plutón después de casi diez años de viaje.",
         "También estudió objetos del cinturón de Kuiper.",
         "Sus imágenes cambiaron la forma en que se entendía a Plutón."
-      ]
+      ],
+      "imageAssetPath": "assets/space_images/new_horizons.jpg",
+      "imageCredit": "NASA/Johns Hopkins University APL · dominio público"
     },
     {
       "id": "parker_solar_probe",
@@ -145,7 +161,9 @@
         "Es una de las naves más rápidas construidas por la humanidad.",
         "Su ruta usa acercamientos a Venus para ajustar la órbita.",
         "Ayuda a entender fenómenos que afectan el clima espacial."
-      ]
+      ],
+      "imageAssetPath": "assets/space_images/parker_solar_probe.jpg",
+      "imageCredit": "NASA · dominio público"
     },
     {
       "id": "juno",
@@ -162,7 +180,9 @@
         "Usa paneles solares incluso estando lejos del Sol.",
         "Sus órbitas reducen la exposición a la radiación intensa de Júpiter.",
         "Ha obtenido imágenes muy detalladas de tormentas y nubes jovianas."
-      ]
+      ],
+      "imageAssetPath": "assets/space_images/juno.jpg",
+      "imageCredit": "NASA · dominio público"
     },
     {
       "id": "cassini",
@@ -179,7 +199,9 @@
         "Transportó la sonda Huygens, que descendió en Titán.",
         "Detectó chorros de material saliendo de Encélado.",
         "Su final evitó contaminar lunas con interés astrobiológico."
-      ]
+      ],
+      "imageAssetPath": "assets/space_images/cassini.jpg",
+      "imageCredit": "NASA/JPL · dominio público"
     },
     {
       "id": "james_webb_space_telescope",
@@ -196,7 +218,9 @@
         "Tiene un escudo solar del tamaño aproximado de una cancha de tenis.",
         "Trabaja muy frío para poder detectar señales infrarrojas débiles.",
         "Observa desde una región estable lejos de la Tierra."
-      ]
+      ],
+      "imageAssetPath": "assets/space_images/james_webb_space_telescope.jpg",
+      "imageCredit": "NASA · dominio público"
     },
     {
       "id": "perseverance",
@@ -213,7 +237,9 @@
         "Llevó el helicóptero Ingenuity como demostración tecnológica.",
         "Analiza rocas marcianas con cámaras e instrumentos científicos.",
         "Sus muestras buscan conservar pistas geológicas importantes."
-      ]
+      ],
+      "imageAssetPath": "assets/space_images/perseverance.jpg",
+      "imageCredit": "NASA/JPL-Caltech · dominio público"
     },
     {
       "id": "what_is_artificial_satellite",
@@ -226,7 +252,9 @@
         "La Luna es un satélite natural, mientras que Hubble e ISS son objetos artificiales.",
         "No todos los satélites tienen el mismo tamaño, brillo ni altura.",
         "La vida útil de un satélite puede variar desde meses hasta más de 15 años según su objetivo, órbita y combustible, y muchos reentran en la atmósfera al final de su misión."
-      ]
+      ],
+      "imageAssetPath": "assets/space_images/what_is_artificial_satellite.jpg",
+      "imageCredit": "Andrey Butko · CC BY-SA 3.0"
     },
     {
       "id": "low_earth_orbit",
@@ -239,7 +267,9 @@
         "Los objetos en esta región se mueven rápido sobre el cielo local.",
         "La fricción atmosférica residual puede reducir lentamente su altura.",
         "Es una zona útil para observación de la Tierra y misiones tripuladas."
-      ]
+      ],
+      "imageAssetPath": "assets/space_images/low_earth_orbit.jpg",
+      "imageCredit": "NASA/Scott Kelly · dominio público"
     },
     {
       "id": "geostationary_orbit",
@@ -252,7 +282,9 @@
         "Es muy usada para comunicaciones y meteorología.",
         "Está mucho más lejos que la órbita baja terrestre.",
         "Desde el suelo parece casi quieta comparada con satélites más cercanos."
-      ]
+      ],
+      "imageAssetPath": "assets/space_images/geostationary_orbit.jpg",
+      "imageCredit": "ESA · CC BY-SA 3.0 IGO"
     },
     {
       "id": "why_iss_visible",
@@ -265,7 +297,9 @@
         "Si entra en la sombra de la Tierra, puede desaparecer gradualmente.",
         "Su brillo puede superar al de muchas estrellas durante buenos pasos.",
         "La hora y dirección del paso cambian día a día."
-      ]
+      ],
+      "imageAssetPath": "assets/space_images/why_iss_visible.jpg",
+      "imageCredit": "Andreas Möller · dominio público"
     },
     {
       "id": "what_is_tle",
@@ -278,7 +312,9 @@
         "Los datos antiguos pueden producir predicciones poco confiables.",
         "El cálculo orbital requiere fecha, hora y ubicación del observador.",
         "En esta versión el contenido básico funciona sin datos orbitales externos."
-      ]
+      ],
+      "imageAssetPath": "assets/space_images/what_is_tle.jpg",
+      "imageCredit": "Ilustración de AstroPilot: TLE de ejemplo de la ISS (2008)"
     },
     {
       "id": "visible_satellites",
@@ -291,7 +327,9 @@
         "Un satélite puede estar sobre el horizonte y aun así ser demasiado débil.",
         "Los pasos más brillantes suelen ocurrir cuando el cielo está oscuro y el satélite recibe luz solar.",
         "La visibilidad real siempre depende de las condiciones locales."
-      ]
+      ],
+      "imageAssetPath": "assets/space_images/visible_satellites.jpg",
+      "imageCredit": "Peter Nussbaumer · CC BY-SA 3.0"
     }
   ]
 }

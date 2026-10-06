@@ -535,6 +535,91 @@ class ApListIcon extends StatelessWidget {
   }
 }
 
+/// Miniatura cuadrada de una imagen incluida en la app. Si no hay imagen (o
+/// no carga) muestra [fallback], que debe medir lo mismo.
+class ApThumbnail extends StatelessWidget {
+  final String? asset;
+  final double size;
+  final Widget fallback;
+
+  const ApThumbnail({
+    super.key,
+    required this.asset,
+    required this.fallback,
+    this.size = 48,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final asset = this.asset;
+    if (asset == null) return fallback;
+    final pixels = (size * MediaQuery.devicePixelRatioOf(context)).round();
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Image.asset(
+        asset,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        // Lists decode a thumbnail, not the full 4:3 picture.
+        cacheWidth: pixels * 4 ~/ 3,
+        errorBuilder: (_, __, ___) => fallback,
+      ),
+    );
+  }
+}
+
+/// Foto 4:3 de una ficha, con el crédito de la imagen debajo.
+class ApPhoto extends StatelessWidget {
+  final String asset;
+  final String? credit;
+  final String semanticLabel;
+
+  const ApPhoto({
+    super.key,
+    required this.asset,
+    required this.semanticLabel,
+    this.credit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final credit = this.credit;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: AspectRatio(
+            aspectRatio: 4 / 3,
+            child: Image.asset(
+              asset,
+              fit: BoxFit.cover,
+              semanticLabel: semanticLabel,
+              errorBuilder: (_, __, ___) => const ColoredBox(
+                color: ApColors.surface2,
+                child: Center(
+                  child: Icon(
+                    Icons.image_not_supported,
+                    color: ApColors.muted,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (credit != null && credit.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Text(
+            'Imagen: $credit',
+            style: ApText.small.copyWith(fontSize: 11.5),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 /// Opción seleccionable tipo radio (`.ap-option`).
 class ApOption extends StatelessWidget {
   final Widget child;

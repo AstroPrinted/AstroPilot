@@ -1,0 +1,116 @@
+{
+ "cassini": {
+  "changes": "Recortada y reducida a 800×600.",
+  "credit": "NASA/JPL · dominio público",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Cassini_Saturn_Orbit_Insertion.jpg"
+ },
+ "geostationary_orbit": {
+  "changes": "Recortada y reducida a 800×600.",
+  "credit": "ESA · CC BY-SA 3.0 IGO",
+  "license": "CC BY-SA 3.0 igo",
+  "source": "https://commons.wikimedia.org/wiki/File:Geostationary_orbit_ESA375612.jpg"
+ },
+ "gps_gnss_satellites": {
+  "changes": "Recortada y reducida a 800×600.",
+  "credit": "U.S. Air Force · dominio público",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:GPS_Block_IIIA.jpg"
+ },
+ "hubble_space_telescope": {
+  "changes": "Recortada y reducida a 800×600.",
+  "credit": "NASA · dominio público",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Hubble_2009_close-up_2.jpg"
+ },
+ "iss": {
+  "changes": "Recortada y reducida a 800×600.",
+  "credit": "NASA · dominio público",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:The_station_pictured_from_the_SpaceX_Crew_Dragon_5.jpg"
+ },
+ "james_webb_space_telescope": {
+  "changes": "Recortada y reducida a 800×600.",
+  "credit": "NASA · dominio público",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:JWST_spacecraft_model_3.png"
+ },
+ "juno": {
+  "changes": "Recortada y reducida a 800×600.",
+  "credit": "NASA · dominio público",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Juno_spacecraft_model_1.png"
+ },
+ "low_earth_orbit": {
+  "changes": "Recortada y reducida a 800×600.",
+  "credit": "NASA/Scott Kelly · dominio público",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:ISS-44_Milky_Way.jpg"
+ },
+ "new_horizons": {
+  "changes": "Recortada y reducida a 800×600.",
+  "credit": "NASA/Johns Hopkins University APL · dominio público",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:New_Horizons_spacecraft_model_1.png"
+ },
+ "noaa_weather_satellites": {
+  "changes": "Recortada y reducida a 800×600.",
+  "credit": "NOAA · dominio público",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Artist%27s_rendition_of_GOES_R_satellite_with_Earth_reflecting_off_solar_panel_(2268-657).jpg"
+ },
+ "parker_solar_probe": {
+  "changes": "Recortada y reducida a 800×600.",
+  "credit": "NASA · dominio público",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Parker_Solar_Probe_spacecraft_model.png"
+ },
+ "perseverance": {
+  "changes": "Recortada y reducida a 800×600.",
+  "credit": "NASA/JPL-Caltech · dominio público",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Perseverance-Selfie-at-Rochette-Horizontal-V2.gif"
+ },
+ "starlink_constellation": {
+  "changes": "Recortada y reducida a 800×600.",
+  "credit": "SpaceX · CC0",
+  "license": "CC0",
+  "source": "https://commons.wikimedia.org/wiki/File:Starlink_Mission_(47926144123).jpg"
+ },
+ "visible_satellites": {
+  "changes": "Recortada y reducida a 800×600.",
+  "credit": "Peter Nussbaumer · CC BY-SA 3.0",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:Iridium_flare_2008_08_11.jpg"
+ },
+ "voyager_1": {
+  "changes": "Recortada y reducida a 800×600.",
+  "credit": "NASA · dominio público",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Voyager_spacecraft_model.png"
+ },
+ "voyager_2": {
+  "changes": "Recortada y reducida a 800×600.",
+  "credit": "NASA/JPL · dominio público",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:Voyager_spacecraft.jpg"
+ },
+ "what_is_artificial_satellite": {
+  "changes": "Recortada y reducida a 800×600.",
+  "credit": "Andrey Butko · CC BY-SA 3.0",
+  "license": "CC BY-SA 3.0",
+  "source": "https://commons.wikimedia.org/wiki/File:%D0%9F%D0%B5%D1%80%D0%B2%D1%8B%D0%B9_%D0%B2_%D0%BC%D0%B8%D1%80%D0%B5_%D0%B8%D1%81%D0%BA%D1%83%D1%81%D1%81%D1%82%D0%B2%D0%B5%D0%BD%D0%BD%D1%8B%D0%B9_%D1%81%D0%BF%D1%83%D1%82%D0%BD%D0%B8%D0%BA_%D0%97%D0%B5%D0%BC%D0%BB%D0%B8.jpg"
+ },
+ "what_is_tle": {
+  "changes": "",
+  "credit": "Ilustración de AstroPilot: TLE de ejemplo de la ISS (2008)",
+  "license": "Own work",
+  "source": "build script"
+ },
+ "why_iss_visible": {
+  "changes": "Recortada y reducida a 800×600.",
+  "credit": "Andreas Möller · dominio público",
+  "license": "Public domain",
+  "source": "https://commons.wikimedia.org/wiki/File:ISS_2008-01-10.jpg"
+ }
+}

@@ -40,6 +40,7 @@ class LocalSpaceEducationRepository {
       shortDescription: item['shortDescription'] as String? ?? '',
       longDescription: item['longDescription'] as String? ?? '',
       imageAssetPath: item['imageAssetPath'] as String?,
+      imageCredit: item['imageCredit'] as String?,
       facts: (item['facts'] as List<dynamic>? ?? const [])
           .map((fact) => fact.toString())
           .toList(growable: false),

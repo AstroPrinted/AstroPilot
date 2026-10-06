@@ -34,6 +34,29 @@ void main() {
       );
     }
   });
+
+  testWidgets('a category with one sheet opens it in a single tap', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_app(_screen()));
+    await _pumpEducationScreen(tester);
+
+    final issCategory = find.text(
+      'Estación Espacial Internacional',
+      skipOffstage: false,
+    );
+    await tester.ensureVisible(issCategory);
+    await tester.pump();
+    await tester.tap(issCategory);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.pump();
+
+    expect(
+      find.text('Se ve porque refleja luz solar.', skipOffstage: false),
+      findsOneWidget,
+    );
+  });
 }
 
 const _blockedActionLabels = [

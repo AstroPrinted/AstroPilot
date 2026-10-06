@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/widgets/ap_widgets.dart';
 import '../../data/local_space_education_repository.dart';
 import '../../domain/models/educational_space_object.dart';
 
@@ -88,14 +89,18 @@ class _SpaceEducationScreenState extends State<SpaceEducationScreen> {
     EducationalSpaceCategory category,
     List<EducationalSpaceObject> objects,
   ) {
+    final inCategory = objects
+        .where((object) => object.category == category)
+        .toList(growable: false);
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => _SpaceEducationCategoryScreen(
-          category: category,
-          objects: objects
-              .where((object) => object.category == category)
-              .toList(growable: false),
-        ),
+        // A category with a single sheet (the ISS) opens it right away.
+        builder: (_) => inCategory.length == 1
+            ? _EducationalObjectDetailScreen(object: inCategory.single)
+            : _SpaceEducationCategoryScreen(
+                category: category,
+                objects: inCategory,
+              ),
       ),
     );
   }
@@ -151,6 +156,14 @@ class _EducationalObjectDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (object.imageAssetPath != null) ...[
+                    ApPhoto(
+                      asset: object.imageAssetPath!,
+                      credit: object.imageCredit,
+                      semanticLabel: 'Imagen de ${object.name}',
+                    ),
+                    const SizedBox(height: 14),
+                  ],
                   _Pill(
                     icon: _iconForType(object.type),
                     label: object.type.label,
@@ -284,7 +297,9 @@ class _CategoryCard extends StatelessWidget {
                     Text(category.description),
                     const SizedBox(height: 8),
                     Text(
-                      '$count fichas educativas',
+                      count == 1
+                          ? '1 ficha educativa'
+                          : '$count fichas educativas',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
@@ -317,11 +332,18 @@ class _EducationalObjectCard extends StatelessWidget {
           );
         },
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: Theme.of(
-            context,
-          ).colorScheme.surfaceContainerHighest,
-          child: Icon(_iconForType(object.type), size: 20),
+        leading: ApThumbnail(
+          asset: object.imageAssetPath,
+          size: 56,
+          fallback: SizedBox.square(
+            dimension: 56,
+            child: CircleAvatar(
+              backgroundColor: Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest,
+              child: Icon(_iconForType(object.type), size: 20),
+            ),
+          ),
         ),
         title: Text(
           object.name,

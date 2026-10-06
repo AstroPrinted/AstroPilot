@@ -68,6 +68,7 @@ flutter:
     - assets/student_quiz_questions.json
     - assets/educational_space_objects.json
     - assets/catalog_images/
+    - assets/space_images/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

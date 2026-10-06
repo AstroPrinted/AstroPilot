@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:astroprintedlogicincludedgeoengine/features/space_education/data/local_space_education_repository.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/space_education/domain/models/educational_space_object.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,6 +15,20 @@ void main() {
     expect(categories, containsAll(educationalSpaceCategories));
     expect(objects.any((object) => object.id == 'iss'), isTrue);
   });
+
+  test(
+    'every educational object has a bundled image with its credit',
+    () async {
+      final objects = await const LocalSpaceEducationRepository().loadObjects();
+
+      for (final object in objects) {
+        final asset = object.imageAssetPath;
+        expect(asset, isNotNull, reason: object.id);
+        expect(File(asset!).existsSync(), isTrue, reason: asset);
+        expect(object.imageCredit, isNotEmpty, reason: object.id);
+      }
+    },
+  );
 
   test('educational objects are never controllable', () async {
     final objects = await const LocalSpaceEducationRepository().loadObjects();
