@@ -34,36 +34,6 @@ void main() {
       );
     }
   });
-
-  testWidgets('shows ISS placeholder without command actions', (tester) async {
-    await tester.pumpWidget(_app(_screen()));
-    await _pumpEducationScreen(tester);
-
-    final issCategory = find.text(
-      'Estación Espacial Internacional',
-      skipOffstage: false,
-    );
-    await tester.ensureVisible(issCategory);
-    await tester.pump();
-    await tester.tap(issCategory);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 350));
-    await tester.pump();
-
-    expect(find.text('Próximos pasos de la ISS'), findsOneWidget);
-    expect(find.textContaining('datos orbitales actualizados'), findsOneWidget);
-    expect(
-      find.textContaining('espacio reservado para predicciones futuras'),
-      findsOneWidget,
-    );
-
-    for (final label in _blockedActionLabels) {
-      expect(
-        find.textContaining(label, findRichText: true, skipOffstage: false),
-        findsNothing,
-      );
-    }
-  });
 }
 
 const _blockedActionLabels = [

@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../../data/local_iss_pass_service.dart';
 import '../../data/local_space_education_repository.dart';
 import '../../domain/models/educational_space_object.dart';
-import '../../domain/models/iss_pass.dart';
-import '../../domain/services/iss_pass_service.dart';
 
 class SpaceEducationScreen extends StatefulWidget {
   final LocalSpaceEducationRepository repository;
-  final IssPassService issPassService;
 
   /// Barra superior; por defecto "Satélites y exploración espacial".
   final PreferredSizeWidget? appBar;
@@ -16,7 +12,6 @@ class SpaceEducationScreen extends StatefulWidget {
   const SpaceEducationScreen({
     super.key,
     this.repository = const LocalSpaceEducationRepository(),
-    this.issPassService = const LocalIssPassService(),
     this.appBar,
   });
 
@@ -100,7 +95,6 @@ class _SpaceEducationScreenState extends State<SpaceEducationScreen> {
           objects: objects
               .where((object) => object.category == category)
               .toList(growable: false),
-          issPassService: widget.issPassService,
         ),
       ),
     );
@@ -110,12 +104,10 @@ class _SpaceEducationScreenState extends State<SpaceEducationScreen> {
 class _SpaceEducationCategoryScreen extends StatelessWidget {
   final EducationalSpaceCategory category;
   final List<EducationalSpaceObject> objects;
-  final IssPassService issPassService;
 
   const _SpaceEducationCategoryScreen({
     required this.category,
     required this.objects,
-    required this.issPassService,
   });
 
   @override
@@ -127,10 +119,6 @@ class _SpaceEducationCategoryScreen extends StatelessWidget {
         children: [
           const _EducationSafetyBanner(compact: true),
           const SizedBox(height: 14),
-          if (category == EducationalSpaceCategory.iss) ...[
-            _IssPassPanel(service: issPassService),
-            const SizedBox(height: 14),
-          ],
           for (final object in objects) ...[
             _EducationalObjectCard(object: object),
             const SizedBox(height: 10),
@@ -344,173 +332,6 @@ class _EducationalObjectCard extends StatelessWidget {
           child: Text('${object.type.label}\n${object.shortDescription}'),
         ),
         trailing: const Icon(Icons.chevron_right_rounded),
-      ),
-    );
-  }
-}
-
-class _IssPassPanel extends StatefulWidget {
-  final IssPassService service;
-
-  const _IssPassPanel({required this.service});
-
-  @override
-  State<_IssPassPanel> createState() => _IssPassPanelState();
-}
-
-class _IssPassPanelState extends State<_IssPassPanel> {
-  late final Future<IssPassResult> _future;
-
-  @override
-  void initState() {
-    super.initState();
-    _future = widget.service.getUpcomingIssPasses(
-      latitude: 0,
-      longitude: 0,
-      from: DateTime.now().toUtc(),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FutureBuilder<IssPassResult>(
-      future: _future,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
-          return const Card(
-            child: Padding(
-              padding: EdgeInsets.all(18),
-              child: Center(child: CircularProgressIndicator()),
-            ),
-          );
-        }
-
-        final result = snapshot.data;
-        if (result == null || snapshot.hasError) {
-          return const _InfoCard(
-            icon: Icons.cloud_off_rounded,
-            title: 'Próximos pasos de la ISS',
-            message:
-                'No se pudieron revisar datos orbitales. El contenido educativo local sigue disponible.',
-          );
-        }
-
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      Icons.timeline_rounded,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        'Próximos pasos de la ISS',
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Text(result.message),
-                const SizedBox(height: 12),
-                if (result.passes.isEmpty)
-                  const _EmptyPassState()
-                else
-                  for (final pass in result.passes) _IssPassTile(pass: pass),
-                const SizedBox(height: 12),
-                const Text(
-                  'La ISS suele verse como un punto brillante que se mueve de forma constante por el cielo. No parpadea como un avión y no deja estela.',
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _IssPassTile extends StatelessWidget {
-  final IssPass pass;
-
-  const _IssPassTile({required this.pass});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(top: 10),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.36),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            pass.visibilityLabel,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 8),
-          Text('Hora: ${_formatTime(pass.startTime)}'),
-          Text('Duración: ${_formatDuration(pass.duration)}'),
-          Text('Altura máxima: ${pass.maxElevation}'),
-          Text('Dirección: ${pass.startDirection} → ${pass.endDirection}'),
-          if (pass.note.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            Text(pass.note, style: Theme.of(context).textTheme.bodySmall),
-          ],
-        ],
-      ),
-    );
-  }
-
-  String _formatTime(DateTime? value) {
-    if (value == null) return 'Pendiente';
-    final local = value.toLocal();
-    final hour = local.hour.toString().padLeft(2, '0');
-    final minute = local.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
-  }
-
-  String _formatDuration(Duration? value) {
-    if (value == null) return 'Pendiente';
-    return '${value.inMinutes} min';
-  }
-}
-
-class _EmptyPassState extends StatelessWidget {
-  const _EmptyPassState();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.36),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: const Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.info_outline_rounded, size: 20),
-          SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              'La primera versión muestra el espacio reservado para predicciones futuras sin depender de internet.',
-            ),
-          ),
-        ],
       ),
     );
   }
