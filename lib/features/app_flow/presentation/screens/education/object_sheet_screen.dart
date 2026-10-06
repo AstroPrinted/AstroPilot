@@ -10,6 +10,7 @@ import '../../../../observation/domain/models/alt_az_result.dart';
 import '../../../../settings/application/settings_service.dart';
 import '../../../application/app_flow_state.dart';
 import '../../widgets/mode_scaffold.dart';
+import '../../widgets/catalog_object_row.dart';
 import '../../widgets/object_display.dart';
 import '../../widgets/object_image.dart';
 import '../home_screen.dart';
@@ -194,6 +195,10 @@ class _ObjectSheetScreenState extends State<ObjectSheetScreen> {
                       ],
                     ),
                     if (position != null) ApPillLeft(_visibilityPill(position)),
+                    if (position != null &&
+                        position.altitudeDeg >= 0 &&
+                        position.altitudeDeg < 5)
+                      const Text(nearHorizonExplanation, style: ApText.small),
                   ],
                 ],
               ),

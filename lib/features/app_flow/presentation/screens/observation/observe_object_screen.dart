@@ -19,6 +19,7 @@ import '../../../../oe4_control/presentation/controllers/oe4_control_controller.
 import '../../../../settings/application/settings_service.dart';
 import '../../../application/app_flow_state.dart';
 import '../../widgets/mode_scaffold.dart';
+import '../../widgets/catalog_object_row.dart';
 import '../../widgets/object_display.dart';
 import '../../widgets/object_image.dart';
 import '../../widgets/telescope_commands.dart';
@@ -198,6 +199,8 @@ class _ObserveObjectScreenState extends State<ObserveObjectScreen> {
     final sun = ObjectDisplay.isSun(object);
     final sky = _controller.currentPosition;
     final below = !sun && sky != null && sky.altitudeDeg < 0;
+    final low =
+        !sun && sky != null && sky.altitudeDeg >= 0 && sky.altitudeDeg < 5;
     final aligned = calibration.isInitialAligned && !flow.referenceLost;
     final blocked =
         sun || below || !aligned || !flow.isConnected || sky == null;
@@ -312,6 +315,14 @@ class _ObserveObjectScreenState extends State<ObserveObjectScreen> {
           ApCard(
             children: [
               const ApCardHead(icon: Icons.gamepad, title: 'Acciones'),
+              if (low)
+                ApNotice(
+                  icon: Icons.warning,
+                  tone: ApTone.warn,
+                  text:
+                      '$short está a ${formatDeg(sky.altitudeDeg)} de altura. '
+                      '$nearHorizonExplanation',
+                ),
               if (below)
                 ApNotice(
                   icon: Icons.visibility_off,

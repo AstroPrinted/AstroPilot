@@ -141,12 +141,7 @@ class _EducationCatalogScreenState extends State<EducationCatalogScreen> {
                   icon: Icons.visibility,
                   title: 'Objetos visibles ahora',
                 ),
-                const Text(
-                  'Visible = sobre el horizonte (altitud >= 0°). Entre 0° y 5° '
-                  'se marca "Cerca del horizonte": puede quedar tapado por '
-                  'cerros o edificios.',
-                  style: ApText.body,
-                ),
+                VisibilityLegend(showsHidden: !_visibleOnly),
                 ApMonoBlock(
                   text: visibilityContext(
                     settings.latDeg,

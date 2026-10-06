@@ -6,8 +6,9 @@ import '../../../../../calibration/presentation/controllers/calibration_controll
 import '../../../../../catalog/domain/models/celestial_object.dart';
 
 /// Lista de estrellas de referencia: las visibles se eligen con un radio y
-/// las demás (bajo el horizonte o cerca del Sol) aparecen deshabilitadas. El
-/// botón envía el GOTO.
+/// las demás (bajo el horizonte o cerca del Sol) aparecen deshabilitadas. Las
+/// no visibles quedan plegadas para no ocupar la pantalla. El botón envía el
+/// GOTO.
 class StarPicker extends StatefulWidget {
   final List<CalibrationStarOption> options;
   final String Function(CalibrationStar star)? guideFor;
@@ -30,6 +31,7 @@ class StarPicker extends StatefulWidget {
 
 class _StarPickerState extends State<StarPicker> {
   String? _selectedId;
+  bool _showHidden = false;
 
   @override
   Widget build(BuildContext context) {
@@ -76,9 +78,32 @@ class _StarPickerState extends State<StarPicker> {
             ),
         ],
         if (hidden.isNotEmpty) ...[
-          const ApSectionLabel('No visibles'),
-          for (final option in hidden)
-            ApOption(enabled: false, child: _StarLabel(option: option)),
+          InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () => setState(() => _showHidden = !_showHidden),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ApSectionLabel('No visibles (${hidden.length})'),
+                  ),
+                  Text(
+                    _showHidden ? 'Ocultar' : 'Mostrar',
+                    style: ApText.small,
+                  ),
+                  Icon(
+                    _showHidden ? Icons.expand_less : Icons.expand_more,
+                    color: ApColors.muted,
+                    size: 22,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (_showHidden)
+            for (final option in hidden)
+              ApOption(enabled: false, child: _StarLabel(option: option)),
         ],
         ApButton(
           label: widget.actionLabel,

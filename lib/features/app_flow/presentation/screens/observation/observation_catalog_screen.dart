@@ -178,12 +178,7 @@ class _ObservationCatalogScreenState extends State<ObservationCatalogScreen> {
                 icon: Icons.visibility,
                 title: 'Objetos visibles',
               ),
-              const Text(
-                'Visible = sobre el horizonte (altitud >= 0°). Entre 0° y 5° '
-                'se marca "Cerca del horizonte": puede quedar tapado por '
-                'cerros o edificios.',
-                style: ApText.small,
-              ),
+              const VisibilityLegend(),
               ApMonoBlock(
                 text: visibilityContext(
                   settings.latDeg,

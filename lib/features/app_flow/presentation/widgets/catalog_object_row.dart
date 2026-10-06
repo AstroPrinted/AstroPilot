@@ -108,6 +108,63 @@ class CatalogObjectRow extends StatelessWidget {
   }
 }
 
+/// Por qué se avisa cuando un objeto está entre el horizonte y los 5°.
+const nearHorizonExplanation =
+    'Está sobre el horizonte, pero muy bajo. Se le puede apuntar, aunque a '
+    'esa altura suele taparlo un cerro, un edificio o un árbol, y el aire '
+    'cerca del horizonte lo deja borroso. Conviene esperar a que suba o '
+    'elegir otro objeto.';
+
+/// Qué significa cada etiqueta de visibilidad de la lista.
+class VisibilityLegend extends StatelessWidget {
+  /// La lista también muestra objetos bajo el horizonte.
+  final bool showsHidden;
+
+  const VisibilityLegend({super.key, this.showsHidden = false});
+
+  @override
+  Widget build(BuildContext context) {
+    Widget entry(ApBadge badge, String text) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        badge,
+        const SizedBox(height: 4),
+        Text(text, style: ApText.small),
+      ],
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: apSpaced([
+        entry(
+          const ApBadge(
+            label: 'Visible · sobre 5°',
+            icon: Icons.visibility,
+            color: ApColors.secondary,
+          ),
+          'A buena altura: se puede observar ahora.',
+        ),
+        entry(
+          const ApBadge(
+            label: 'Cerca del horizonte · entre 0° y 5°',
+            icon: Icons.warning,
+            color: ApColors.warn,
+          ),
+          nearHorizonExplanation,
+        ),
+        if (showsHidden)
+          entry(
+            const ApBadge(
+              label: 'Bajo el horizonte · menos de 0°',
+              icon: Icons.visibility_off,
+              color: ApColors.muted,
+            ),
+            'Lo tapa la Tierra: no se puede ver a esta hora.',
+          ),
+      ], gap: 10),
+    );
+  }
+}
+
 /// Chips de categoría (`.ap-chips`).
 class CategoryChips extends StatelessWidget {
   final CatalogCategory selected;
