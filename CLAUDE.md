@@ -35,6 +35,14 @@ App Flutter (Android + iOS) que controla por BLE un telescopio alt-az motorizado
 - Al conectar se pide STATUS. Después de un STOP o un `ALERTA:`, el objetivo se toma del STATUS siguiente. SET_POSITION fija las dos posiciones.
 - SET_POSITION (referencia manual y alineación inicial): si el firmware no dijo `Completado` (la app cerró el movimiento a su tolerancia), su PID sigue activo y el firmware rechaza el comando con "motores detenidos". `sendSetPositionCommand` envía STOP antes; si igual lo rechaza, envía STOP y reintenta una vez. Después envía un GOTO a las mismas coordenadas. Ese GOTO salió de una hipótesis que el `.ino` descartó (SET_POSITION sí actualiza el objetivo del PID), así que no corrige nada.
 
+### Bloqueo del Sol
+
+- `SunGuard` (`lib/features/observation/domain/services/sun_guard.dart`) rechaza cualquier destino a menos de 15° del Sol (`exclusionRadiusDeg`) mientras el Sol esté sobre -2° de altitud. Usa la hora real del teléfono, no la hora personalizada de Configuración. La posición del Sol no se muestra en ninguna pantalla.
+- El bloqueo de fondo está en `Oe4ControlController.moveTo`, por donde pasan todos los movimientos (GOTO del catálogo, tracking, alineación, flechas y Técnico). También cubre HOME (0/0) y TEST_ROUTINE (0/0, 0/45, 0/30, 0/120). Lanza `SunSafetyError` (un `StateError`).
+- Compara en coordenadas del motor, que con la referencia fijada equivalen al Alt/Az del cielo. Sin referencia (recién conectado) esas coordenadas no corresponden al cielo y el bloqueo no protege de verdad.
+- Solo mira el destino: no revisa si el recorrido cruza por delante del Sol. SET_POSITION no se bloquea porque no mueve el telescopio.
+- Avisos previos: la lista de estrellas de alineación separa las "Bloqueadas · cerca del Sol", el catálogo muestra el badge "Cerca del Sol · GOTO bloqueado" y `AstronomicalGotoService` rechaza el objeto con su nombre.
+
 ### Compensación de holgura en azimut (leída del `.ino` `astropilot_motorsV2_5_PCNT_y_BLE_en_Core0_V2.ino`)
 
 - El firmware compensa 5° de holgura (`BACKLASH_DEG_AZ`) en azimut. El PID (Core 1) lleva `lastFlankAz`: +1 si el último objetivo de az subió y -1 si bajó, con un umbral de 0.01°. Arranca en -1. En el flanco -1 apunta el encoder 5° por debajo del objetivo, y STATUS informa `encoder + 5°`. Por eso el az de STATUS salta 5° apenas cambia el sentido, antes de que el motor se mueva. La altitud no tiene compensación.
@@ -55,6 +63,14 @@ App Flutter (Android + iOS) que controla por BLE un telescopio alt-az motorizado
   - El método "Objeto fijo" del ajuste fino (queda como "Próximamente").
 
 ## Historial relevante
+
+- **Sesión 2026-10-06:**
+  - Se agregó el bloqueo del Sol (ver sección).
+  - En Observar, las flechas de ajuste fino quedaron siempre visibles en la tarjeta "Ajuste fino" (se habilitan después del primer GOTO) y se quitó "Último comando enviado", que sigue en Técnico. El tracking no se pausa al usar las flechas: si la corrección no se guarda, el siguiente GOTO de tracking (cada 15 s) deshace el ajuste.
+  - La flecha "Abajo" pasó a ser rellena como las demás (el diseño la tenía solo con borde).
+  - Inicio muestra la fecha y hora del teléfono en vez de "Usando hora actual". El catálogo y Configuración muestran la hora local con su desfase (`formatLocalDateTime`, `lib/core/time_format.dart`) en vez de UTC.
+  - Se quitó de Satélites el panel "Próximos pasos de la ISS" y su servicio de relleno (nunca tuvo datos reales).
+  - Pendiente de revisar con electrónica: "Abajo" casi no mueve el tubo en la alineación. La app y el PID son simétricos; se sospecha holgura en altitud (el firmware solo compensa azimut) o que el motor no vence la carga al bajar.
 
 - **Sesión 2026-10-01:**
   - Se leyó el firmware real.

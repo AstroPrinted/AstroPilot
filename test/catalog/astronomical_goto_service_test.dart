@@ -10,6 +10,7 @@ import 'package:astroprintedlogicincludedgeoengine/features/catalog/domain/model
 import 'package:astroprintedlogicincludedgeoengine/features/observation/domain/models/alt_az_result.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/observation/domain/models/observer_data.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/observation/domain/services/observer_data_provider.dart';
+import 'package:astroprintedlogicincludedgeoengine/features/observation/domain/services/sun_guard.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geoengine/geoengine.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -155,6 +156,54 @@ void main() {
       expect(sent, isFalse);
     },
   );
+
+  test('blocks GoTo to an object in front of or behind the Sun', () {
+    final alignment = CalibrationResult(
+      altitudeOffset: 0,
+      azimuthOffset: 0,
+      stage: CalibrationStage.initialAlignment,
+      correctionModel: CorrectionModel.none,
+      method: CalibrationMethod.oneStar,
+      status: CalibrationStatus.calibrated,
+      points: const [],
+      createdAt: DateTime.utc(2026),
+    );
+    AstronomicalGotoService near(double sunAzimuth) => AstronomicalGotoService(
+      observerDataProvider: const _FakeObserverDataProvider(),
+      calibrationRepository: repository,
+      sunGuard: SunGuard(
+        observerDataProvider: const _FakeObserverDataProvider(),
+        sunPositionResolver: (_, __) => (altitude: 32, azimuth: sunAzimuth),
+      ),
+    );
+
+    expect(
+      () => near(33).buildCommand(
+        object: _object(),
+        rawPosition: _position(30, 30),
+        initialAlignment: alignment,
+        correctionCalibration: null,
+      ),
+      throwsA(
+        isA<SunSafetyError>().having(
+          (error) => error.message,
+          'message',
+          contains('M42'),
+        ),
+      ),
+    );
+    expect(
+      near(200)
+          .buildCommand(
+            object: _object(),
+            rawPosition: _position(30, 30),
+            initialAlignment: alignment,
+            correctionCalibration: null,
+          )
+          .finalAltitude,
+      30,
+    );
+  });
 
   test('blocks solar GoTo', () async {
     final service = _service(repository, _position(30, 30));

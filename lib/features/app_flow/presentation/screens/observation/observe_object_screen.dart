@@ -13,6 +13,7 @@ import '../../../../calibration/presentation/controllers/calibration_controller.
 import '../../../../catalog/application/astronomical_goto_service.dart';
 import '../../../../catalog/domain/models/celestial_object.dart';
 import '../../../../catalog/presentation/controllers/celestial_control_controller.dart';
+import '../../../../observation/domain/services/sun_guard.dart';
 import '../../../../oe4_control/domain/telescope_position.dart';
 import '../../../../oe4_control/presentation/controllers/oe4_control_controller.dart';
 import '../../../../settings/application/settings_service.dart';
@@ -37,7 +38,6 @@ class _ObserveObjectScreenState extends State<ObserveObjectScreen> {
   late final CelestialControlController _controller;
   late final AppFlowState _flow;
   Timer? _clock;
-  bool _centering = false;
   bool _saveCorrection = true;
   bool _stopped = false;
   bool _savingCorrection = false;
@@ -56,6 +56,9 @@ class _ObserveObjectScreenState extends State<ObserveObjectScreen> {
         ),
         astronomyPositionService: const AstronomyPositionService(),
         correctionService: const PointingCorrectionService(),
+        sunGuard: SunGuard(
+          observerDataProvider: context.read<SettingsService>(),
+        ),
       ),
       positionProvider: () => context.read<Oe4ControlController>().motionBase,
     );
@@ -103,7 +106,7 @@ class _ObserveObjectScreenState extends State<ObserveObjectScreen> {
   Future<void> _stop() async {
     setState(() {
       _stopped = true;
-      _centering = false;
+      _centeredMessage = null;
     });
     await _controller.sendStop(_commands.stop);
   }
@@ -114,7 +117,7 @@ class _ObserveObjectScreenState extends State<ObserveObjectScreen> {
     final motor = context.read<Oe4ControlController>().telescopePosition;
     if (!_saveCorrection) {
       setState(() {
-        _centering = false;
+        _centerError = null;
         _centeredMessage = 'Objeto centrado. La corrección no se guardó.';
       });
       return;
@@ -143,7 +146,6 @@ class _ObserveObjectScreenState extends State<ObserveObjectScreen> {
       final result = calibration.correctionCalibrationResult;
       if (!mounted) return;
       setState(() {
-        _centering = false;
         _centeredMessage = result == null
             ? 'Corrección guardada. Los próximos GOTO la usarán.'
             : 'Corrección guardada '
@@ -165,10 +167,7 @@ class _ObserveObjectScreenState extends State<ObserveObjectScreen> {
       return (label: 'En espera', tone: ApTone.muted);
     }
     return switch (oe4.lastMoveOutcome?.kind) {
-      MoveOutcomeKind.arrived => (
-        label: 'Llegó al objetivo',
-        tone: ApTone.ok,
-      ),
+      MoveOutcomeKind.arrived => (label: 'Llegó al objetivo', tone: ApTone.ok),
       MoveOutcomeKind.stalled => (
         label: 'Se detuvo antes de llegar',
         tone: ApTone.warn,
@@ -210,6 +209,12 @@ class _ObserveObjectScreenState extends State<ObserveObjectScreen> {
         .inSeconds
         .clamp(0, 15);
     final error = _controller.errorMessage;
+    final canFine = !blocked && _controller.canFineTune;
+    final fineStep = CelestialControlController.fineStepDegrees.toStringAsFixed(
+      2,
+    );
+    Future<void> Function()? fine(CelestialFineDirection direction) =>
+        canFine ? () => _controller.fineTune(direction, _commands.goto) : null;
 
     return Scaffold(
       appBar: ModeAppBar(title: short, back: true),
@@ -250,12 +255,12 @@ class _ObserveObjectScreenState extends State<ObserveObjectScreen> {
                       children: [
                         Text(object.name, style: ApText.title),
                         const SizedBox(height: 2),
-                        Text(ObjectDisplay.subtitle(object), style: ApText.small),
+                        Text(
+                          ObjectDisplay.subtitle(object),
+                          style: ApText.small,
+                        ),
                         if (j2000 != null)
-                          Text(
-                            j2000,
-                            style: ApText.small.merge(ApText.number),
-                          ),
+                          Text(j2000, style: ApText.small.merge(ApText.number)),
                       ],
                     ),
                   ),
@@ -265,7 +270,10 @@ class _ObserveObjectScreenState extends State<ObserveObjectScreen> {
               Row(
                 children: [
                   const Expanded(
-                    child: Text('Posición Alt/Az en vivo', style: ApText.strong),
+                    child: Text(
+                      'Posición Alt/Az en vivo',
+                      style: ApText.strong,
+                    ),
                   ),
                   ApPill(pill.label, tone: pill.tone),
                 ],
@@ -290,14 +298,6 @@ class _ObserveObjectScreenState extends State<ObserveObjectScreen> {
                   ),
                 ],
               ),
-              if (oe4.movementWarning != null && !_stopped && !_centering)
-                ApNotice(
-                  icon: Icons.warning,
-                  tone: ApTone.warn,
-                  text:
-                      '${oe4.movementWarning!} Usa "El objeto no está '
-                      'centrado" para terminar de apuntar.',
-                ),
               if (_controller.isTracking)
                 ApNotice(
                   icon: Icons.autorenew,
@@ -308,130 +308,109 @@ class _ObserveObjectScreenState extends State<ObserveObjectScreen> {
                 ),
             ],
           ),
-          if (!_centering)
-            ApCard(
-              children: [
-                const ApCardHead(icon: Icons.gamepad, title: 'Acciones'),
-                if (below)
-                  ApNotice(
-                    icon: Icons.visibility_off,
-                    tone: ApTone.muted,
-                    text:
-                        'GOTO deshabilitado: $short está bajo el horizonte '
-                        '(${formatDeg(sky.altitudeDeg)}).',
-                  )
-                else if (!sun && !aligned)
-                  const ApNotice(
-                    icon: Icons.center_focus_strong,
-                    tone: ApTone.warn,
-                    text: 'Alinea el telescopio para poder hacer GOTO.',
-                  )
-                else if (!sun && !flow.isConnected)
-                  const ApNotice(
-                    icon: Icons.bluetooth_disabled,
-                    tone: ApTone.warn,
-                    text: 'Conecta el telescopio para hacer GOTO.',
-                  ),
-                if (error != null && !sun)
-                  ApNotice(
-                    icon: Icons.error_outline,
-                    tone: ApTone.error,
-                    text: error,
-                  ),
-                ApButton(
-                  label: 'Enviar GOTO',
-                  icon: Icons.near_me,
-                  large: true,
-                  busy: _controller.isSending && !_controller.isTracking,
-                  onPressed: blocked || busy ? null : _goto,
+          ApCard(
+            children: [
+              const ApCardHead(icon: Icons.gamepad, title: 'Acciones'),
+              if (below)
+                ApNotice(
+                  icon: Icons.visibility_off,
+                  tone: ApTone.muted,
+                  text:
+                      'GOTO deshabilitado: $short está bajo el horizonte '
+                      '(${formatDeg(sky.altitudeDeg)}).',
+                )
+              else if (!sun && !aligned)
+                const ApNotice(
+                  icon: Icons.center_focus_strong,
+                  tone: ApTone.warn,
+                  text: 'Alinea el telescopio para poder hacer GOTO.',
+                )
+              else if (!sun && !flow.isConnected)
+                const ApNotice(
+                  icon: Icons.bluetooth_disabled,
+                  tone: ApTone.warn,
+                  text: 'Conecta el telescopio para hacer GOTO.',
                 ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ApButton(
-                        label: _controller.isTracking
-                            ? 'Pausar'
-                            : 'Iniciar tracking',
-                        icon: _controller.isTracking
-                            ? Icons.pause
-                            : Icons.play_arrow,
-                        kind: ApButtonKind.outlined,
-                        onPressed: blocked && !_controller.isTracking
-                            ? null
-                            : _toggleTracking,
-                      ),
+              if (error != null && !sun)
+                ApNotice(
+                  icon: Icons.error_outline,
+                  tone: ApTone.error,
+                  text: error,
+                ),
+              ApButton(
+                label: 'Enviar GOTO',
+                icon: Icons.near_me,
+                large: true,
+                busy: _controller.isSending && !_controller.isTracking,
+                onPressed: blocked || busy ? null : _goto,
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: ApButton(
+                      label: _controller.isTracking
+                          ? 'Pausar tracking'
+                          : 'Iniciar tracking',
+                      icon: _controller.isTracking
+                          ? Icons.pause
+                          : Icons.play_arrow,
+                      kind: ApButtonKind.outlined,
+                      onPressed: blocked && !_controller.isTracking
+                          ? null
+                          : _toggleTracking,
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: ApButton(
-                        label: 'STOP',
-                        icon: Icons.stop,
-                        kind: ApButtonKind.danger,
-                        onPressed: flow.isConnected ? _stop : null,
-                      ),
-                    ),
-                  ],
-                ),
-                ApButton(
-                  label: 'El objeto no está centrado',
-                  icon: Icons.filter_center_focus,
-                  kind: ApButtonKind.outlined,
-                  onPressed: blocked || !_controller.canFineTune
-                      ? null
-                      : () => setState(() {
-                          _centering = true;
-                          _centeredMessage = null;
-                          _centerError = null;
-                        }),
-                ),
-                if (_centeredMessage != null)
-                  ApNotice(
-                    icon: Icons.check_circle,
-                    tone: ApTone.ok,
-                    text: _centeredMessage!,
                   ),
-              ],
-            )
-          else
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ApButton(
+                      label: 'STOP',
+                      icon: Icons.stop,
+                      kind: ApButtonKind.danger,
+                      onPressed: flow.isConnected ? _stop : null,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          if (!sun)
             ApCard(
-              accent: ApColors.primary,
               children: [
                 const ApCardHead(
                   icon: Icons.filter_center_focus,
-                  iconColor: ApColors.primary,
-                  title: 'Centrar el objeto',
+                  title: 'Ajuste fino',
                 ),
                 const Text(
-                  'Mueve hasta que el objeto quede en el centro del ocular.',
+                  'Si el objeto no quedó centrado, muévelo con las flechas '
+                  'hasta el centro del ocular.',
                   style: ApText.body,
                 ),
                 ApJoystick(
-                  onUp: () => _controller.fineTune(
-                    CelestialFineDirection.up,
-                    _commands.goto,
-                  ),
-                  onDown: () => _controller.fineTune(
-                    CelestialFineDirection.down,
-                    _commands.goto,
-                  ),
-                  onLeft: () => _controller.fineTune(
-                    CelestialFineDirection.left,
-                    _commands.goto,
-                  ),
-                  onRight: () => _controller.fineTune(
-                    CelestialFineDirection.right,
-                    _commands.goto,
-                  ),
-                  caption:
-                      'Ajuste fino de '
-                      '${CelestialControlController.fineStepDegrees.toStringAsFixed(2)}°. '
-                      'Mantén presionado para repetir.',
+                  onUp: fine(CelestialFineDirection.up),
+                  onDown: fine(CelestialFineDirection.down),
+                  onLeft: fine(CelestialFineDirection.left),
+                  onRight: fine(CelestialFineDirection.right),
+                  caption: canFine
+                      ? 'Cada toque mueve $fineStep°. Mantén presionado '
+                            'para repetir.'
+                      : 'Envía un GOTO para habilitar las flechas.',
                 ),
-                if (oe4.movementWarning != null)
+                // Messages go below the arrows: they appear and disappear
+                // with every move and must not shift the button under the
+                // finger.
+                if (_controller.fineTuneError != null)
+                  ApNotice(
+                    icon: Icons.error_outline,
+                    tone: ApTone.error,
+                    text: _controller.fineTuneError!,
+                  ),
+                if (oe4.movementWarning != null && !_stopped)
                   ApNotice(
                     icon: Icons.warning,
                     tone: ApTone.warn,
-                    text: oe4.movementWarning!,
+                    text:
+                        '${oe4.movementWarning!} Puedes terminar de apuntar '
+                        'con las flechas.',
                   ),
                 if (_centerError != null)
                   ApNotice(
@@ -439,9 +418,16 @@ class _ObserveObjectScreenState extends State<ObserveObjectScreen> {
                     tone: ApTone.error,
                     text: _centerError!,
                   ),
+                if (_centeredMessage != null)
+                  ApNotice(
+                    icon: Icons.check_circle,
+                    tone: ApTone.ok,
+                    text: _centeredMessage!,
+                  ),
                 CheckboxListTile(
                   value: _saveCorrection,
-                  onChanged: (v) => setState(() => _saveCorrection = v ?? false),
+                  onChanged: (v) =>
+                      setState(() => _saveCorrection = v ?? false),
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: EdgeInsets.zero,
                   title: const Text(
@@ -450,27 +436,14 @@ class _ObserveObjectScreenState extends State<ObserveObjectScreen> {
                   ),
                 ),
                 ApButton(
-                  label: 'Centrado ahora sí',
+                  label: 'Confirmar objeto centrado',
                   icon: Icons.check_circle,
-                  large: true,
+                  kind: ApButtonKind.outlined,
                   busy: _savingCorrection,
-                  onPressed: oe4.isMoving ? null : _confirmCentered,
-                ),
-                ApButton(
-                  label: 'Cancelar',
-                  kind: ApButtonKind.text,
-                  onPressed: () => setState(() => _centering = false),
+                  onPressed: canFine && !oe4.isMoving ? _confirmCentered : null,
                 ),
               ],
             ),
-          ApCard(
-            children: [
-              ApMonoBlock(
-                label: 'Último comando enviado',
-                text: oe4.lastSentCommand ?? '—',
-              ),
-            ],
-          ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

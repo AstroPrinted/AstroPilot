@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/time_format.dart';
 import '../../../../core/widgets/ap_widgets.dart';
 import '../../../catalog/domain/models/visible_celestial_object.dart';
 import 'object_display.dart';
@@ -84,6 +85,13 @@ class CatalogObjectRow extends StatelessWidget {
         color: ApColors.muted,
       );
     }
+    if (item.isNearSun) {
+      return const ApBadge(
+        label: 'Cerca del Sol · GOTO bloqueado',
+        icon: Icons.block,
+        color: ApColors.error,
+      );
+    }
     if (item.isNearHorizon) {
       return ApBadge(
         label: 'Cerca del horizonte · $value',
@@ -128,11 +136,8 @@ class CategoryChips extends StatelessWidget {
   }
 }
 
-/// "Ubicación / UTC" del cálculo de visibilidad.
-String visibilityContext(double lat, double lon, DateTime utc) {
-  final t = utc.toUtc();
-  String two(int v) => v.toString().padLeft(2, '0');
-  return 'Ubicación  ${lat.toStringAsFixed(4)}, ${lon.toStringAsFixed(4)}\n'
-      'UTC        ${t.year}-${two(t.month)}-${two(t.day)} '
-      '${two(t.hour)}:${two(t.minute)}:${two(t.second)}Z';
+/// "Ubicación / Hora local" del cálculo de visibilidad.
+String visibilityContext(double lat, double lon, DateTime time) {
+  return 'Ubicación   ${lat.toStringAsFixed(4)}, ${lon.toStringAsFixed(4)}\n'
+      'Hora local  ${formatLocalDateTime(time)}';
 }

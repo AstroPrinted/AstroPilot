@@ -7,6 +7,7 @@ import '../../domain/telescope_position.dart';
 import '../../../calibration/domain/services/alignment_session.dart';
 import '../../../ble_connection/presentation/controllers/ble_connection_controller.dart';
 import '../../../ble_connection/data/models/ble_device_state.dart';
+import '../../../observation/domain/services/sun_guard.dart';
 
 class Oe4ControlController extends ChangeNotifier {
   static const Duration _heartbeatInterval = Duration(milliseconds: 300);
@@ -15,8 +16,20 @@ class Oe4ControlController extends ChangeNotifier {
   static const Duration _stalePingAfter = Duration(milliseconds: 600);
   static const Duration _rssiInterval = Duration(seconds: 1);
 
+  // Destinos fijos de HOME y TEST_ROUTINE en el firmware.
+  static const MotorAngles _homeTarget = (altitude: 0, azimuth: 0);
+  static const List<MotorAngles> _testRoutineTargets = [
+    _homeTarget,
+    (altitude: 0, azimuth: 45),
+    (altitude: 0, azimuth: 30),
+    (altitude: 0, azimuth: 120),
+  ];
+
   final MotorCommandService _motorCommandService;
   final BleConnectionController? connection;
+
+  /// Rechaza los movimientos hacia el Sol. Sin él no hay bloqueo.
+  final SunGuard? sunGuard;
   late final StreamSubscription<String> _responseSubscription;
   Timer? _heartbeatTimer;
   Timer? _rssiTimer;
@@ -79,7 +92,11 @@ class Oe4ControlController extends ChangeNotifier {
         'posición real del encoder para el siguiente movimiento.';
   }
 
-  Oe4ControlController(this._motorCommandService, {this.connection}) {
+  Oe4ControlController(
+    this._motorCommandService, {
+    this.connection,
+    this.sunGuard,
+  }) {
     connection?.addListener(_connectionChanged);
     _responseSubscription = _motorCommandService.responseStream.listen((value) {
       if (_isPongResponse(value)) {
@@ -150,9 +167,10 @@ class Oe4ControlController extends ChangeNotifier {
     required double alt,
     required double az,
     bool throwOnError = false,
-  }) {
+  }) async {
     final target = normalizeMotorAngles(alt, az);
-    return _send(
+    if (!_sunSafe([target], throwOnError: throwOnError)) return;
+    await _send(
       () => _motorCommandService.sendGotoCommand(
         deviceId,
         alt: target.altitude,
@@ -160,6 +178,29 @@ class Oe4ControlController extends ChangeNotifier {
       ),
       throwOnError: throwOnError,
     );
+  }
+
+  /// Comprueba los destinos contra [sunGuard]. Si alguno queda cerca del Sol
+  /// deja el aviso en [errorMessage] y devuelve false (o lanza
+  /// [SunSafetyError] con [throwOnError]).
+  ///
+  /// Los destinos están en coordenadas del motor, que con la referencia
+  /// fijada equivalen al Alt/Az del cielo; el margen de [SunGuard] cubre la
+  /// diferencia que agrega la corrección de puntería.
+  bool _sunSafe(List<MotorAngles> targets, {bool throwOnError = false}) {
+    final guard = sunGuard;
+    if (guard == null) return true;
+    try {
+      for (final target in targets) {
+        guard.ensureSafe(target.altitude, target.azimuth);
+      }
+      return true;
+    } on SunSafetyError catch (error) {
+      _errorMessage = error.message;
+      _safeNotify();
+      if (throwOnError) rethrow;
+      return false;
+    }
   }
 
   /// Mueve el telescopio relativo a su posición actual.
@@ -227,8 +268,9 @@ class Oe4ControlController extends ChangeNotifier {
     );
   }
 
-  Future<void> sendHome(String deviceId) {
-    return _send(() => _motorCommandService.sendHomeCommand(deviceId));
+  Future<void> sendHome(String deviceId) async {
+    if (!_sunSafe(const [_homeTarget])) return;
+    await _send(() => _motorCommandService.sendHomeCommand(deviceId));
   }
 
   /// Rebase the motor coordinates without reusing the old star calibration.
@@ -275,8 +317,9 @@ class Oe4ControlController extends ChangeNotifier {
     return _send(() => _motorCommandService.sendStopCommand(deviceId));
   }
 
-  Future<void> sendTestRoutine(String deviceId) {
-    return _send(() => _motorCommandService.sendTestRoutineCommand(deviceId));
+  Future<void> sendTestRoutine(String deviceId) async {
+    if (!_sunSafe(_testRoutineTargets)) return;
+    await _send(() => _motorCommandService.sendTestRoutineCommand(deviceId));
   }
 
   Future<void> setWatchdogEnabled(String deviceId, bool enabled) async {

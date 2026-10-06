@@ -55,6 +55,7 @@ class CelestialControlController extends ChangeNotifier {
   bool _trackingTickInFlight = false;
   int _stopGeneration = 0;
   String? _errorMessage;
+  String? _fineTuneError;
   String? _previewError;
   String? _statusMessage;
   AltAzResult? _currentPosition;
@@ -91,6 +92,10 @@ class CelestialControlController extends ChangeNotifier {
   bool get isTracking => _isTracking;
   String? get errorMessage => _errorMessage ?? _previewError;
   String? get previewError => _previewError;
+
+  /// Error de la última flecha de ajuste fino. Va aparte de [errorMessage]
+  /// para mostrarlo debajo de las flechas y no moverlas bajo el dedo.
+  String? get fineTuneError => _fineTuneError;
   String? get statusMessage => _statusMessage;
   AltAzResult? get currentPosition => _currentPosition;
   CalibrationResult? get savedCalibration => _savedCalibration;
@@ -228,10 +233,11 @@ class CelestialControlController extends ChangeNotifier {
         sentAt: sentAt,
       );
       _errorMessage = null;
+      _fineTuneError = null;
     } catch (e) {
       if (_disposed || generation != _stopGeneration) return;
-      _errorMessage = _errorText(e);
-      _statusMessage = _errorMessage;
+      _fineTuneError = _errorText(e);
+      _statusMessage = _fineTuneError;
     } finally {
       _fineTuneInFlight = false;
       _safeNotify();
@@ -246,6 +252,7 @@ class CelestialControlController extends ChangeNotifier {
 
     _isSending = true;
     _errorMessage = null;
+    _fineTuneError = null;
     _statusMessage = 'Enviando STOP...';
     _safeNotify();
 
@@ -292,6 +299,7 @@ class CelestialControlController extends ChangeNotifier {
     final generation = _stopGeneration;
     _isSending = true;
     _errorMessage = null;
+    _fineTuneError = null;
     _statusMessage = 'Enviando $label...';
     _safeNotify();
 

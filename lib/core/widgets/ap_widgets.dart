@@ -815,7 +815,6 @@ class ApHoldButton extends StatefulWidget {
   final String label;
   final IconData icon;
   final bool iconAfter;
-  final bool outlined;
   final Future<void> Function()? onAction;
 
   const ApHoldButton({
@@ -823,7 +822,6 @@ class ApHoldButton extends StatefulWidget {
     required this.label,
     required this.icon,
     this.iconAfter = false,
-    this.outlined = false,
     this.onAction,
   });
 
@@ -876,7 +874,6 @@ class _ApHoldButtonState extends State<ApHoldButton> {
           label: widget.label,
           icon: widget.icon,
           iconAfter: widget.iconAfter,
-          kind: widget.outlined ? ApButtonKind.outlined : ApButtonKind.filled,
           // The Listener drives the action; the button only paints the state.
           onPressed: enabled ? () {} : null,
         ),
@@ -933,7 +930,6 @@ class ApJoystick extends StatelessWidget {
         ApHoldButton(
           label: 'Abajo',
           icon: Icons.arrow_downward,
-          outlined: true,
           onAction: onDown,
         ),
         const SizedBox(height: 8),

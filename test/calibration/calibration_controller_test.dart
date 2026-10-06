@@ -17,6 +17,7 @@ import 'package:astroprintedlogicincludedgeoengine/features/catalog/domain/model
 import 'package:astroprintedlogicincludedgeoengine/features/observation/domain/models/alt_az_result.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/observation/domain/models/observer_data.dart';
 import 'package:astroprintedlogicincludedgeoengine/features/observation/domain/services/observer_data_provider.dart';
+import 'package:astroprintedlogicincludedgeoengine/features/observation/domain/services/sun_guard.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -72,6 +73,59 @@ void main() {
       expect(controller.selectedStarGuide, isNotEmpty);
     },
   );
+
+  test('stars near the Sun cannot be chosen as reference', () async {
+    final controller = _controller(
+      _position(45, 120),
+      sunGuard: _sunAt(altitude: 50, azimuth: 125),
+    );
+    addTearDown(controller.dispose);
+
+    await controller.loadSavedCalibration();
+    controller.startMethod(CalibrationMethod.oneStar);
+
+    final option = controller.calibrationStarOptions.first;
+    expect(option.isVisible, isTrue);
+    expect(option.isNearSun, isTrue);
+    expect(option.isSelectable, isFalse);
+    expect(controller.errorMessage, contains('No hay estrellas'));
+
+    await controller.selectStar(option);
+
+    expect(controller.flowStep, CalibrationFlowStep.selectingObject);
+    expect(controller.selectedStar, isNull);
+    expect(controller.errorMessage, contains('Sol'));
+  });
+
+  test('a GOTO blocked by the Sun returns to the star list', () async {
+    final controller = _controller(_position(45, 120));
+    addTearDown(controller.dispose);
+
+    await controller.loadSavedCalibration();
+    controller.startMethod(CalibrationMethod.oneStar);
+    await controller.selectStar(controller.calibrationStarOptions.first);
+    await controller.sendGotoToReference(
+      (_, __) async => throw SunSafetyError('cerca del Sol'),
+    );
+
+    expect(controller.flowStep, CalibrationFlowStep.selectingObject);
+    expect(controller.selectedStar, isNull);
+    expect(controller.errorMessage, 'cerca del Sol');
+  });
+
+  test('an arrow blocked by the Sun keeps the centering step', () async {
+    final controller = _controller(_position(45, 120));
+    addTearDown(controller.dispose);
+
+    await _selectInitialStar(controller);
+    await controller.nudge(
+      CalibrationNudgeDirection.up,
+      (_, __) async => throw SunSafetyError('cerca del Sol'),
+    );
+
+    expect(controller.flowStep, CalibrationFlowStep.waitingUserCentering);
+    expect(controller.errorMessage, 'cerca del Sol');
+  });
 
   test('manual nudge sends relative movement without GoTo target', () async {
     final controller = _controller(_position(45, 120));
@@ -144,20 +198,23 @@ void main() {
     },
   );
 
-  test('a failed approximate GOTO still lets the user center by hand', () async {
-    final controller = _controller(_position(45, 120));
-    addTearDown(controller.dispose);
+  test(
+    'a failed approximate GOTO still lets the user center by hand',
+    () async {
+      final controller = _controller(_position(45, 120));
+      addTearDown(controller.dispose);
 
-    await controller.loadSavedCalibration();
-    controller.startInitialAlignment();
-    await controller.selectStar(controller.calibrationStarOptions.first);
-    await controller.sendGotoToReference(
-      (_, __) async => throw StateError('El ESP32 dejó de responder'),
-    );
+      await controller.loadSavedCalibration();
+      controller.startInitialAlignment();
+      await controller.selectStar(controller.calibrationStarOptions.first);
+      await controller.sendGotoToReference(
+        (_, __) async => throw StateError('El ESP32 dejó de responder'),
+      );
 
-    expect(controller.flowStep, CalibrationFlowStep.waitingUserCentering);
-    expect(controller.errorMessage, contains('GOTO'));
-  });
+      expect(controller.flowStep, CalibrationFlowStep.waitingUserCentering);
+      expect(controller.errorMessage, contains('GOTO'));
+    },
+  );
 
   test('stopping the approximate GOTO returns to the star list', () async {
     final controller = _controller(_position(45, 120));
@@ -435,6 +492,7 @@ Future<void> _selectInitialStar(CalibrationController controller) async {
 CalibrationController _controller(
   AltAzResult position, {
   bool isLive = true,
+  SunGuard? sunGuard,
   ({double altitude, double azimuth})? Function()? motorPosition,
 }) {
   return CalibrationController(
@@ -445,7 +503,15 @@ CalibrationController _controller(
       correctionService: PointingCorrectionService(),
     ),
     observerDataProvider: _FakeObserverDataProvider(isLive: isLive),
+    sunGuard: sunGuard,
     motorPositionProvider: motorPosition,
+  );
+}
+
+SunGuard _sunAt({required double altitude, required double azimuth}) {
+  return SunGuard(
+    observerDataProvider: const _FakeObserverDataProvider(),
+    sunPositionResolver: (_, __) => (altitude: altitude, azimuth: azimuth),
   );
 }
 

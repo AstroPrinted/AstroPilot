@@ -14,6 +14,7 @@ import 'core/theme/app_theme.dart';
 import 'features/catalog/data/repository/celestial_catalog_repository.dart';
 import 'features/ble_connection/domain/ble_service.dart';
 import 'features/ble_connection/presentation/controllers/ble_connection_controller.dart';
+import 'features/observation/domain/services/sun_guard.dart';
 import 'features/oe4_control/domain/motor_command_service.dart';
 import 'features/oe4_control/presentation/controllers/oe4_control_controller.dart';
 import 'features/settings/application/settings_service.dart';
@@ -67,6 +68,9 @@ class AstroPilotApp extends StatelessWidget {
           create: (context) => Oe4ControlController(
             MotorCommandService(),
             connection: context.read<BleConnectionController>(),
+            sunGuard: SunGuard(
+              observerDataProvider: context.read<SettingsService>(),
+            ),
           ),
         ),
         ChangeNotifierProvider(
@@ -81,6 +85,9 @@ class AstroPilotApp extends StatelessWidget {
               correctionService: PointingCorrectionService(),
             ),
             observerDataProvider: context.read<SettingsService>(),
+            sunGuard: SunGuard(
+              observerDataProvider: context.read<SettingsService>(),
+            ),
             motorPositionProvider: () =>
                 context.read<Oe4ControlController>().motorPosition,
           )..loadSavedCalibration(),

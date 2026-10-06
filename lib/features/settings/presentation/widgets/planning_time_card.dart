@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/time_format.dart';
 import '../../domain/models/observer_state.dart';
 import '../../domain/settings_defaults.dart';
 
@@ -52,7 +53,7 @@ class PlanningTimeCard extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         Text(
-          'UTC efectivo: ${state.effectiveUtc.toIso8601String()}',
+          'Hora local usada: ${formatLocalDateTime(localTime)}',
           style: Theme.of(
             context,
           ).textTheme.bodySmall?.copyWith(fontFamily: 'monospace'),

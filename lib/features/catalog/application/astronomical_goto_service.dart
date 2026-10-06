@@ -8,6 +8,7 @@ import '../../calibration/domain/services/alignment_session.dart';
 import '../../observation/domain/models/alt_az_result.dart';
 import '../../observation/domain/models/observer_data.dart';
 import '../../observation/domain/services/observer_data_provider.dart';
+import '../../observation/domain/services/sun_guard.dart';
 import '../../observation/domain/utils/angle_math.dart';
 import '../domain/models/celestial_object.dart';
 
@@ -46,12 +47,16 @@ class AstronomicalGotoService {
   final PointingCorrectionService correctionService;
   final AstronomicalPositionResolver? positionResolver;
 
+  /// Bloquea el GoTo a un objeto que está delante o detrás del Sol.
+  final SunGuard? sunGuard;
+
   const AstronomicalGotoService({
     required this.observerDataProvider,
     required this.calibrationRepository,
     this.astronomyPositionService = const AstronomyPositionService(),
     this.correctionService = const PointingCorrectionService(),
     this.positionResolver,
+    this.sunGuard,
   });
 
   Future<CalibrationResult?> loadSavedCalibration() {
@@ -196,6 +201,12 @@ class AstronomicalGotoService {
     if (rawPosition.altitudeDeg < 0.0) {
       throw StateError('Objeto bajo el horizonte. GoTo bloqueado.');
     }
+    sunGuard?.ensureSafe(
+      rawPosition.altitudeDeg,
+      rawPosition.azimuthDeg,
+      what: object.name,
+      at: rawPosition.computedAt,
+    );
   }
 
   void _ensureInitialAligned(CalibrationResult? initialAlignment) {

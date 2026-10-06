@@ -6,7 +6,8 @@ import '../../../../../calibration/presentation/controllers/calibration_controll
 import '../../../../../catalog/domain/models/celestial_object.dart';
 
 /// Lista de estrellas de referencia: las visibles se eligen con un radio y
-/// las demás aparecen deshabilitadas. El botón envía el GOTO.
+/// las demás (bajo el horizonte o cerca del Sol) aparecen deshabilitadas. El
+/// botón envía el GOTO.
 class StarPicker extends StatefulWidget {
   final List<CalibrationStarOption> options;
   final String Function(CalibrationStar star)? guideFor;
@@ -32,7 +33,10 @@ class _StarPickerState extends State<StarPicker> {
 
   @override
   Widget build(BuildContext context) {
-    final visible = widget.options.where((o) => o.isVisible).toList();
+    final visible = widget.options.where((o) => o.isUsable).toList();
+    final nearSun = widget.options
+        .where((o) => o.isVisible && o.isNearSun)
+        .toList();
     final hidden = widget.options.where((o) => !o.isVisible).toList();
     final selected = visible
         .where((o) => o.star.id == _selectedId && o.isSelectable)
@@ -59,13 +63,22 @@ class _StarPickerState extends State<StarPicker> {
               ),
             ),
         ],
+        if (nearSun.isNotEmpty) ...[
+          const ApSectionLabel('Bloqueadas · cerca del Sol'),
+          for (final option in nearSun)
+            ApOption(
+              enabled: false,
+              icon: Icons.block,
+              child: _StarLabel(
+                option: option,
+                tip: 'Apuntarle sería apuntar hacia el Sol.',
+              ),
+            ),
+        ],
         if (hidden.isNotEmpty) ...[
           const ApSectionLabel('No visibles'),
           for (final option in hidden)
-            ApOption(
-              enabled: false,
-              child: _StarLabel(option: option),
-            ),
+            ApOption(enabled: false, child: _StarLabel(option: option)),
         ],
         ApButton(
           label: widget.actionLabel,

@@ -2,6 +2,7 @@ import '../../calibration/domain/services/astronomy_position_service.dart';
 import '../../observation/domain/models/alt_az_result.dart';
 import '../../observation/domain/models/observer_data.dart';
 import '../../observation/domain/services/observer_data_provider.dart';
+import '../../observation/domain/services/sun_guard.dart';
 import '../data/repository/celestial_catalog_repository.dart';
 import '../domain/models/celestial_object.dart';
 import '../domain/models/visible_celestial_object.dart';
@@ -22,12 +23,16 @@ class VisibleObjectsService {
   final CatalogObjectsProvider? objectsProvider;
   final ObjectPositionResolver? positionResolver;
 
+  /// Marca los objetos visibles que quedan cerca del Sol.
+  final SunGuard? sunGuard;
+
   const VisibleObjectsService({
     required this.catalogRepository,
     required this.observerDataProvider,
     this.astronomyPositionService = const AstronomyPositionService(),
     this.objectsProvider,
     this.positionResolver,
+    this.sunGuard,
   });
 
   Future<List<VisibleCelestialObject>> loadObjects({
@@ -53,13 +58,26 @@ class VisibleObjectsService {
         final visible = position.altitudeDeg >= horizonAltitudeDeg;
         final nearHorizon =
             visible && position.altitudeDeg < nearHorizonAltitudeDeg;
+        final nearSun =
+            visible &&
+            (sunGuard?.isNearSun(
+                  position.altitudeDeg,
+                  position.azimuthDeg,
+                  at: observer.utc,
+                ) ??
+                false);
 
         return VisibleCelestialObject(
           object: object,
           position: position,
           isVisible: visible,
           isNearHorizon: nearHorizon,
-          blockedReason: visible ? null : 'Objeto bajo el horizonte',
+          isNearSun: nearSun,
+          blockedReason: !visible
+              ? 'Objeto bajo el horizonte'
+              : nearSun
+              ? SunGuard.blockedMessage(what: object.name)
+              : null,
         );
       } catch (error) {
         return VisibleCelestialObject(

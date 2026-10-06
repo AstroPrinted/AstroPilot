@@ -10,6 +10,7 @@ import '../../../../calibration/presentation/controllers/calibration_controller.
 import '../../../../catalog/application/visible_objects_service.dart';
 import '../../../../catalog/data/repository/celestial_catalog_repository.dart';
 import '../../../../catalog/domain/models/visible_celestial_object.dart';
+import '../../../../observation/domain/services/sun_guard.dart';
 import '../../../../settings/application/settings_service.dart';
 import '../../../application/app_flow_state.dart';
 import '../../widgets/catalog_object_row.dart';
@@ -57,6 +58,9 @@ class _ObservationCatalogScreenState extends State<ObservationCatalogScreen> {
         catalogRepository: CelestialCatalogRepository(),
         observerDataProvider: context.read<SettingsService>(),
         astronomyPositionService: const AstronomyPositionService(),
+        sunGuard: SunGuard(
+          observerDataProvider: context.read<SettingsService>(),
+        ),
       ).loadObjects(category: category.key, visibleOnly: true);
       if (!mounted || category != _category) return;
       setState(() {
@@ -175,7 +179,9 @@ class _ObservationCatalogScreenState extends State<ObservationCatalogScreen> {
                 title: 'Objetos visibles',
               ),
               const Text(
-                'Visible = altitud >= 0°. Advertencia si está entre 0° y 5°.',
+                'Visible = sobre el horizonte (altitud >= 0°). Entre 0° y 5° '
+                'se marca "Cerca del horizonte": puede quedar tapado por '
+                'cerros o edificios.',
                 style: ApText.small,
               ),
               ApMonoBlock(
@@ -188,7 +194,11 @@ class _ObservationCatalogScreenState extends State<ObservationCatalogScreen> {
             ],
           ),
           if (_error != null)
-            ApNotice(icon: Icons.error_outline, tone: ApTone.error, text: _error!)
+            ApNotice(
+              icon: Icons.error_outline,
+              tone: ApTone.error,
+              text: _error!,
+            )
           else if (_loading)
             const Center(
               child: Padding(

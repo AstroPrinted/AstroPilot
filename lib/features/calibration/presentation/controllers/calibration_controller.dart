@@ -4,6 +4,7 @@ import '../../../catalog/data/repository/celestial_catalog_repository.dart';
 import '../../../catalog/domain/models/celestial_object.dart';
 import '../../../observation/domain/models/alt_az_result.dart';
 import '../../../observation/domain/services/observer_data_provider.dart';
+import '../../../observation/domain/services/sun_guard.dart';
 import '../../../observation/domain/utils/angle_math.dart';
 import '../../data/calibration_repository.dart';
 import '../../domain/models/calibration_flow_step.dart';
@@ -22,6 +23,7 @@ import '../../domain/services/alignment_session.dart';
 typedef CalibrationCommandSender = Future<void> Function();
 typedef CalibrationGotoSender =
     Future<void> Function(double altitude, double azimuth);
+
 /// Relative move from the shared telescope position.
 typedef CalibrationManualMoveSender =
     Future<void> Function(double deltaAltitude, double deltaAzimuth);
@@ -39,6 +41,9 @@ final class CalibrationStarOption {
   final double? closestReferenceDistanceDeg;
   final bool isTooCloseToReference;
 
+  /// Está dentro de la zona prohibida alrededor del Sol.
+  final bool isNearSun;
+
   const CalibrationStarOption({
     required this.star,
     required this.position,
@@ -46,9 +51,13 @@ final class CalibrationStarOption {
     this.isAlreadySelected = false,
     this.closestReferenceDistanceDeg,
     this.isTooCloseToReference = false,
+    this.isNearSun = false,
   });
 
-  bool get isSelectable => isVisible && !isAlreadySelected;
+  /// Sobre el horizonte mínimo y lejos del Sol.
+  bool get isUsable => isVisible && !isNearSun;
+
+  bool get isSelectable => isUsable && !isAlreadySelected;
 }
 
 class CalibrationController extends ChangeNotifier {
@@ -73,6 +82,7 @@ class CalibrationController extends ChangeNotifier {
   final AstronomyPositionService astronomyPositionService;
   final CalibrationService calibrationService;
   final ObserverDataProvider observerDataProvider;
+  final SunGuard? sunGuard;
   final ({double altitude, double azimuth})? Function()? motorPositionProvider;
 
   bool _initialized = false;
@@ -101,6 +111,7 @@ class CalibrationController extends ChangeNotifier {
     required this.astronomyPositionService,
     required this.calibrationService,
     required this.observerDataProvider,
+    this.sunGuard,
     this.motorPositionProvider,
   }) {
     AlignmentSession.changes.addListener(_onSessionChanged);
@@ -417,7 +428,7 @@ class CalibrationController extends ChangeNotifier {
       _errorMessage = _visibilityRequirementError(_calibrationStarOptions);
       debugPrint(
         '[Calibration] Visible reference stars: '
-        '${_calibrationStarOptions.where((option) => option.isVisible).length} / '
+        '${_calibrationStarOptions.where((option) => option.isUsable).length} / '
         '${_calibrationStarOptions.length}',
       );
     } catch (error) {
@@ -449,6 +460,12 @@ class CalibrationController extends ChangeNotifier {
       return;
     }
 
+    if (option.isNearSun) {
+      _errorMessage = SunGuard.blockedMessage(what: option.star.name);
+      notifyListeners();
+      return;
+    }
+
     final star = option.star;
 
     _selectedStar = star;
@@ -475,6 +492,11 @@ class CalibrationController extends ChangeNotifier {
         _flowStep = CalibrationFlowStep.selectingObject;
         _errorMessage =
             'La estrella ya no está visible para referencia. Selecciona otra estrella visible.';
+        return;
+      }
+      if (_isNearSun(target)) {
+        _resetToStarSelection();
+        _errorMessage = SunGuard.blockedMessage(what: star.name);
         return;
       }
 
@@ -543,6 +565,11 @@ class CalibrationController extends ChangeNotifier {
             'La referencia ya no está visible. Selecciona una estrella sobre ${visibleStarAltitudeThresholdDeg.toStringAsFixed(0)} grados de altitud.';
         return;
       }
+      if (_isNearSun(target)) {
+        _resetToStarSelection();
+        _errorMessage = SunGuard.blockedMessage(what: star.name);
+        return;
+      }
 
       // The initial alignment replaces the reference, so the previous
       // correction must not bend its approximate GOTO.
@@ -574,6 +601,12 @@ class CalibrationController extends ChangeNotifier {
       if (_abortRequested) {
         _abortRequested = false;
         _resetToStarSelection();
+        return;
+      }
+      // Nothing moved: centering by hand from here would aim at the Sun.
+      if (error is SunSafetyError) {
+        _resetToStarSelection();
+        _errorMessage = error.message;
         return;
       }
       // The user can still center the star by hand from wherever the
@@ -1023,12 +1056,13 @@ class CalibrationController extends ChangeNotifier {
         isTooCloseToReference:
             closestDistance != null &&
             closestDistance < minimumRecommendedSeparationDeg,
+        isNearSun: _isNearSun(position),
       );
     }).toList();
 
     options.sort((a, b) {
-      if (a.isVisible != b.isVisible) {
-        return a.isVisible ? -1 : 1;
+      if (a.isUsable != b.isUsable) {
+        return a.isUsable ? -1 : 1;
       }
       if (a.isAlreadySelected != b.isAlreadySelected) {
         return a.isAlreadySelected ? 1 : -1;
@@ -1081,7 +1115,7 @@ class CalibrationController extends ChangeNotifier {
     if (session == null) return null;
 
     final requiredCount = session.method.requiredPointCount;
-    final visibleCount = options.where((option) => option.isVisible).length;
+    final visibleCount = options.where((option) => option.isUsable).length;
     if (visibleCount < requiredCount) {
       return _insufficientStarsMessage(session);
     }
@@ -1135,6 +1169,14 @@ class CalibrationController extends ChangeNotifier {
     return position.altitudeDeg > visibleStarAltitudeThresholdDeg;
   }
 
+  bool _isNearSun(AltAzResult position) =>
+      sunGuard?.isNearSun(
+        position.altitudeDeg,
+        position.azimuthDeg,
+        at: position.computedAt,
+      ) ??
+      false;
+
   ({double altitude, double azimuth}) _rawGotoTarget(AltAzResult target) => (
     altitude: target.altitudeDeg.clamp(-90.0, 90.0).toDouble(),
     azimuth: normalizeDegrees360(target.azimuthDeg),
@@ -1172,6 +1214,9 @@ class CalibrationController extends ChangeNotifier {
         throw StateError('La conexión cambió. Repite la alineación.');
       }
       onSuccess?.call();
+    } on SunSafetyError catch (error) {
+      // Nothing was sent, so the flow keeps its position and can go on.
+      _errorMessage = error.message;
     } catch (error) {
       _errorMessage = 'No se pudo enviar comando: $error';
       // An interrupted movement may have advanced only part of the requested

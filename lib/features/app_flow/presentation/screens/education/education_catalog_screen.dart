@@ -9,6 +9,7 @@ import '../../../../calibration/domain/services/astronomy_position_service.dart'
 import '../../../../catalog/application/visible_objects_service.dart';
 import '../../../../catalog/data/repository/celestial_catalog_repository.dart';
 import '../../../../catalog/domain/models/visible_celestial_object.dart';
+import '../../../../observation/domain/services/sun_guard.dart';
 import '../../../../settings/application/settings_service.dart';
 import '../../widgets/catalog_object_row.dart';
 import '../../widgets/mode_scaffold.dart';
@@ -47,6 +48,9 @@ class _EducationCatalogScreenState extends State<EducationCatalogScreen> {
         catalogRepository: CelestialCatalogRepository(),
         observerDataProvider: context.read<SettingsService>(),
         astronomyPositionService: const AstronomyPositionService(),
+        sunGuard: SunGuard(
+          observerDataProvider: context.read<SettingsService>(),
+        ),
       ).loadObjects(category: category.key, visibleOnly: visibleOnly);
       if (!mounted || category != _category || visibleOnly != _visibleOnly) {
         return;
@@ -138,7 +142,9 @@ class _EducationCatalogScreenState extends State<EducationCatalogScreen> {
                   title: 'Objetos visibles ahora',
                 ),
                 const Text(
-                  'Visible = altitud >= 0°. Advertencia si está entre 0° y 5°.',
+                  'Visible = sobre el horizonte (altitud >= 0°). Entre 0° y 5° '
+                  'se marca "Cerca del horizonte": puede quedar tapado por '
+                  'cerros o edificios.',
                   style: ApText.body,
                 ),
                 ApMonoBlock(
@@ -151,7 +157,11 @@ class _EducationCatalogScreenState extends State<EducationCatalogScreen> {
               ],
             ),
           if (_error != null)
-            ApNotice(icon: Icons.error_outline, tone: ApTone.error, text: _error!)
+            ApNotice(
+              icon: Icons.error_outline,
+              tone: ApTone.error,
+              text: _error!,
+            )
           else if (_loading)
             const Center(
               child: Padding(

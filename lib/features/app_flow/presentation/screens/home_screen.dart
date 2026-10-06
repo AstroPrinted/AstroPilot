@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -138,12 +140,13 @@ class HomeScreen extends StatelessWidget {
                     '${settings.lonDeg.toStringAsFixed(4)}',
                 mono: true,
               ),
-              _InfoRow(
-                label: 'Hora',
-                value: settings.isCustomTime
-                    ? 'Planificando: ${_formatLocal(settings.observerTime)}'
-                    : 'Usando hora actual',
-              ),
+              if (settings.isCustomTime)
+                _InfoRow(
+                  label: 'Hora',
+                  value: 'Planificando: ${_formatLocal(settings.observerTime)}',
+                )
+              else
+                const _PhoneClockRow(),
             ],
           ),
         ],
@@ -240,6 +243,42 @@ class _ModeCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// La hora del teléfono, que es la que usan los cálculos. Verla ayuda a
+/// notar un reloj mal puesto antes de apuntar.
+class _PhoneClockRow extends StatefulWidget {
+  const _PhoneClockRow();
+
+  @override
+  State<_PhoneClockRow> createState() => _PhoneClockRowState();
+}
+
+class _PhoneClockRowState extends State<_PhoneClockRow> {
+  late final Timer _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(
+      const Duration(seconds: 1),
+      (_) => setState(() {}),
+    );
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _InfoRow(
+      label: 'Hora',
+      value: '${HomeScreen._formatLocal(DateTime.now())} · del teléfono',
     );
   }
 }
