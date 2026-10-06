@@ -20,6 +20,7 @@ import '../../../../settings/application/settings_service.dart';
 import '../../../application/app_flow_state.dart';
 import '../../widgets/mode_scaffold.dart';
 import '../../widgets/object_display.dart';
+import '../../widgets/object_image.dart';
 import '../../widgets/telescope_commands.dart';
 import '../education/object_sheet_screen.dart';
 import 'observation_shell.dart';
@@ -247,7 +248,7 @@ class _ObserveObjectScreenState extends State<ObserveObjectScreen> {
             children: [
               Row(
                 children: [
-                  ApListIcon(ObjectDisplay.icon(object)),
+                  ObjectThumbnail(object),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(

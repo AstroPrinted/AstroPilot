@@ -65,6 +65,7 @@ App Flutter (Android + iOS) que controla por BLE un telescopio alt-az motorizado
 ## Historial relevante
 
 - **Sesión 2026-10-06:**
+  - (Rama `catalog-images`) Los 86 objetos del catálogo tienen imagen en `assets/catalog_images/<id>.jpg`, todas de 800×600. `credits.json` guarda archivo, crédito, licencia y fuente por id de objeto; `CelestialCatalogRepository.imageFor` la entrega y `ObjectThumbnail` / `ObjectPhoto` (`lib/features/app_flow/presentation/widgets/object_image.dart`) la muestran en las listas y en la ficha, con el crédito debajo. Planetas y cielo profundo vienen de Wikimedia Commons (dominio público o Creative Commons). Las 25 estrellas son mapas del cielo dibujados por `tool/render_star_maps.py` con el catálogo público Hipparcos (no son fotos y no tienen licencia de terceros). No usar el Digitized Sky Survey: solo permite uso no comercial. Al agregar un objeto al catálogo hay que agregar su imagen y su entrada en `credits.json` (hay un test que lo exige).
   - Se agregó el bloqueo del Sol (ver sección).
   - En Observar, las flechas de ajuste fino quedaron siempre visibles en la tarjeta "Ajuste fino" (se habilitan después del primer GOTO) y se quitó "Último comando enviado", que sigue en Técnico. El tracking no se pausa al usar las flechas: si la corrección no se guarda, el siguiente GOTO de tracking (cada 15 s) deshace el ajuste.
   - La flecha "Abajo" pasó a ser rellena como las demás (el diseño la tenía solo con borde).

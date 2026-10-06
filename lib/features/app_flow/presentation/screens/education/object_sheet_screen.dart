@@ -11,6 +11,7 @@ import '../../../../settings/application/settings_service.dart';
 import '../../../application/app_flow_state.dart';
 import '../../widgets/mode_scaffold.dart';
 import '../../widgets/object_display.dart';
+import '../../widgets/object_image.dart';
 import '../home_screen.dart';
 
 /// Ficha educativa de un objeto. No mueve el telescopio: "Observar este
@@ -113,6 +114,7 @@ class _ObjectSheetScreenState extends State<ObjectSheetScreen> {
               ApCard(
                 children: [
                   ApCardHead(icon: ObjectDisplay.icon(object), title: 'Objeto'),
+                  ObjectPhoto(object),
                   Text(
                     object.name,
                     style: const TextStyle(

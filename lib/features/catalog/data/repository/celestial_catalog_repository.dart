@@ -6,6 +6,16 @@ import 'package:geoengine/geoengine.dart';
 
 import '../../domain/models/celestial_object.dart';
 
+/// Imagen de un objeto del catálogo, incluida en la app.
+class CatalogImage {
+  final String asset;
+
+  /// Autor y licencia, tal como exige la licencia de la imagen.
+  final String credit;
+
+  const CatalogImage({required this.asset, required this.credit});
+}
+
 class CelestialCatalogRepository {
   static final CelestialCatalogRepository _instance =
       CelestialCatalogRepository._();
@@ -13,8 +23,10 @@ class CelestialCatalogRepository {
   CelestialCatalogRepository._();
 
   static const _assetPath = 'assets/celestial_catalog.json';
+  static const _imagesDir = 'assets/catalog_images';
 
   List<CelestialObject>? _catalog;
+  Map<String, CatalogImage> _images = const {};
 
   Future<void> initialize() async {
     if (_catalog != null) {
@@ -54,7 +66,29 @@ class CelestialCatalogRepository {
     }
 
     final solarSystem = _buildSolarSystemBodies(solarSystemNotes);
+    _images = await _loadImages();
     _catalog = _mergeAndSort(solarSystem, jsonObjects);
+  }
+
+  /// La imagen de [object], o null si el catálogo no tiene una.
+  CatalogImage? imageFor(CelestialObject object) => _images[object.id];
+
+  /// `credits.json` lista, por id de objeto, el archivo y su crédito.
+  Future<Map<String, CatalogImage>> _loadImages() async {
+    try {
+      final raw = await rootBundle.loadString('$_imagesDir/credits.json');
+      final map = json.decode(raw) as Map<String, dynamic>;
+      return {
+        for (final entry in map.entries)
+          entry.key: CatalogImage(
+            asset: '$_imagesDir/${(entry.value as Map)['file']}',
+            credit: (entry.value as Map)['credit'] as String,
+          ),
+      };
+    } catch (e) {
+      debugPrint('Catalog images not available: $e');
+      return const {};
+    }
   }
 
   List<CelestialObject> getAllObjects() {

@@ -5,6 +5,7 @@ import '../../../../core/time_format.dart';
 import '../../../../core/widgets/ap_widgets.dart';
 import '../../../catalog/domain/models/visible_celestial_object.dart';
 import 'object_display.dart';
+import 'object_image.dart';
 
 /// Fila de objeto del catálogo con su badge de visibilidad.
 class CatalogObjectRow extends StatelessWidget {
@@ -23,7 +24,7 @@ class CatalogObjectRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Row(
           children: [
-            ApListIcon(ObjectDisplay.icon(object)),
+            ObjectThumbnail(object),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
