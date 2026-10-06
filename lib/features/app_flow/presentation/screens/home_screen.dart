@@ -10,6 +10,7 @@ import '../../../settings/application/settings_service.dart';
 import '../../../settings/presentation/screens/settings_screen.dart';
 import '../../application/app_flow_state.dart';
 import '../widgets/telescope_icon.dart';
+import 'about_screen.dart';
 import 'education/education_shell.dart';
 import 'observation/observation_shell.dart';
 
@@ -147,6 +148,30 @@ class HomeScreen extends StatelessWidget {
                 )
               else
                 const _PhoneClockRow(),
+            ],
+          ),
+          const SizedBox(height: 14),
+          ApCard(
+            gap: 10,
+            children: [
+              const ApCardHead(
+                icon: Icons.info_outline,
+                title: 'Sobre el proyecto',
+              ),
+              const Text(
+                'AstroPilot es la aplicación de AstroPrinted, un telescopio '
+                'educativo hecho con impresión 3D y electrónica accesible.',
+                style: ApText.body,
+              ),
+              ApButton(
+                label: 'Conocer la historia del proyecto',
+                icon: Icons.arrow_forward,
+                iconAfter: true,
+                kind: ApButtonKind.outlined,
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(builder: (_) => const AboutScreen()),
+                ),
+              ),
             ],
           ),
         ],

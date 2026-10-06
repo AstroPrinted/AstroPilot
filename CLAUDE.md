@@ -65,6 +65,8 @@ App Flutter (Android + iOS) que controla por BLE un telescopio alt-az motorizado
 ## Historial relevante
 
 - **Sesión 2026-10-06:**
+  - Inicio tiene la tarjeta "Sobre el proyecto", que abre `AboutScreen` (`lib/features/app_flow/presentation/screens/about_screen.dart`) con el origen de AstroPrinted y AstroPilot. El texto sale de `docs/GUIA_ORAL_MANANA.md`; no nombra personas ni instituciones porque el usuario no las dio.
+  - El diseño (artifact) se actualizó con los cambios de esta sesión y tiene un artboard nuevo, `Acerca.dc.html`. Las imágenes que usa están en `project/img/`. No se tocó `Mapa.dc.html` ni las pantallas de la versión anterior.
   - Las 19 fichas de Satélites tienen imagen en `assets/space_images/<id>.jpg` (800×600); la ruta y el crédito van en `educational_space_objects.json` (`imageAssetPath`, `imageCredit`) y la licencia y la fuente en `assets/space_images/credits.json`. Una categoría con una sola ficha (la ISS) abre la ficha directamente.
   - El dibujo del paso 2 (Nivelación) muestra el lente adelante, apuntando al norte, y el ocular atrás. El usuario le dice "ocular" al lente del frente; en la app el frente se llama "lente".
   - En la alineación, las estrellas "No visibles" quedan plegadas. El aviso de 0° a 5° se explica con una leyenda en el catálogo (`VisibilityLegend`) y con un aviso en Observar y en la ficha.
