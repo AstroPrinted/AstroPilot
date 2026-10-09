@@ -1,7 +1,6 @@
 # Calibración del telescopio en AstroPilot
 
-La rama `codex/ios-prototype` usa el protocolo v3 del firmware incluido. La guía
-operativa está en [PRUEBA_MANANA.md](PRUEBA_MANANA.md).
+La rama `codex/ios-prototype` usa el protocolo v3 del firmware incluido.
 
 ## Alineación inicial
 
@@ -76,4 +75,4 @@ El último comando enviado conserva las coordenadas efectivamente enviadas.
 
 La compilación y las pruebas automatizadas verifican código y manejo de errores.
 Siguen pendientes la compilación/firma iOS en Mac, Bluetooth/GPS en iPhone y las
-mediciones de apuntado con la montura real. Ver el registro de PRUEBA_MANANA.md.
+mediciones de apuntado con la montura real.

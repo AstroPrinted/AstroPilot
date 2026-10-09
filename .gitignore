@@ -51,6 +51,12 @@ app.*.map.json
 /tesis_latex.zip
 /tmp/
 
+# Notas internas (quedan solo en el equipo)
+/CLAUDE.md
+/docs/GUIA_ORAL_MANANA.md
+/docs/PRUEBA_MANANA.md
+/docs/spec_preparacion_demostracion.md
+
 # Archivos locales y credenciales
 .env
 .env.*

@@ -3,7 +3,6 @@
 Para preparar la app en iPhone, consultar la [guía de iOS](docs/IOS.md):
 configuración incluida, compilación en Mac, firma y pruebas físicas pendientes.
 
-Para la demostración, seguir [PRUEBA_MANANA.md](docs/PRUEBA_MANANA.md).
 La rama `codex/ios-prototype` requiere actualizar juntos la app y el firmware v3
 del ESP32. Incluye un script de preparación para Mac y confirmaciones de comandos.
 

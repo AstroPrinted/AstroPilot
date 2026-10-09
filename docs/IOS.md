@@ -4,8 +4,7 @@ El proyecto tiene configurado un mínimo de iOS 13.0. La configuración nativa y
 el flujo de permisos están preparados para iOS; la compilación con Xcode y la
 validación de Bluetooth/GPS en un iPhone físico siguen pendientes.
 
-Esta versión debe usarse con el firmware v3 incluido en la rama. Ver
-[la secuencia de prueba](PRUEBA_MANANA.md) para cargarlo y verificar la montura.
+Esta versión debe usarse con el firmware v3 incluido en la rama.
 En una Mac con las herramientas ya instaladas, `bash scripts/preparar_ios_macos.sh`
 realiza la preparación y compilación sin firma descritas más abajo.
 

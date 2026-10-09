@@ -30,5 +30,5 @@ echo "Compilando para iPhone sin firma..."
 flutter build ios --release --no-codesign
 
 echo "Compilación terminada. Falta elegir el Team y firmar para instalar."
-echo "Abriendo Runner.xcworkspace. Sigue docs/IOS.md y docs/PRUEBA_MANANA.md."
+echo "Abriendo Runner.xcworkspace. Sigue docs/IOS.md."
 open ios/Runner.xcworkspace
